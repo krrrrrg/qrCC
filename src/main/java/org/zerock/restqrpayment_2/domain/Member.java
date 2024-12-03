@@ -6,6 +6,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import lombok.*;
+import org.zerock.restqrpayment_2.dto.MemberDTO;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -39,4 +40,12 @@ public class Member extends BaseEntity{
         this.roleSet.clear();
     }
 
+    // MemberEntity를 MemberDTO로 변환
+    public MemberDTO toDTO() {
+        return MemberDTO.builder()
+                .mid(this.mid)
+                .mpw(this.mpw)
+                .roles(this.roleSet)
+                .build();
+    }
 }

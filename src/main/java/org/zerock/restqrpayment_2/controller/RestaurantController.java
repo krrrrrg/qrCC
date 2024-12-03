@@ -34,7 +34,6 @@ public class RestaurantController {
 
     // 1. Read - 식당 목록 조회 (User, Owner, Admin)
     @GetMapping
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN')")
     public ResponseEntity<PageResponseDTO<RestaurantListAllDTO>> getList(PageRequestDTO pageRequestDTO) {
         PageResponseDTO<RestaurantListAllDTO> responseDTO = restaurantService.listWithAll(pageRequestDTO);
         return ResponseEntity.ok(responseDTO); // 200 OK
@@ -42,7 +41,6 @@ public class RestaurantController {
 
     // 2. Read - 특정 식당 조회 (Owner는 자기 식당만, Admin은 모든 식당 조회 가능)
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('USER') or (hasRole('OWNER') and @restaurantService.isOwnerOfRestaurant(#id, authentication.name)) or hasRole('ADMIN')")
     public ResponseEntity<RestaurantDTO> getRestaurantById(@PathVariable Long id, PageRequestDTO pageRequestDTO) {
         RestaurantDTO restaurantDTO = restaurantService.readOne(id);
 
@@ -54,7 +52,6 @@ public class RestaurantController {
     }
 
     // 3. Create - 식당 등록 (Owner는 자기 식당만, Admin은 모든 식당 등록 가능)
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<?> registerRestaurant(
             @Valid @RequestBody RestaurantDTO restaurantDTO,
@@ -80,7 +77,6 @@ public class RestaurantController {
 
     // 4. Update - 식당 수정 (Owner는 자기 식당만, Admin은 모든 식당 수정 가능)
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('OWNER') and @restaurantService.isOwnerOfRestaurant(#id, authentication.name) or hasRole('ADMIN')")
     public ResponseEntity<?> updateRestaurant(@Valid @RequestBody RestaurantDTO restaurantDTO,
                                               BindingResult bindingResult) {
 
@@ -100,7 +96,6 @@ public class RestaurantController {
     }
 
     // 5. Delete - 식당 삭제 (Admin만 가능)
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRestaurant(@RequestBody RestaurantDTO restaurantDTO) {
         Long id = restaurantDTO.getId();
