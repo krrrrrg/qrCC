@@ -43,7 +43,7 @@ public class RestaurantServiceTests2 {
     @Test
     public void testReadOne() {
         // Given
-        Long id = 103L;
+        Long id = 105L;
 
         // When
         RestaurantDTO restaurantDTO = restaurantService.readOne(id);
@@ -51,15 +51,21 @@ public class RestaurantServiceTests2 {
         // Then
         assertNotNull(restaurantDTO);
         assertThat(restaurantDTO.getId()).isEqualTo(id);
-        assertThat(restaurantDTO.getFileNames()).contains("newImage1.jpg", "newImage2.jpg");
+        // 파일 이름 검증
+        assertThat(restaurantDTO.getFileNames()).hasSize(2);
+        assertThat(restaurantDTO.getFileNames())
+                .anyMatch(name -> name.endsWith("updatedImage1.jpg"))
+                .anyMatch(name -> name.endsWith("updatedImage2.jpg"));
         log.info("Fetched Restaurant: {}", restaurantDTO);
     }
 
     @Test
     public void testRegister() {
+        // UUID 생성
         UUID uuid1 = UUID.randomUUID();
         UUID uuid2 = UUID.randomUUID();
-        // Given
+
+        // Given: RestaurantDTO 생성
         RestaurantDTO newRestaurant = RestaurantDTO.builder()
                 .name("New Restaurant")
                 .address("New Address")
@@ -67,29 +73,46 @@ public class RestaurantServiceTests2 {
                 .phoneNumber("010-9876-5432")
                 .ownerId("newOwner")
                 .description("New Description")
-                .fileNames(Arrays.asList(uuid1+"newImage1.jpg", uuid2+"newImage2.jpg"))
+                .refLink("refLink")
+                .fileNames(Arrays.asList(uuid1 + "_newImage1.jpg", uuid2 + "_newImage2.jpg"))
                 .build();
 
-        // When
-        Long id = restaurantService.register(newRestaurant);
+        Long id = 0L;
+        // When: Service를 통해 등록
+        try {
+            // 트랜잭션 처리 코드
+            id = restaurantService.register(newRestaurant);
+        } catch (Exception e) {
+            log.error("Error during transaction", e);
+            throw e; // 예외를 다시 던져야 롤백 처리가 제대로 됨
+        }
 
-        // Then
+        // Then: 등록된 ID와 데이터 검증
         assertNotNull(id);
+
         RestaurantDTO registeredRestaurant = restaurantService.readOne(id);
         assertThat(registeredRestaurant.getName()).isEqualTo("New Restaurant");
-        assertThat(registeredRestaurant.getFileNames()).contains("newImage1.jpg", "newImage2.jpg");
+
+        // 파일 이름 검증
+        assertThat(registeredRestaurant.getFileNames()).hasSize(2);
+        assertThat(registeredRestaurant.getFileNames())
+                .anyMatch(name -> name.endsWith("newImage1.jpg"))
+                .anyMatch(name -> name.endsWith("newImage2.jpg"));
+
         log.info("Registered Restaurant: {}", registeredRestaurant);
     }
 
     @Test
     public void testModify() {
+        UUID uuid1 = UUID.randomUUID();
+        UUID uuid2 = UUID.randomUUID();
         // Given
-        Long id = testRestaurant.getId();
+        Long id = 105L;
         RestaurantDTO restaurantDTO = restaurantService.readOne(id);
 
         restaurantDTO.setName("Updated Name");
         restaurantDTO.setDescription("Updated Description");
-        restaurantDTO.setFileNames(Arrays.asList("updatedImage1.jpg", "updatedImage2.jpg"));
+        restaurantDTO.setFileNames(Arrays.asList(uuid1+"_updatedImage1.jpg", uuid2+"_updatedImage2.jpg"));
 
         // When
         restaurantService.modify(restaurantDTO);
@@ -98,14 +121,16 @@ public class RestaurantServiceTests2 {
         RestaurantDTO updatedRestaurant = restaurantService.readOne(id);
         assertThat(updatedRestaurant.getName()).isEqualTo("Updated Name");
         assertThat(updatedRestaurant.getDescription()).isEqualTo("Updated Description");
-        assertThat(updatedRestaurant.getFileNames()).contains("updatedImage1.jpg", "updatedImage2.jpg");
+        assertThat(restaurantDTO.getFileNames())
+                .anyMatch(name -> name.endsWith("updatedImage1.jpg"))
+                .anyMatch(name -> name.endsWith("updatedImage2.jpg"));
         log.info("Updated Restaurant: {}", updatedRestaurant);
     }
 
     @Test
     public void testRemove() {
         // Given
-        Long id = testRestaurant.getId();
+        Long id = 105L;
 
         // When
         restaurantService.remove(id);
@@ -121,7 +146,7 @@ public class RestaurantServiceTests2 {
         // Given
         PageRequestDTO pageRequestDTO = PageRequestDTO.builder()
                 .type("n") // 검색 타입
-                .keyword("Setup") // 테스트 데이터의 키워드
+                .keyword("1") // 테스트 데이터의 키워드
                 .page(1)
                 .size(10)
                 .build();

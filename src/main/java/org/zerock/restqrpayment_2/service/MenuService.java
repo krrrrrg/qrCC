@@ -32,16 +32,23 @@ public interface MenuService {
                 .dishes(menuDTO.getDishes())
                 .build();
 
-        if(menuDTO.getFileNames() != null) {
+        if (menuDTO.getFileNames() != null) {
             menuDTO.getFileNames().forEach(fileName -> {
-                String[] arr = fileName.split("_");
-                menu.addMenuImage(arr[0], arr[1]);
+                if (fileName != null && fileName.contains("_")) {
+                    String[] arr = fileName.split("_");
+                    if (arr.length == 2) {
+                        menu.addMenuImage(arr[0], arr[1]);
+                    } else {
+                        throw new IllegalArgumentException("Invalid fileName format: " + fileName);
+                    }
+                } else {
+                    throw new IllegalArgumentException("Invalid fileName or missing '_': " + fileName);
+                }
             });
         }
 
         return menu;
     }
-
 
 
     default MenuDTO entityToDTO(Menu menu) {

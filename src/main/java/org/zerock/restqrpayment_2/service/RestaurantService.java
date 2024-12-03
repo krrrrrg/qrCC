@@ -34,12 +34,21 @@ public interface RestaurantService {
                 .ownerId(restaurantDTO.getOwnerId())
                 .build();
 
-        if(restaurantDTO.getFileNames() != null) {
+        if (restaurantDTO.getFileNames() != null) {
             restaurantDTO.getFileNames().forEach(fileName -> {
-                String[] arr = fileName.split("_");
-                restaurant.addRestaurantImage(arr[0], arr[1]);
+                if (fileName != null && fileName.contains("_")) {
+                    String[] arr = fileName.split("_");
+                    if (arr.length == 2) {
+                        restaurant.addRestaurantImage(arr[0], arr[1]);
+                    } else {
+                        throw new IllegalArgumentException("Invalid fileName format: " + fileName);
+                    }
+                } else {
+                    throw new IllegalArgumentException("Invalid fileName or missing '_': " + fileName);
+                }
             });
         }
+
 
         return restaurant;
     }

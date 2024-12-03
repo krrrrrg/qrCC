@@ -28,16 +28,12 @@ import java.util.stream.Collectors;
 @Log4j2
 public class MenuServiceImpl implements MenuService {
 
-    private final RestaurantRepository restaurantRepository;
-
     private final MenuRepository menuRepository;
-
-    private final ModelMapper modelMapper;
 
     @Override
     public Long register(MenuDTO menuDTO) {
 
-        Menu menu = modelMapper.map(menuDTO, Menu.class);
+        Menu menu = dtoToEntity(menuDTO);
 
         log.info(menu);
 
@@ -49,11 +45,15 @@ public class MenuServiceImpl implements MenuService {
     @Override
     public MenuDTO read(Long id) {
 
-        Optional<Menu> menuOptional = menuRepository.findById(id);
+        Optional<Menu> menuOptional = menuRepository.findByIdWithImages(id);
 
         Menu menu = menuOptional.orElseThrow();
 
-        return modelMapper.map(menu, MenuDTO.class);
+        MenuDTO menuDTO = entityToDTO(menu);
+
+        log.info(menuDTO);
+
+        return menuDTO;
     }
 
     @Override
@@ -63,7 +63,17 @@ public class MenuServiceImpl implements MenuService {
 
         Menu menu = menuOptional.orElseThrow();
 
-        menu.changeMenu(menuDTO.getName(), menuDTO.getPrice(), menu.getDescription());
+        menu.changeMenu(menuDTO.getName(), menuDTO.getPrice(), menuDTO.getDescription());
+
+        menu.clearMenuImages();
+
+        if(menuDTO.getFileNames() != null) {
+            for(String fileName : menuDTO.getFileNames()) {
+
+                String[] arr = fileName.split("_");
+                menu.addMenuImage(arr[0], arr[1]);
+            }
+        }
 
         menuRepository.save(menu);
 

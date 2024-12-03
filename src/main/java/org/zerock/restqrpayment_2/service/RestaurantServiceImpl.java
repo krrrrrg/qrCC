@@ -25,7 +25,7 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     public RestaurantDTO readOne(Long id) {
-        Optional<Restaurant> result = restaurantRepository.findById(id);
+        Optional<Restaurant> result = restaurantRepository.findByIdWithImages(id);
 
         Restaurant restaurant = result.orElseThrow();
 
