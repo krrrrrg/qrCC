@@ -1,0 +1,13 @@
+/* 인증 관련 스타일 */
+.auth-form {
+    background: white;
+    border-radius: 16px;
+    padding: 32px 24px;
+    margin: 24px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.input-group {
+    margin-bottom: 24px;
+    width: 100%;
+} 

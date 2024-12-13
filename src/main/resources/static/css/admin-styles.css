@@ -1,0 +1,1147 @@
+/* 관리자 레이아웃 */
+.admin-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* 사이드바 스타일 */
+.admin-sidebar {
+    width: 260px;
+    background: white;
+    border-right: 1px solid var(--border-color);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+.admin-profile {
+    display: flex;
+    align-items: center;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 24px;
+}
+
+.profile-image {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--background-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin-right: 12px;
+}
+
+.profile-info .store-name {
+    font-weight: 600;
+    margin: 0;
+}
+
+.profile-info .admin-name {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+    margin: 4px 0 0 0;
+}
+
+/* 관리자 메뉴 */
+.admin-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex: 1;
+}
+
+.admin-menu li {
+    margin-bottom: 8px;
+}
+
+.admin-menu a {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.admin-menu a:hover {
+    background: var(--background-color);
+}
+
+.admin-menu li.active a {
+    background: var(--accent-color);
+    color: white;
+}
+
+.admin-menu .icon {
+    margin-right: 12px;
+    font-size: 1.2rem;
+}
+
+/* 메인 컨텐츠 영역 */
+.admin-content {
+    flex: 1;
+    padding: 32px;
+    background: var(--background-color);
+}
+
+/* 대시보드 카드 */
+.dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.stat-card {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.stat-card h3 {
+    margin: 0;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 8px 0 0 0;
+    color: var(--accent-color);
+}
+
+.stat-text {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin: 8px 0 0 0;
+}
+
+/* 섹션 스타일 */
+.admin-section {
+    display: none;
+}
+
+.admin-section.active {
+    display: block;
+}
+
+.admin-section h2 {
+    margin: 0 0 24px 0;
+    font-size: 1.5rem;
+}
+
+/* 폼 스타일 개선 */
+.settings-form {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    max-width: 600px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: var(--background-color);
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(255, 61, 0, 0.1);
+    background-color: white;
+}
+
+.time-inputs {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.time-inputs input {
+    width: 120px;
+}
+
+.time-inputs span {
+    color: var(--secondary-color);
+    font-size: 1rem;
+}
+
+/* 버튼 스타일 개선 */
+.save-btn {
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    width: 100%;
+}
+
+.save-btn:hover {
+    background-color: #e63600;
+}
+
+/* 비밀번호 입력 필드 특별 스타일 */
+.form-group input[type="password"] {
+    letter-spacing: 0.1em;
+    font-family: monospace;
+}
+
+/* 모달 폼 스타일 개선 */
+.modal-content .form-group {
+    margin-bottom: 16px;
+}
+
+.modal-content .form-group:last-child {
+    margin-bottom: 0;
+}
+
+.modal-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+.modal-buttons button {
+    flex: 1;
+    padding: 12px 24px;
+}
+
+.cancel-btn {
+    background: var(--background-color);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--secondary-color);
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+}
+
+.cancel-btn:hover {
+    background-color: #e0e0e0;
+}
+
+/* 메뉴 관리 스타일 */
+.action-bar {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.add-menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background-color: var(--accent-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin: 16px 0;
+}
+
+.add-menu-button:hover {
+  background-color: #d63300;
+}
+
+/* 모달 스타일 */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background: white;
+    width: 90%;
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.modal h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+#imagePreview {
+    margin: 10px 0;
+    max-width: 100%;
+    text-align: center;
+}
+
+#imagePreview img {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.save-button {
+    padding: 8px 24px;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.save-button:hover {
+    background-color: #d63300;
+}
+
+.cancel-button {
+    padding: 8px 24px;
+    background-color: #f5f5f5;
+    color: #666;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.cancel-button:hover {
+    background-color: #eee;
+}
+
+/* 로그아웃 버튼 기본 스타일 */
+.logout-btn {
+    background: none;
+    border: 1px solid var(--border-color);
+    padding: 12px;
+    border-radius: 8px;
+    color: var(--secondary-color);
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+    background-color: var(--background-color);
+    color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+/* 모바일 대응을 위한 미디어 쿼리 */
+@media screen and (max-width: 768px) {
+    .admin-layout {
+        flex-direction: column;
+    }
+
+    .admin-sidebar {
+        width: 100%;
+        padding: 16px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .admin-profile {
+        padding-bottom: 16px;
+        margin-bottom: 16px;
+    }
+
+    .admin-menu {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 8px;
+        margin-bottom: 0;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-menu li {
+        margin-bottom: 0;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+
+    .admin-menu a {
+        padding: 8px 16px;
+        font-size: 0.9rem;
+    }
+
+    .admin-menu .icon {
+        margin-right: 8px;
+        font-size: 1rem;
+    }
+
+    .admin-content {
+        padding: 16px;
+    }
+
+    /* 대시보드 카드 조정 */
+    .dashboard-stats {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+
+    /* 폼 조정 */
+    .settings-form {
+        padding: 16px;
+        margin: 16px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .time-inputs {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .time-inputs input {
+        width: 100%;
+    }
+
+    /* 모달 조정 */
+    .modal-content {
+        width: calc(100% - 32px);
+        margin: 16px;
+        padding: 16px;
+    }
+
+    .modal-buttons {
+        flex-direction: column;
+    }
+
+    .modal-buttons button {
+        width: 100%;
+    }
+
+    /* 메뉴 관리 조정 */
+    .action-bar {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .add-menu-button,
+    #categoryFilter {
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* 로그아웃 버튼 위치 조정 */
+    .logout-btn {
+        position: static;
+        margin-top: 16px;
+        width: auto;
+        padding: 8px 16px;
+        background: none;
+        border: none;
+        box-shadow: none;
+        color: var(--accent-color);
+        font-size: 0.9rem;
+        text-align: center;
+    }
+
+    /* 관리자 메뉴 컨테이너 수정 */
+    .admin-menu-container {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 0;
+    }
+
+    /* 프로필 영역 모바일 조정 */
+    .admin-profile {
+        border-bottom: none;
+        padding-bottom: 8px;
+        margin-bottom: 8px;
+    }
+
+    /* 가게 관리의 저장하기 버튼 예외 처리 */
+    .admin-section button {
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* 예외 처리: 가게 관리의 저장하기 버튼과 메뉴 관리 작은 버튼들은 원래 스타일 유지 */
+    #storeSettingsForm button[type="submit"],
+    .menu-actions button {
+        width: 100%;
+        margin: 0;
+    }
+}
+
+/* 작은 모바일 화면 대응 */
+@media screen and (max-width: 480px) {
+    .admin-menu a {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+
+    .admin-menu .icon {
+        margin-right: 4px;
+    }
+
+    .stat-number {
+        font-size: 1.5rem;
+    }
+
+    .stat-text {
+        font-size: 1rem;
+    }
+
+    .admin-section h2 {
+        font-size: 1.2rem;
+        margin-bottom: 16px;
+    }
+
+    .logout-btn {
+        font-size: 0.85rem;
+        padding: 6px 12px;
+    }
+}
+
+/* 메뉴 아이템 모바일 스타일 */
+@media screen and (max-width: 768px) {
+    .menu-item {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 16px;
+    }
+
+    .menu-item img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        border-radius: 8px 8px 0 0;
+    }
+
+    .menu-info {
+        padding: 12px;
+    }
+
+    .menu-header {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .menu-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .menu-actions button {
+        flex: 1;
+        padding: 8px;
+        font-size: 0.9rem;
+    }
+}
+
+/* 테이블 스타일 모바일 대응 */
+@media screen and (max-width: 768px) {
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+        min-width: 600px;
+    }
+
+    td, th {
+        padding: 12px 8px;
+        font-size: 0.9rem;
+    }
+}
+
+/* 관리자 로그인 스타일 */
+.admin-login-header {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.admin-login-header .profile-image {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+}
+
+.admin-login-header h1 {
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+/* 모바일 대응 */
+@media screen and (max-width: 768px) {
+    .admin-login-header h1 {
+        font-size: 1.3rem;
+    }
+} 
+
+.qr-preview {
+    margin-top: 20px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background: white;
+}
+
+#qrCode {
+    margin: 20px 0;
+    text-align: center;
+}
+
+#tableLink {
+    word-break: break-all;
+    color: #666;
+}
+
+.order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.order-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.order-items {
+    margin: 1rem 0;
+}
+
+.order-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.order-status select {
+    width: 100%;
+    padding: 0.5rem;
+    margin-top: 1rem;
+    border-radius: 4px;
+}
+
+.no-orders {
+    text-align: center;
+    color: #666;
+    padding: 2rem;
+}
+
+.order-total {
+    margin-top: 1rem;
+    text-align: right;
+    font-weight: bold;
+}
+
+.order-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.table-number {
+    background-color: #f0f0f0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* 메뉴 관리 스타일 */
+.menu-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.menu-item {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+.menu-item.sold-out {
+    opacity: 0.7;
+}
+
+.menu-image {
+    position: relative;
+    padding-bottom: 100%;
+}
+
+.menu-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.popular-badge, .sold-out-badge {
+    position: absolute;
+    top: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.popular-badge {
+    right: 10px;
+    background: var(--accent-color);
+    color: white;
+}
+
+.sold-out-badge {
+    left: 10px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+}
+
+/* 카테고리 관리 스타일 */
+.category-management {
+    margin-bottom: 24px;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.category-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.category-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--background-color);
+    border-radius: 8px;
+}
+
+/* 버튼 아이콘 스타일 */
+.edit-btn, .delete-btn, .sold-out-btn {
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+}
+
+.edit-btn {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.delete-btn {
+    background: #ffebee;
+    color: #d32f2f;
+}
+
+.sold-out-btn {
+    background: #f5f5f5;
+    color: #616161;
+}
+
+.edit-btn:hover {
+    background: #bbdefb;
+}
+
+.delete-btn:hover {
+    background: #ffcdd2;
+}
+
+.sold-out-btn:hover {
+    background: #eeeeee;
+}
+
+/* 메뉴 아이템 액션 버튼 컨테이너 */
+.menu-actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* 카테고리 아이템 액션 버튼 */
+.category-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* 카테고리 관리 스타일 */
+.category-list-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.category-items {
+    margin: 16px 0;
+}
+
+.category-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.category-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.category-actions button {
+    padding: 6px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    cursor: pointer;
+}
+
+.category-actions .edit-btn {
+    color: #1976d2;
+}
+
+.category-actions .delete-btn {
+    color: #dc3545;
+}
+
+/* 메뉴 목록 스타일 */
+.menu-list-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.menu-filters {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.menu-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.menu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid var(--accent-color);
+}
+
+.menu-info h4 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.menu-info p {
+    margin: 4px 0 0 0;
+    color: var(--accent-color);
+    font-weight: 500;
+}
+
+.menu-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.menu-actions button {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+.menu-actions .edit-btn {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.menu-actions .delete-btn {
+    background: #ffebee;
+    color: #dc3545;
+}
+
+.menu-actions .soldout-btn {
+    background: #f5f5f5;
+    color: #616161;
+}
+
+/* 테이블 관리 스타일 */
+.tables-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+.table-control {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.table-control input {
+    width: 120px;
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+.table-list {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.table-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--accent-color);
+}
+
+.table-item:last-child {
+    margin-bottom: 0;
+}
+
+.table-number {
+    font-weight: 500;
+    font-size: 1.1rem;
+    color: var(--primary-color);
+}
+
+.table-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.qr-preview {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.qr-content {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    margin-top: 16px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+#qrCode {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.qr-info {
+    flex: 1;
+}
+
+.table-title {
+    font-size: 1.2rem;
+    font-weight: 500;
+    margin: 0 0 8px 0;
+    color: var(--primary-color);
+}
+
+.table-link {
+    font-size: 0.9rem;
+    color: var(--secondary-color);
+    margin: 0 0 16px 0;
+    word-break: break-all;
+}
+
+.download-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+}
+
+.download-btn:hover {
+    background-color: #e63600;
+}
+
+/* 반응형 스타일 */
+@media screen and (max-width: 768px) {
+    .tables-container {
+        grid-template-columns: 1fr;
+    }
+
+    .table-control {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .table-control input {
+        width: 100%;
+    }
+
+    .qr-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .qr-info {
+        margin-top: 16px;
+    }
+}
+
+/* 드롭다운 메뉴 아이템 스타일 */
+.menu-list a, .menu-list button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    width: 100%;
+    border: none;
+    background: none;
+    color: var(--primary-color);
+    font-size: 0.95rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.menu-list a:hover, .menu-list button:hover {
+    background-color: #f5f5f5;
+}
+
+.menu-list a i, .menu-list button i {
+    width: 20px;
+    text-align: center;
+    color: var(--secondary-color);
+}
+
+.menu-list .divider {
+    height: 1px;
+    background-color: var(--border-color);
+    margin: 8px 0;
+}
+
+/* 모바일 화면에서 하단 메뉴 추가 버튼의 너비를 90%로 조정 */
+@media screen and (max-width: 768px) {
+    .admin-section button {
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* 기존 스타일 유지 */
+    .menu-actions button {
+        width: auto;
+        margin: 0;
+    }
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>장바구니</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <header class="detail-header">
+      <button onclick="location.href='/'" class="back-button">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+      </button>
+      <h1>장바구니</h1>
+    </header>
+    <main class="cart-page">
+      <div class="table-indicator">테이블 <span id="tableNumber"></span>번</div>
+      <div id="cart-items" class="cart-items">
+        <!-- 장바구니 아이템들이 여기에 동적으로 추가됨 -->
+      </div>
+      <div class="cart-summary">
+        <div class="summary-item">
+          <span>주문금액</span>
+          <span id="subtotal">0원</span>
+        </div>
+        <div class="summary-item">
+          <span>할인금액</span>
+          <span id="discount">0원</span>
+        </div>
+        <div class="summary-item total">
+          <span>총 결제금액</span>
+          <span id="total">0원</span>
+        </div>
+      </div>
+      <button onclick="proceedToCheckout()" class="checkout-button">결제하기</button>
+    </main>
+    <script src="/js/cart.js" type="module"></script>
+  </body>
+</html>

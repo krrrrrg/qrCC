@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>주문 상태</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .order-status-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .order-number {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .progress-container {
+            margin: 30px 0;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #eee;
+            border-radius: 2px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .progress-fill {
+            position: absolute;
+            height: 100%;
+            background: #b7472a;
+            border-radius: 2px;
+            transition: width 0.5s ease;
+            width: 0;
+        }
+
+        .status-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-top: -12px;
+        }
+
+        .status-step {
+            text-align: center;
+            position: relative;
+            flex: 1;
+        }
+
+        .step-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-size: 20px;
+            position: relative;
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+
+        .status-step.active .step-icon {
+            border-color: #b7472a;
+            background: #b7472a;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .status-step.active .step-label {
+            color: #b7472a;
+            font-weight: bold;
+        }
+
+        .order-details {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .total-amount {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px solid #eee;
+            text-align: right;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .estimated-time {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .table-indicator {
+            display: inline-block;
+            background-color: #FFF8E7;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #333;
+            margin-left: 10px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+        }
+
+        .store-name {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <header class="detail-header">
+        <div class="header-title">
+            <button class="back-button" onclick="goToMenu()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <span class="store-name">투스 카페2</span>
+            <span class="table-indicator">테이블 <span id="tableNumber"></span>번</span>
+        </div>
+    </header>
+
+    <main class="center-container">
+        <div class="order-status-card">
+            <div class="order-number">
+                주문번호: <span id="orderNumber"></span>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+                <div class="status-steps">
+                    <div class="status-step" data-status="pending">
+                        <div class="step-icon">📝</div>
+                        <div class="step-label">주문접수</div>
+                    </div>
+                    <div class="status-step" data-status="preparing">
+                        <div class="step-icon">👨‍🍳</div>
+                        <div class="step-label">조리중</div>
+                    </div>
+                    <div class="status-step" data-status="completed">
+                        <div class="step-icon">✨</div>
+                        <div class="step-label">완료</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="estimated-time">
+                예상 대기 시간: <span id="estimatedTime">15</span>분
+            </div>
+        </div>
+
+        <div class="order-details">
+            <h3>주문 내역</h3>
+            <div id="orderItems" class="order-items">
+                <!-- 주문 아이템들이 여기에 동적으로 추가됨 -->
+            </div>
+            <div class="total-amount">
+                총 결제금액: <span id="totalAmount">0</span>원
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        import { OrderService } from '/js/store/order-service.js';
+
+        const orderService = new OrderService();
+        let currentOrder = null;
+
+        // URL에서 주문 ID와 테이블 정보 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const orderId = urlParams.get('orderId');
+        const tableNo = urlParams.get('table');
+        const menuId = urlParams.get('id');
+
+        // 테이블 번호 표시
+        if (tableNo) {
+            document.getElementById('tableNumber').textContent = tableNo;
+        }
+
+        // localStorage 변경 이벤트 리스너
+        window.addEventListener('storage', (e) => {
+            if (e.key === orderService.orderStatusKey || e.key === orderService.ordersKey) {
+                if (currentOrder) {
+                    const updatedStatus = orderService.getOrderStatus(currentOrder.id);
+                    if (updatedStatus && updatedStatus !== currentOrder.status) {
+                        currentOrder.status = updatedStatus;
+                        displayOrderInfo();
+                    }
+                }
+            }
+        });
+
+        // 주문 정보 표시 함수
+        function displayOrderInfo() {
+            if (!currentOrder) return;
+
+            // 주문 번호 표시
+            document.getElementById('orderNumber').textContent = currentOrder.id;
+
+            // 주문 상태에 따른 UI 업데이트
+            updateStatusUI(currentOrder.status);
+
+            // 주문 아이템 표시
+            const orderItemsContainer = document.getElementById('orderItems');
+            orderItemsContainer.innerHTML = '';
+            
+            currentOrder.items.forEach(item => {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'order-item';
+                itemElement.innerHTML = `
+                    <span>${item.name} × ${item.quantity}</span>
+                    <span>${(item.price * item.quantity).toLocaleString()}원</span>
+                `;
+                orderItemsContainer.appendChild(itemElement);
+            });
+
+            // 총 금액 표시
+            document.getElementById('totalAmount').textContent = 
+                currentOrder.totalAmount.toLocaleString();
+        }
+
+        // 주문 상태에 따른 UI 업데이트
+        function updateStatusUI(status) {
+            const steps = document.querySelectorAll('.status-step');
+            const progressBar = document.getElementById('progressBar');
+            
+            let progress = 0;
+            const statusIndex = {
+                'pending': 0,
+                'preparing': 1,
+                'completed': 2
+            }[status] || 0;
+
+            progress = statusIndex * 50;
+            progressBar.style.width = `${progress}%`;
+            
+            steps.forEach((step, index) => {
+                if (index <= statusIndex) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+        }
+
+        // 주문 상태 주기적으로 확인 (백업용)
+        function pollOrderStatus() {
+            setInterval(() => {
+                if (currentOrder) {
+                    const updatedStatus = orderService.getOrderStatus(currentOrder.id);
+                    if (updatedStatus && updatedStatus !== currentOrder.status) {
+                        currentOrder.status = updatedStatus;
+                        displayOrderInfo();
+                    }
+                }
+            }, 5000); // 5초마다 확인
+        }
+
+        // 뒤로가기 버튼 처리 함수
+        window.goToMenu = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tableNo = urlParams.get('table');
+            window.location.href = `index.html?table=${tableNo}`;
+        };
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            if (orderId) {
+                const orders = orderService.getOrders();
+                currentOrder = orders.find(order => order.id === orderId);
+                
+                if (currentOrder) {
+                    displayOrderInfo();
+                    pollOrderStatus(); // 백업용으로 폴링도 유지
+                } else {
+                    alert('주문 정보를 찾을 수 없습니다.');
+                    window.location.href = `order-history.html?table=${tableNo}&id=${menuId}`;
+                }
+            }
+        });
+    </script>
+    <script src="/js/order-status.js" type="module"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</body>
+</html>

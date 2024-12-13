@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>카페 주문</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* 기존 스타일 유지 */
+        /* 추가 스타일 */
+        .table-indicator {
+            display: inline-block;
+            background-color: #FFF8E7;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            color: #333;
+            margin-left: 10px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+        }
+
+        .store-name {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+    </style>
+  </head>
+  <body>
+    <header class="store-header">
+      <div class="header-title">
+        <span class="store-name">공공</span>
+        <span class="table-indicator">테이블 <span id="tableNumber"></span>번</span>
+      </div>
+      <button class="menu-button">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M3 12h18M3 6h18M3 18h18" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <!-- 드롭다운 메뉴 -->
+      <div class="dropdown-menu">
+        <div class="menu-list">
+            <button id="orderHistoryBtn">
+                <i class="fas fa-history"></i>
+                주문내역
+            </button>
+            <div class="divider"></div>
+            <button id="loginBtn">
+                <i class="fas fa-user"></i>
+                로그인
+            </button>
+            <div class="divider"></div>
+            <a href="#" class="sns-link" target="_blank">
+                <i class="fab fa-instagram"></i>
+                Instagram
+            </a>
+        </div>
+      </div>
+    </header>
+
+    <nav class="category-nav">
+      <ul>
+        <li><a href="#recommended">추천메뉴</a></li>
+        <li><a href="#all">전체</a></li>
+        <li><a href="#sandwiches">샌드위치</a></li>
+        <li><a href="#coffee">커피</a></li>
+        <li><a href="#beverages">음료</a></li>
+        <li><a href="#desserts">디저트</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <div class="promotion-banner">
+        <span class="promotion-icon">📢</span>
+        1인당 1메뉴 부탁드려요 :)
+      </div>
+
+      <section id="menu-list">
+        <!-- 메뉴 항목이 JavaScript로 동적 추가됨 -->
+      </section>
+    </main>
+
+    <footer class="cart-footer">
+      <button id="view-cart" class="cart-button">
+        장바구니 보기
+        <span class="cart-count">0</span>
+      </button>
+    </footer>
+    <script>
+      // URL에서 테이블 번호 가져오기
+      const urlParams = new URLSearchParams(window.location.search);
+      const tableNo = urlParams.get('table');
+      if (tableNo) {
+        document.getElementById('tableNumber').textContent = tableNo;
+      }
+    </script>
+    <script src="/js/store/cart-service.js" type="module"></script>
+    <script src="/js/main.js" type="module"></script>
+  </body>
+</html>

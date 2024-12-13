@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>결제</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .checkout-container {
+        padding: 20px;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .order-summary {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .order-items {
+        margin: 15px 0;
+      }
+
+      .order-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #eee;
+      }
+
+      .order-item span {
+        font-size: 1.1em;
+      }
+
+      .total-price {
+        font-size: 1.3em;
+        font-weight: bold;
+        text-align: right;
+        margin-top: 20px;
+        color: #b7472a;
+      }
+
+      .checkout-button {
+        width: 100%;
+        padding: 15px;
+        background-color: #b7472a;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1.1em;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+
+      .checkout-button:hover {
+        background-color: #a33f25;
+        opacity: 0.9;
+      }
+
+      .checkout-button:disabled {
+        background-color: #cccccc;
+      }
+
+      .table-info {
+        background-color: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        text-align: center;
+      }
+
+      .table-info h2 {
+        margin: 0;
+        color: #333;
+        font-size: 1.2em;
+      }
+
+      .success-icon {
+        width: 60px;
+        height: 60px;
+        background-color: var(--accent-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 24px;
+        margin: 0 auto 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <header class="detail-header">
+      <button onclick="location.href='/cart'" class="back-button">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+        </svg>
+      </button>
+      <h1>결제</h1>
+    </header>
+    <div class="checkout-container">
+      <div class="table-info">
+        <h2>테이블 번호: <span id="tableNumber"></span></h2>
+      </div>
+
+      <div class="order-summary">
+        <h2>주문 내역</h2>
+        <div class="order-items" id="orderItems">
+          <!-- 주문 항목들이 여기에 동적으로 추가됨 -->
+        </div>
+        <div class="total-price">
+          총 결제금액: <span id="totalPrice">0</span>원
+        </div>
+      </div>
+
+      <button id="confirmOrder" class="checkout-button">주문하기</button>
+    </div>
+
+    <script src="/js/checkout.js" type="module"></script>
+  </body>
+</html>
