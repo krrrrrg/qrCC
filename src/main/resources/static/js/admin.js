@@ -4,10 +4,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const menuItems = document.querySelectorAll('.admin-menu a');
     const sections = document.querySelectorAll('.admin-section');
 
+    // 현재 활성화된 섹션 ID를 저장
+    let currentSection = '';
+
     menuItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
             const targetId = item.getAttribute('href').substring(1);
+            
+            // 이전 섹션의 모달 닫기
+            if (currentSection) {
+                const prevModal = document.querySelector(`#${currentSection} .modal`);
+                if (prevModal) {
+                    prevModal.style.display = 'none';
+                }
+            }
             
             // 활성 탭 변경
             document.querySelector('.admin-menu li.active')?.classList.remove('active');
@@ -18,6 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 section.classList.remove('active');
                 if (section.id === targetId) {
                     section.classList.add('active');
+                    currentSection = targetId;
                     
                     // 주문 관리 탭이 활성화되면 주문 목록 새로고침
                     if (targetId === 'order-management') {
@@ -151,6 +163,27 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
+
+    // 각 섹션별 모달 관리
+    sections.forEach(section => {
+        const modal = section.querySelector('.modal');
+        if (modal) {
+            // 모달 외부 클릭시 닫기
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // 닫기 버튼 클릭시 모달 닫기
+            const closeBtn = modal.querySelector('.cancel-button, .close');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                });
+            }
+        }
+    });
 });
 
 // 메뉴 관리 함수들
@@ -184,13 +217,23 @@ function loadMenuList() {
 }
 
 function showAddMenuModal() {
-    const modal = document.getElementById('menuModal');
-    modal.style.display = 'block';
+    const currentSection = document.querySelector('.admin-section.active');
+    if (currentSection) {
+        const modal = currentSection.querySelector('#menuModal');
+        if (modal) {
+            modal.style.display = 'block';
+        }
+    }
 }
 
 function closeMenuModal() {
-    const modal = document.getElementById('menuModal');
-    modal.style.display = 'none';
+    const currentSection = document.querySelector('.admin-section.active');
+    if (currentSection) {
+        const modal = currentSection.querySelector('#menuModal');
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
 }
 
 function handleMenuForm(event) {
@@ -272,7 +315,7 @@ function addTable() {
     const newTable = {
         number: tableNumber,
         id: Date.now().toString(36),
-        url: `${currentDomain}/index.html?table=${tableNumber}&id=${Date.now().toString(36)}`,
+        url: `${currentDomain}/?table=${tableNumber}&id=${Date.now().toString(36)}`,
         active: true,
         createdAt: new Date().toISOString()
     };
@@ -295,7 +338,7 @@ function generateTableUrl(tableNumber) {
     // 기본 URL + 테이블 번호 + 유니크 식별자
     const baseUrl = window.location.origin;
     const uniqueId = Date.now().toString(36);
-    return `${baseUrl}/index.html?table=${tableNumber}&id=${uniqueId}`;
+    return `${baseUrl}/?table=${tableNumber}&id=${uniqueId}`;
 }
 
 function renderTables() {
@@ -323,7 +366,7 @@ function showQR(tableNumber) {
     const table = tables.find(t => t.number === tableNumber);
     if (!table) return;
 
-    // QR 코드 미리보기 영역 ��데이트
+    // QR 코드 미리보기 영역 업데이트
     const qrPreview = document.querySelector('.qr-preview');
     const qrInfo = qrPreview.querySelector('.qr-info');
     

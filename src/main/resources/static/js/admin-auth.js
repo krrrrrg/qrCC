@@ -16,7 +16,7 @@ function handleAdminLogin(event) {
         };
         
         localStorage.setItem('adminUser', JSON.stringify(adminUser));
-        window.location.href = 'admin-dashboard.html';
+        window.location.href = 'owner-dashboard.html';
     } else {
         alert('아이디 또는 비밀번호가 올바르지 않습니다.');
     }

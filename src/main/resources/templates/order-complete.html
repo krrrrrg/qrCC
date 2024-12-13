@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>주문 완료</title>
-    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
 <body>
     <header class="detail-header">
@@ -27,14 +27,14 @@
                     <div class="progress-fill"></div>
                 </div>
             </div>
-            <button onclick="location.href='index.html'" class="primary-button">
+            <button th:onclick="|location.href='@{/}'|" class="primary-button">
                 메인으로 돌아가기
             </button>
         </div>
     </main>
 
-    <script src="/js/order.js" type="module"></script>
-    <script>
+    <script type="module" th:src="@{/js/order.js}"></script>
+    <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);
             const orderId = urlParams.get('orderId');

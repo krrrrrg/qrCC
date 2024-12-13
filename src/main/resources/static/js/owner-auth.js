@@ -16,7 +16,7 @@ function handleOwnerLogin(event) {
             role: 'owner'
         }));
         alert('로그인 되었습니다.');
-        window.location.href = 'admin-dashboard.html';
+        window.location.href = 'owner-dashboard.html';
     } else {
         alert('아이디 또는 비밀번호가 올바르지 않습니다.');
     }

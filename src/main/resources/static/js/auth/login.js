@@ -21,9 +21,9 @@ function handleLogin(event) {
             
             // 로그인 성공 후 리다이렉트
             if (tableNo && id) {
-                window.location.href = `index.html?table=${tableNo}&id=${id}`;
+                window.location.href = `/?table=${tableNo}&id=${id}`;
             } else {
-                window.location.href = 'index.html';
+                window.location.href = '/';
             }
         } else {
             alert('아이디 또는 비밀번호가 일치하지 않습니다.');
@@ -98,12 +98,12 @@ function handleSignup(event, role = 'user') {
         owners.push(newUser);
         localStorage.setItem('owners', JSON.stringify(owners));
         alert('점주 회원가입이 완료되었습니다.');
-        window.location.href = 'owner-login.html';
+        window.location.href = '/owner/login';
     } else {
         users.push(newUser);
         localStorage.setItem('users', JSON.stringify(users));
         alert('회원가입이 완료되었습니다.');
-        window.location.href = 'login.html';
+        window.location.href = '/login';
     }
 }
 
@@ -134,13 +134,13 @@ function handleFindPassword(event, role = 'user') {
                     <p>임시 비밀번호가 발급되었습니다.</p>
                     <p class="temp-password">${tempPassword}</p>
                     <p class="warning">보안을 위해 로그인 후 반드시 비밀번호를 변경해주세요.</p>
-                    <button onclick="location.href='${role === 'owner' ? 'owner-login.html' : 'login.html'}'" 
+                    <button onclick="location.href='${role === 'owner' ? '/owner/login' : '/login'}'" 
                             class="primary-button">로그인하기</button>
                 </div>
             `;
         } else {
             alert(`임시 비밀번호는 ${tempPassword} 입니다.\n로그인 비밀번호를 변경해주세요.`);
-            window.location.href = role === 'owner' ? 'owner-login.html' : 'login.html';
+            window.location.href = role === 'owner' ? '/owner/login' : '/login';
         }
     } else {
         alert('일치하는 사용자 정보가 없습니다.');
@@ -175,9 +175,9 @@ function handleLogout() {
     
     // 테이블 정보가 있으면 유지하면서 리다이렉트
     if (tableNo && id) {
-        window.location.href = `index.html?table=${tableNo}&id=${id}`;
+        window.location.href = `/?table=${tableNo}&id=${id}`;
     } else {
-        window.location.href = 'index.html';
+        window.location.href = '/';
     }
 }
 
@@ -210,13 +210,13 @@ function handleFindId(event, role = 'user') {
             resultDiv.innerHTML = `
                 <div class="result-box">
                     <p>찾으시는 아이디는 <strong>${maskedId}</strong> 입니다.</p>
-                    <button onclick="location.href='${role === 'owner' ? 'owner-login.html' : 'login.html'}'" 
+                    <button onclick="location.href='${role === 'owner' ? '/owner/login' : '/login'}'" 
                             class="primary-button">로그인하기</button>
                 </div>
             `;
         } else {
             alert(`찾으시는 아���디는 ${maskedId} 입니다.`);
-            window.location.href = role === 'owner' ? 'owner-login.html' : 'login.html';
+            window.location.href = role === 'owner' ? '/owner/login' : '/login';
         }
     } else {
         alert('일치하는 사용자 정보가 없습니다.');
@@ -244,7 +244,7 @@ function handleAdminLogin(event) {
         };
         
         localStorage.setItem('adminUser', JSON.stringify(adminUser));
-        window.location.href = 'owner-dashboard.html';
+        window.location.href = 'admin-dashboard';
     } else {
         alert('아이디 또는 비밀번호가 올바르지 않습니다.');
     }
@@ -257,7 +257,7 @@ function handleLoginSuccess(user) {
         localStorage.removeItem('checkoutRedirect');
         window.location.href = redirectUrl;
     } else {
-        window.location.href = 'index.html';
+        window.location.href = 'index';
     }
 }
 
@@ -280,7 +280,7 @@ function updateAuthUI() {
         // 로그아웃 상태
         authIcon.className = 'fas fa-sign-in-alt';
         authText.textContent = '로그인';
-        authButton.onclick = () => window.location.href = 'login.html';
+        authButton.onclick = () => window.location.href = 'login';
     }
 }
 

@@ -1,12 +1,12 @@
 // 주문 상태 상수
-export const ORDER_STATUS = {
+const ORDER_STATUS = {
     PENDING: 'pending',
     PREPARING: 'preparing',
     COMPLETED: 'completed',
     CANCELLED: 'cancelled'
 };
 
-export class OrderService {
+class OrderService {
     constructor() {
         this.ordersKey = 'orders';
         this.orderHistoryKey = 'orderHistory';

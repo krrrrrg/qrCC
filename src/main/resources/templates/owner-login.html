@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>점주 로그인</title>
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css}">
 </head>
 <body>
     <div class="center-container">
@@ -27,14 +27,14 @@
                 <button type="submit" class="primary-button">로그인</button>
             </form>
             <div class="auth-links">
-                <a href="find-id.html?role=owner">아이디 찾기</a>
+                <a href="/find/id?role=owner">아이디 찾기</a>
                 <span class="divider">|</span>
-                <a href="find-password.html?role=owner">비밀번호 찾기</a>
+                <a href="/find/password?role=owner">비밀번호 찾기</a>
                 <span class="divider">|</span>
-                <a href="signup.html?role=owner">회원가입</a>
+                <a href="/signup?role=owner">회원가입</a>
             </div>
         </div>
     </div>
-    <script src="/js/owner-auth.js" type="module"></script>
+    <script th:src="@{/js/owner-auth.js}" type="module"></script>
 </body>
 </html>

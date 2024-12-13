@@ -21,14 +21,9 @@ public class ViewController {
         return "signup";
     }
     
-    @GetMapping("/admin/login")
-    public String adminLogin() {
-        return "admin-login";
-    }
-    
-    @GetMapping("/admin/dashboard")
+    @GetMapping("/owner/dashboard")
     public String adminDashboard() {
-        return "admin-dashboard";
+        return "owner-dashboard";
     }
     
     @GetMapping("/owner/login")

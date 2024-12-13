@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>카페 주문</title>
-    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         /* 기존 스타일 유지 */
@@ -91,15 +91,17 @@
         <span class="cart-count">0</span>
       </button>
     </footer>
-    <script>
+    <script th:inline="javascript">
       // URL에서 테이블 번호 가져오기
-      const urlParams = new URLSearchParams(window.location.search);
-      const tableNo = urlParams.get('table');
-      if (tableNo) {
+      function getTableNumber() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const tableNo = urlParams.get('table') || '1';
         document.getElementById('tableNumber').textContent = tableNo;
       }
+      getTableNumber();
     </script>
-    <script src="/js/store/cart-service.js" type="module"></script>
-    <script src="/js/main.js" type="module"></script>
+    <script type="module" th:src="@{/js/cart-service.js}"></script>
+    <script type="module" th:src="@{/js/script.js}"></script>
+
   </body>
 </html>

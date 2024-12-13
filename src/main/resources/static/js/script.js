@@ -1,4 +1,4 @@
-import { CartService } from './scripts/store/cart-service.js';
+import { CartService } from './cart-service.js';
 
 // 이벤트 리스너 초기화 함수
 function initializeEventListeners() {
@@ -80,9 +80,9 @@ function initializeEventListeners() {
                 const id = urlParams.get('id');
                 
                 if (tableNo && id) {
-                    window.location.href = `login.html?table=${tableNo}&id=${id}`;
+                    window.location.href = `/login?table=${tableNo}&id=${id}`;
                 } else {
-                    window.location.href = 'login.html';
+                    window.location.href = '/login';
                 }
             });
         }
