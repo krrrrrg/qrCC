@@ -4,13 +4,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.zerock.restqrpayment_2.domain.Member;
-import org.zerock.restqrpayment_2.domain.MemberRole;
 import org.zerock.restqrpayment_2.dto.MemberDTO;
 import org.zerock.restqrpayment_2.repository.MemberRepository;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,34 +21,38 @@ public class MemberServiceImpl implements MemberService {
     @Override
     public String register(MemberDTO memberDTO) {
         Member member = Member.builder()
-                .mid(memberDTO.getMid())
-                .mpw(passwordEncoder.encode(memberDTO.getMpw())) // 암호화
+                .userId(memberDTO.getUserId())
+                .password(passwordEncoder.encode(memberDTO.getPassword())) // 암호화
                 .roleSet(memberDTO.getRoles())
+                .name(memberDTO.getName())
+                .phone(memberDTO.getPhone())
                 .build();
 
         memberRepository.save(member);
-        return member.getMid();
+        return member.getUserId();
     }
 
     @Override
-    public MemberDTO read(String mid) {
-        Optional<Member> memberOptional = memberRepository.findById(mid);
+    public MemberDTO read(String userId) {
+        Optional<Member> memberOptional = memberRepository.findById(userId);
         Member member = memberOptional.orElseThrow(() -> new IllegalArgumentException("Member not found"));
 
         return MemberDTO.builder()
-                .mid(member.getMid())
-                .mpw(member.getMpw())
+                .userId(member.getUserId())
+                .password(member.getPassword())
                 .roles(member.getRoleSet())
+                .name(member.getName())
+                .phone(member.getPhone())
                 .build();
     }
 
     @Override
     public void modify(MemberDTO memberDTO) {
-        Member member = memberRepository.findById(memberDTO.getMid())
+        Member member = memberRepository.findById(memberDTO.getUserId())
                 .orElseThrow(() -> new IllegalArgumentException("Member not found"));
 
-        if (memberDTO.getMpw() != null) {
-            member.changePassword(passwordEncoder.encode(memberDTO.getMpw()));
+        if (memberDTO.getPassword() != null) {
+            member.changePassword(passwordEncoder.encode(memberDTO.getPassword()));
         }
 
         if (memberDTO.getRoles() != null) {
@@ -62,8 +64,8 @@ public class MemberServiceImpl implements MemberService {
     }
 
     @Override
-    public void remove(String mid) {
-        memberRepository.deleteById(mid);
+    public void remove(String userId) {
+        memberRepository.deleteById(userId);
     }
 
     @Override

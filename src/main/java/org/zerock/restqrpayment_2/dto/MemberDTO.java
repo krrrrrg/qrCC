@@ -13,8 +13,10 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MemberDTO {
-    private String mid; // Member ID
-    private String mpw; // Password
+    private String userId; // Member ID
+    private String password; // Password
+    private String name;
+    private String phone;
 
     @Builder.Default
     private Set<MemberRole> roles = new HashSet<>(); // USER, OWNER, ADMIN

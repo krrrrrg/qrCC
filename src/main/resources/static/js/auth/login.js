@@ -1,38 +1,23 @@
 // 로그인 처리
 function handleLogin(event) {
-    event.preventDefault();
     
     const userId = document.getElementById('userId').value;
     const password = document.getElementById('password').value;
 
-    try {
-        // 로그인 처리
-        const users = JSON.parse(localStorage.getItem('users')) || [];
-        const user = users.find(u => u.userId === userId && u.password === password);
-        
-        if (user) {
-            // 로그인 성공
-            localStorage.setItem('currentUser', JSON.stringify(user));
-            
-            // 현재 URL의 파라미터 가져오기
-            const urlParams = new URLSearchParams(window.location.search);
-            const tableNo = urlParams.get('table');
-            const id = urlParams.get('id');
-            
-            // 로그인 성공 후 리다이렉트
-            if (tableNo && id) {
-                window.location.href = `/?table=${tableNo}&id=${id}`;
-            } else {
-                window.location.href = '/';
-            }
-        } else {
-            alert('아이디 또는 비밀번호가 일치하지 않습니다.');
-        }
-
-    } catch (error) {
-        console.error('Login error:', error);
-        alert('로그인에 실패했습니다.');
+    // 아이디 유효성 검사
+    if (userId.length < 4) {
+        alert('아이디는 4자 이상이어야 합니다.');
+        return false;
     }
+
+    // 비밀번호 길이 체크
+    if (password.length < 8) {
+        alert('비밀번호는 8자 이상이어야 합니다.');
+        return false;
+    }
+
+    // 모든 유효성 검사를 통과하면 폼 제출
+    return true;
 }
 
 // 회원가입 처리

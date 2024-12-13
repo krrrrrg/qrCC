@@ -36,8 +36,7 @@ function handleLogin(event) {
 }
 
 // 회원가입 처리
-function handleSignup(event, role = 'user') {
-    event.preventDefault();
+function handleSignup(event) {
     
     const name = document.getElementById('name').value;
     const userId = document.getElementById('userId').value;
@@ -48,63 +47,29 @@ function handleSignup(event, role = 'user') {
     // 아이디 유효성 검사
     if (userId.length < 4) {
         alert('아이디는 4자 이상이어야 합니다.');
-        return;
+        return false;
     }
 
     // 전화번호 유효성 검사
     if (!/^[0-9]{11}$/.test(phone)) {
         alert('올바른 전화번호를 입력해주세요.');
-        return;
+        return false;
     }
 
     // 비밀번호 확인
     if (password !== passwordConfirm) {
         alert('비밀번호가 일치하지 않습니다.');
-        return;
+        return false;
     }
 
     // 비밀번호 길이 체크
     if (password.length < 8) {
         alert('비밀번호는 8자 이상이어야 합니다.');
-        return;
+        return false;
     }
 
-    // 기존 사용자 확인
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const owners = JSON.parse(localStorage.getItem('owners')) || [];
-
-    // 통합 아이디 중복 체크
-    const isUserIdExists = users.some(user => user.userId === userId);
-    const isOwnerIdExists = owners.some(owner => owner.userId === userId);
-    const isAdminId = userId === 'admin'; // admin 계정과의 중복도 체크
-
-    if (isUserIdExists || isOwnerIdExists || isAdminId) {
-        alert('이미 사용 중인 아이디입니다. 다른 아이디를 선택해주세요.');
-        return;
-    }
-
-    // 새 사용자 정보
-    const newUser = {
-        name,
-        userId,
-        password,
-        phone,
-        role,
-        createdAt: new Date().toISOString()
-    };
-
-    // 권한에 따라 다른 스토리지에 저장
-    if (role === 'owner') {
-        owners.push(newUser);
-        localStorage.setItem('owners', JSON.stringify(owners));
-        alert('점주 회원가입이 완료되었습니다.');
-        window.location.href = 'owner-login.html';
-    } else {
-        users.push(newUser);
-        localStorage.setItem('users', JSON.stringify(users));
-        alert('회원가입이 완료되었습니다.');
-        window.location.href = 'login.html';
-    }
+    // 모든 유효성 검사를 통과하면 폼 제출
+    return true;
 }
 
 // 비밀번호 찾기 처리

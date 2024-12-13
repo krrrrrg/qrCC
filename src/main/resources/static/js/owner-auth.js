@@ -1,31 +1,5 @@
-// 점주 로그인 처리
-function handleOwnerLogin(event) {
-    event.preventDefault();
-    
-    const userId = document.getElementById('userId').value;
-    const password = document.getElementById('password').value;
-
-    const owners = JSON.parse(localStorage.getItem('owners')) || [];
-    const owner = owners.find(o => o.userId === userId && o.password === password);
-
-    if (owner) {
-        // 로그인 성공
-        localStorage.setItem('currentOwner', JSON.stringify({
-            id: owner.userId,
-            storeName: owner.storeName,
-            role: 'owner'
-        }));
-        alert('로그인 되었습니다.');
-        window.location.href = 'owner-dashboard.html';
-    } else {
-        alert('아이디 또는 비밀번호가 올바르지 않습니다.');
-    }
-}
-
-// 점주 회원가입 처리
-function handleOwnerSignup(event) {
-    event.preventDefault();
-    
+// 점주 회원가입 유효성 검사
+function validateOwnerSignup(event) {
     const name = document.getElementById('name').value;
     const userId = document.getElementById('userId').value;
     const password = document.getElementById('password').value;
@@ -35,46 +9,56 @@ function handleOwnerSignup(event) {
     // 아이디 유효성 검사
     if (userId.length < 4) {
         alert('아이디는 4자 이상이어야 합니다.');
-        return;
+        return false;
     }
 
     // 전화번호 유효성 검사
     if (!/^[0-9]{11}$/.test(phone)) {
         alert('올바른 전화번호를 입력해주세요.');
-        return;
+        return false;
     }
 
     // 비밀번호 확인
     if (password !== passwordConfirm) {
         alert('비밀번호가 일치하지 않습니다.');
-        return;
+        return false;
     }
 
     // 비밀번호 길이 체크
     if (password.length < 8) {
         alert('비밀번호는 8자 이상이어야 합니다.');
-        return;
+        return false;
     }
 
-    // 기존 사용자 확인
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    if (users.some(user => user.userId === userId)) {
-        alert('이미 사용 중인 아이디입니다.');
-        return;
+    return true;
+}
+
+// 점주 로그인 처리
+function handleOwnerLogin(event) {
+    const userId = document.getElementById('userId').value;
+    const password = document.getElementById('password').value;
+
+    // 간단한 유효성 검사
+    if (!userId || !password) {
+        alert('아이디와 비밀번호를 모두 입력해주세요.');
+        event.preventDefault();
+        return false;
     }
 
-    // 점주 정보 저장 (role: 'owner' 추가)
-    const ownerData = {
-        name,
-        userId,
-        password,
-        phone,
-        role: 'owner'  // 점주 권한 부여
-    };
+    // 아이디 형식 검사
+    if (userId.length < 4) {
+        alert('아이디는 4자 이상이어야 합니다.');
+        event.preventDefault();
+        return false;
+    }
 
-    users.push(ownerData);
-    localStorage.setItem('users', JSON.stringify(users));
+    // 비밀번호 길이 검사
+    if (password.length < 8) {
+        alert('비밀번호는 8자 이상이어야 합니다.');
+        event.preventDefault();
+        return false;
+    }
 
-    alert('점주 회원가입이 완료되었습니다.');
-    window.location.href = 'owner-login.html';
-} 
+    // form이 정상적으로 제출되도록 true 반환
+    return true;
+}

@@ -20,16 +20,19 @@ import java.util.Set;
 public class Member extends BaseEntity{
 
     @Id
-    private String mid;
+    private String userId;
 
-    private String mpw;
+    private String password;
+
+    private String name;
+    private String phone;
 
     @ElementCollection(fetch = FetchType.LAZY)
     @Builder.Default
     private Set<MemberRole> roleSet = new HashSet<>();
 
-    public void changePassword(String mpw) {
-        this.mpw = mpw;
+    public void changePassword(String password) {
+        this.password = password;
     }
 
     public void addRole(MemberRole role) {
@@ -43,9 +46,11 @@ public class Member extends BaseEntity{
     // MemberEntity를 MemberDTO로 변환
     public MemberDTO toDTO() {
         return MemberDTO.builder()
-                .mid(this.mid)
-                .mpw(this.mpw)
+                .userId(this.userId)
+                .password(this.password)
                 .roles(this.roleSet)
+                .name(this.name)
+                .phone(this.phone)
                 .build();
     }
 }

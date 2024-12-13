@@ -1,0 +1,83 @@
+package org.zerock.restqrpayment_2.controller;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.zerock.restqrpayment_2.dto.MemberDTO;
+import org.zerock.restqrpayment_2.service.MemberService;
+import org.zerock.restqrpayment_2.domain.MemberRole;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import lombok.extern.log4j.Log4j2;
+
+import java.util.HashSet;
+
+@Controller
+@Log4j2
+@RequiredArgsConstructor
+public class OwnerController {
+
+    private final MemberService memberService;
+    private final PasswordEncoder passwordEncoder;
+
+    @GetMapping("/owner/login")
+    public String ownerLogin() {
+        return "owner/owner-login";
+    }
+
+    @GetMapping("/owner/dashboard")
+    public String ownerDashboard() {
+        return "owner/owner-dashboard";
+    }
+
+    @GetMapping("/owner/signup")
+    public String ownerSignup() {
+        return "owner/owner-signup";
+    }
+
+    @PostMapping("/owner/signup")
+    public String ownerSignupPost(
+            MemberDTO memberDTO
+    ) {
+        HashSet<MemberRole> roles = new HashSet<>();
+        roles.add(MemberRole.OWNER);
+        memberDTO.setRoles(roles);
+        
+        log.info(memberDTO);
+        memberService.register(memberDTO);
+        return "redirect:/owner/login";
+    }
+
+    @PostMapping("/owner/login")
+    public String ownerLoginPost(MemberDTO memberDTO, RedirectAttributes redirectAttributes) {
+        log.info("Login attempt for user: " + memberDTO.getUserId());
+        
+        try {
+            // 사용자 정보 조회
+            MemberDTO existingMember = memberService.read(memberDTO.getUserId());
+            
+            // 비밀번호 확인
+            if (passwordEncoder.matches(memberDTO.getPassword(), existingMember.getPassword())) {
+                // 점주 권한 확인
+                if (existingMember.getRoles().contains(MemberRole.OWNER)) {
+                    log.info("Login successful for owner: " + memberDTO.getUserId());
+                    return "redirect:/owner/dashboard";
+                } else {
+                    log.warn("User " + memberDTO.getUserId() + " does not have owner privileges");
+                    redirectAttributes.addAttribute("error", "unauthorized");
+                    return "redirect:/owner/login";
+                }
+            } else {
+                log.warn("Invalid password for user: " + memberDTO.getUserId());
+                redirectAttributes.addAttribute("error", "invalid");
+                return "redirect:/owner/login";
+            }
+        } catch (IllegalArgumentException e) {
+            log.warn("User not found: " + memberDTO.getUserId());
+            redirectAttributes.addAttribute("error", "notfound");
+            return "redirect:/owner/login";
+        }
+    }
+}

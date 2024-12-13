@@ -1,4 +1,4 @@
-package org.zerock.restqrpayment_2.controller;
+package org.zerock.restqrpayment_2.apiController;
 
 import lombok.extern.log4j.Log4j2;
 import net.coobird.thumbnailator.Thumbnailator;
