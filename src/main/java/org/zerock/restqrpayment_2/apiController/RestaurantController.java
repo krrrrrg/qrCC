@@ -64,11 +64,6 @@ public class RestaurantController {
             return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
         }
 
-        // 등록 시점에 점주 ID 확인
-        if (restaurantDTO.getOwnerId() == null) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Owner ID is required.");
-        }
-
         Long registeredId = restaurantService.register(restaurantDTO);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(registeredId); // 201 Created
