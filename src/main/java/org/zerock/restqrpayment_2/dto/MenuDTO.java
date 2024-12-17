@@ -21,24 +21,18 @@ public class MenuDTO {
 
     private Long id;
 
-    @NotNull
-    private Long restaurantId;
-
-    @NotEmpty
+    @NotEmpty(message = "메뉴 이름은 필수입니다")
     private String name;
 
-    @NotEmpty
-    private String category;  // 메뉴 카테고리
-
-    @Positive
+    @NotNull(message = "가격은 필수입니다")
     private Double price;
 
-    @NotEmpty
     private String description;
 
-    @NotEmpty
-    private String dishes;
+    @NotEmpty(message = "카테고리는 필수입니다")
+    private String menuCategory;
 
-    // 첨부파일의 이름들
+    private Long restaurantId;
+
     private List<String> fileNames;
 }

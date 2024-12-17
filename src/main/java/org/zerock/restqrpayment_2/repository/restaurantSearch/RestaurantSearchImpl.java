@@ -79,7 +79,7 @@ public class RestaurantSearchImpl extends QuerydslRepositorySupport implements R
                 .map(restaurant1 -> RestaurantListAllDTO.builder()
                         .id(restaurant1.getId())
                         .name(restaurant1.getName())
-                        .category(restaurant1.getCategory())
+                        .businessType(restaurant1.getBusinessType())
                         .regDate(restaurant1.getRegDate())
                         .restaurantImages(imageMap.getOrDefault(restaurant1.getId(), Collections.emptyList()))
                         .build())
@@ -102,7 +102,7 @@ public class RestaurantSearchImpl extends QuerydslRepositorySupport implements R
                     booleanBuilder.or(restaurant.name.contains(keyword));
                     break;
                 case "c":
-                    booleanBuilder.or(restaurant.category.contains(keyword));
+                    booleanBuilder.or(restaurant.businessType.contains(keyword));
                     break;
                 case "a":
                     booleanBuilder.or(restaurant.address.contains(keyword));

@@ -27,7 +27,7 @@ public interface RestaurantService {
                 .id(restaurantDTO.getId())
                 .name(restaurantDTO.getName())
                 .address(restaurantDTO.getAddress())
-                .category(restaurantDTO.getCategory())
+                .businessType(restaurantDTO.getBusinessType())
                 .phoneNumber(restaurantDTO.getPhoneNumber())
                 .refLink(restaurantDTO.getRefLink())
                 .description(restaurantDTO.getDescription())
@@ -58,7 +58,7 @@ public interface RestaurantService {
                 .id(restaurant.getId())
                 .name(restaurant.getName())
                 .address(restaurant.getAddress())
-                .category(restaurant.getCategory())
+                .businessType(restaurant.getBusinessType())
                 .phoneNumber(restaurant.getPhoneNumber())
                 .refLink(restaurant.getRefLink())
                 .description(restaurant.getDescription())
@@ -72,6 +72,8 @@ public interface RestaurantService {
 
         return restaurantDTO;
     }
+
+    List<RestaurantDTO> getRestaurantsByOwnerId(String ownerId);
 
 }
 

@@ -17,7 +17,7 @@ public class RestaurantListAllDTO {
 
     private String name;
 
-    private String category;
+    private String businessType;
 
     private LocalDateTime regDate;
 

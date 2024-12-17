@@ -13,7 +13,9 @@ import org.zerock.restqrpayment_2.dto.RestaurantDTO;
 import org.zerock.restqrpayment_2.dto.RestaurantListAllDTO;
 import org.zerock.restqrpayment_2.repository.RestaurantRepository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Log4j2
 @RequiredArgsConstructor
@@ -48,13 +50,17 @@ public class RestaurantServiceImpl implements RestaurantService {
     @Override
     public void modify(RestaurantDTO restaurantDTO) {
         Optional<Restaurant> result = restaurantRepository.findById(restaurantDTO.getId());
+
         Restaurant restaurant = result.orElseThrow();
-        restaurant.changeRestaurant(restaurantDTO.getName(),
+
+        restaurant.changeRestaurant(
+                restaurantDTO.getName(),
                 restaurantDTO.getAddress(),
-                restaurantDTO.getCategory(),
+                restaurantDTO.getBusinessType(),
                 restaurantDTO.getPhoneNumber(),
                 restaurantDTO.getRefLink(),
-                restaurantDTO.getDescription());
+                restaurantDTO.getDescription()
+        );
 
         restaurant.clearRestaurantImages();
 
@@ -90,5 +96,13 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .build();
     }
 
+    @Override
+    public List<RestaurantDTO> getRestaurantsByOwnerId(String ownerId) {
+        log.info("Getting restaurants for owner: " + ownerId);
+        List<Restaurant> restaurants = restaurantRepository.findRestaurantByOwnerId(ownerId);
+        return restaurants.stream()
+            .map(this::entityToDTO)
+            .collect(Collectors.toList());
+    }
 
 }

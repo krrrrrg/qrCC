@@ -25,7 +25,7 @@ public class RestaurantDTO {
     private String address;
 
     @NotEmpty
-    private String category;
+    private String businessType;
 
     @NotEmpty
     private String phoneNumber;

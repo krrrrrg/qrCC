@@ -26,7 +26,7 @@ public class Restaurant extends BaseEntity {
     private String address;
 
     @Column(length = 500, nullable = false)
-    private String category;
+    private String businessType;
 
     @Column(length = 500, nullable = false)
     private String phoneNumber;
@@ -39,10 +39,10 @@ public class Restaurant extends BaseEntity {
     private String ownerId;
 
     // Restaurant 업데이트
-    public void changeRestaurant(String name, String address, String category, String phoneNumber, String refLink, String description) {
+    public void changeRestaurant(String name, String address, String businessType, String phoneNumber, String refLink, String description) {
         this.name = name;
         this.address = address;
-        this.category = category;
+        this.businessType = businessType;
         this.phoneNumber = phoneNumber;
         this.refLink = refLink;
         this.description = description;
@@ -90,8 +90,8 @@ public class Restaurant extends BaseEntity {
     }
 
     // 메뉴 삭제
-    public void clearMenus() {
-        menuSet.forEach(menu -> menu.clearRestaurant(null));
+    public void clearMenuSet() {
+        menuSet.forEach(menu -> menu.setRestaurant(null));
         this.menuSet.clear();
     }
 }

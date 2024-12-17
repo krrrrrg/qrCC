@@ -24,5 +24,8 @@ public class WebConfig implements WebMvcConfigurer {
         // 기타 정적 리소스 매핑
         registry.addResourceHandler("/static/**")
                 .addResourceLocations("classpath:/static/");
+
+        registry.addResourceHandler("/menu-images/**")
+                .addResourceLocations("file:" + System.getProperty("user.home") + "/menu-images/");
     }
 }

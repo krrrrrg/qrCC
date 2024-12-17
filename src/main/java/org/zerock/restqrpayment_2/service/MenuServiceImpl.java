@@ -77,43 +77,26 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     public PageResponseDTO<MenuListAllDTO> listWithAll(Long restaurantId, PageRequestDTO pageRequestDTO) {
-        Pageable pageable = PageRequest.of(
-                pageRequestDTO.getPage() <= 0 ? 0 : pageRequestDTO.getPage() - 1,
-                pageRequestDTO.getSize(),
-                Sort.by("id").descending());
-
-        Page<Object[]> result = menuRepository.searchWithAll(restaurantId, pageable);
-
-        List<MenuListAllDTO> dtoList = result.get().map(arr -> {
-            MenuListAllDTO menuListAllDTO = MenuListAllDTO.builder()
-                    .id((Long) arr[0])
-                    .name((String) arr[1])
-                    .price(((Integer) arr[2]).doubleValue()) 
-                    .description((String) arr[3])
-                    .dishes((String) arr[4])
-                    .build();
-
-            String imageStr = (String) arr[5];
-            if (imageStr != null) {
-                List<MenuImageDTO> menuImages = Arrays.stream(imageStr.split(","))
-                        .map(str -> {
-                            String[] parts = str.split("_");
-                            return MenuImageDTO.builder()
-                                    .uuid(parts[0])
-                                    .fileName(parts[1])
-                                    .build();
-                        })
-                        .collect(Collectors.toList());
-                menuListAllDTO.setMenuImages(menuImages);
-            }
-            return menuListAllDTO;
-        }).collect(Collectors.toList());
-
+        Pageable pageable = pageRequestDTO.getPageable("id");
+        
+        Page<Menu> result = menuRepository.findByRestaurantId(restaurantId, pageable);
+        
+        List<MenuListAllDTO> dtoList = result.getContent().stream()
+            .map(menu -> MenuListAllDTO.builder()
+                .id(menu.getId())
+                .name(menu.getName())
+                .price(menu.getPrice())
+                .description(menu.getDescription())
+                .restaurantId(restaurantId)
+                // 필요한 다른 필드들 추가
+                .build())
+            .collect(Collectors.toList());
+        
         return PageResponseDTO.<MenuListAllDTO>withAll()
-                .pageRequestDTO(pageRequestDTO)
-                .dtoList(dtoList)
-                .total((int)result.getTotalElements())
-                .build();
+            .pageRequestDTO(pageRequestDTO)
+            .dtoList(dtoList)
+            .total((int)result.getTotalElements())
+            .build();
     }
 
     @Override
@@ -142,6 +125,7 @@ public class MenuServiceImpl implements MenuService {
 
         Menu menu = dtoToEntity(menuDTO);
         menu.setRestaurant(restaurant);
+        
         Menu savedMenu = menuRepository.save(menu);
         return entityToDTO(savedMenu);
     }

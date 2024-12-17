@@ -1,547 +1,1086 @@
 <!DOCTYPE html>
-<html lang="ko" 
-      xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
-    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}"/>
+<html
+  lang="ko"
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}" />
+    <meta
+      name="_csrf_header"
+      th:content="${_csrf != null ? _csrf.headerName : ''}"
+    />
     <title>점주 관리자</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}" />
-    <link rel="stylesheet" th:href="@{/css/admin-styles.css}">
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css}">
-    <script th:src="@{https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js}"></script>
-    <link th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css}" rel="stylesheet">
-    <script th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js}"></script>
+    <link rel="stylesheet" th:href="@{/css/admin-styles.css}" />
+    <link
+      rel="stylesheet"
+      th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css}"
+    />
+    <script
+      th:src="@{https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js}"
+    ></script>
+    <link
+      th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css}"
+      rel="stylesheet"
+    />
+    <script
+      th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js}"
+    ></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <link rel="stylesheet" th:href="@{https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css}">
+    <link
+      rel="stylesheet"
+      th:href="@{https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css}"
+    />
     <style>
-        .sidebar {
-            min-height: 100vh;
-            background-color: #f8f9fa;
-            padding: 20px;
-        }
-        .nav-link {
-            color: #333;
-            margin: 5px 0;
-        }
-        .nav-link.active {
-            background-color: #b45f34;
-            color: white;
-        }
-        .order-card {
-            margin-bottom: 15px;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-        }
-        .status-button {
-            margin: 5px;
-        }
-        .settings-container {
-            max-width: 600px;
-            margin: 20px auto;
-        }
-        .settings-form {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-        .warning-text {
-            color: #dc3545;
-            margin-bottom: 20px;
-        }
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-        }
-        
-        .restaurant-selector {
-            margin-bottom: 20px;
-        }
-        
-        .restaurant-selector select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 16px;
-            background-color: white;
-        }
-        
-        .restaurant-selector select:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
-        }
+      .sidebar {
+        min-height: 100vh;
+        background-color: #f8f9fa;
+        padding: 20px;
+      }
+      .nav-link {
+        color: #333;
+        margin: 5px 0;
+      }
+      .nav-link.active {
+        background-color: #b45f34;
+        color: white;
+      }
+      .order-card {
+        margin-bottom: 15px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+      }
+      .status-button {
+        margin: 5px;
+      }
+      .settings-container {
+        max-width: 600px;
+        margin: 20px auto;
+      }
+      .settings-form {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+      }
+      .warning-text {
+        color: #dc3545;
+        margin-bottom: 20px;
+      }
+      .btn-danger {
+        background-color: #dc3545;
+        color: white;
+      }
+
+      .restaurant-selector {
+        margin-bottom: 20px;
+      }
+
+      .restaurant-selector select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        background-color: white;
+      }
+
+      .restaurant-selector select:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+      }
+
+      /* 모달 스타일 */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.4);
+      }
+
+      .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        border-radius: 5px;
+        position: relative;
+      }
+
+      .close {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .close:hover,
+      .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      /* 폼 스타일 */
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+
+      /* 기존 스타일에 추가 */
+      .menu-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        padding: 20px;
+      }
+
+      .menu-item.card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+      }
+
+      .menu-item.card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .menu-item .card-body {
+        padding: 15px;
+      }
+
+      .menu-item .card-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .menu-item .card-text {
+        margin-bottom: 8px;
+      }
+
+      .menu-item .img-thumbnail {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        margin-bottom: 15px;
+      }
+
+      .menu-item .btn-group {
+        display: flex;
+        gap: 10px;
+      }
+
+      .menu-content {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .menu-filters {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="admin-layout">
-        <!-- 사이드바 네비게이션 -->
-        <nav class="admin-sidebar">
-            <div class="admin-profile">
-                <div class="profile-image">🏪</div>
-                <div class="profile-info">
-                    <p class="store-name">투스 카페</p>
-                    <p class="admin-name">관리자</p>
-                </div>
-            </div>
-            <div class="admin-menu-container">
-                <ul class="admin-menu">
-                    <li class="active">
-                        <a href="#dashboard">
-                            <span class="icon">📊</span>
-                            대시보드
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#menu-management">
-                            <span class="icon">🍽️</span>
-                            메뉴 관리
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#store-management">
-                            <span class="icon">🏪</span>
-                            가게 관리
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#table-management">
-                            <span class="icon">🪑</span>
-                            테이블 관리
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#account-settings">
-                            <span class="icon">⚙️</span>
-                            계정 설정
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#order-management">
-                            <span class="icon">📦</span>
-                            주문 관리
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            <button class="logout-btn" onclick="handleAdminLogout()">
-                <span class="icon">🚪</span>
-                로그아웃
-            </button>
-        </nav>
+      <!-- 사이드바 네비게이션 -->
+      <nav class="admin-sidebar">
+        <div class="admin-profile">
+          <div class="profile-image">🏪</div>
+          <div class="profile-info">
+            <p class="store-name">투스 카페</p>
+            <p class="admin-name">관리자</p>
+          </div>
+        </div>
+        <div class="admin-menu-container">
+          <ul class="admin-menu">
+            <li class="active">
+              <a href="#dashboard">
+                <span class="icon">📊</span>
+                대시보드
+              </a>
+            </li>
+            <li>
+              <a href="#menu-management">
+                <span class="icon">🍽️</span>
+                메뉴 관리
+              </a>
+            </li>
+            <li>
+              <a href="#store-management">
+                <span class="icon">🏪</span>
+                가게 관리
+              </a>
+            </li>
+            <li>
+              <a href="#table-management">
+                <span class="icon">🪑</span>
+                테이블 관리
+              </a>
+            </li>
+            <li>
+              <a href="#account-settings">
+                <span class="icon">⚙️</span>
+                계정 설정
+              </a>
+            </li>
+            <li>
+              <a href="#order-management">
+                <span class="icon">📦</span>
+                주문 관리
+              </a>
+            </li>
+          </ul>
+        </div>
+        <button class="logout-btn" onclick="handleAdminLogout()">
+          <span class="icon">🚪</span>
+          로그아웃
+        </button>
+      </nav>
 
-        <!-- 메인 컨텐츠 영역 -->
-        <main class="admin-content">
-            <div id="dashboard" class="admin-section active">
-                <h2>대시보드</h2>
-                <div class="dashboard-stats">
-                    <div class="stat-card">
-                        <h3>오늘의 주문</h3>
-                        <p class="stat-number" id="todayOrders">28</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>매출액</h3>
-                        <p class="stat-number" id="totalSales">487,000원</p>
-                    </div>
-                    <div class="stat-card">
-                        <h3>인기 메뉴</h3>
-                        <p class="stat-text">아메리카노</p>
-                    </div>
-                </div>
+      <!-- 메인 컨텐츠 영역 -->
+      <main class="admin-content">
+        <div id="dashboard" class="admin-section active">
+          <h2>대시보드</h2>
+          <div class="dashboard-stats">
+            <div class="stat-card">
+              <h3>오늘의 주문</h3>
+              <p class="stat-number" id="todayOrders">28</p>
             </div>
+            <div class="stat-card">
+              <h3>매출액</h3>
+              <p class="stat-number" id="totalSales">487,000원</p>
+            </div>
+            <div class="stat-card">
+              <h3>인기 메뉴</h3>
+              <p class="stat-text">아메리카노</p>
+            </div>
+          </div>
+        </div>
 
-            <!-- 메뉴 관리 섹션 -->
-            <section id="menu-management" class="admin-section">
-                <div class="section-header">
-                    <h2>메뉴 관리</h2>
-                    <div class="form-group mb-3">
-                        <label for="restaurantSelect">레스토랑 선택</label>
-                        <select class="form-control" id="restaurantSelect">
-                            <option value="">레스토랑을 선택하세요</option>
-                        </select>
-                    </div>
+        <!-- 메뉴 관리 섹션 -->
+        <section id="menu-management" class="admin-section">
+          <div class="section-header">
+            <h2>메뉴 관리</h2>
+            <div class="form-group mb-3">
+              <label for="restaurantSelect">레스토랑 선택</label>
+              <select class="form-control" id="restaurantSelect">
+                <option value="">레스토랑을 선택하세요</option>
+                <option
+                  th:each="restaurant : ${restaurants}"
+                  th:if="${restaurant.ownerId == #authentication.principal.username}"
+                  th:value="${restaurant.id}"
+                  th:text="${restaurant.name}"
+                ></option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 메뉴 관리 컨텐츠 -->
+          <div class="menu-content" style="display: none">
+            <!-- 메뉴 목록 -->
+            <div class="menu-list mt-4">
+              <div
+                class="d-flex justify-content-between align-items-center mb-3"
+              >
+                <h3>메뉴 목록</h3>
+                <button
+                  class="btn btn-primary"
+                  onclick="openAddMenuModal()"
+                  id="addMenuBtn"
+                  disabled
+                >
+                  새 메뉴 추가
+                </button>
+              </div>
+              <div class="menu-filters mb-3">
+                <div class="row">
+                  <div class="col-md-6">
+                    <select id="categoryFilter" class="form-control">
+                      <option value="all">전체 카테고리</option>
+                    </select>
+                  </div>
+                  <div class="col-md-6">
+                    <input
+                      type="text"
+                      id="menuSearch"
+                      class="form-control"
+                      placeholder="메뉴 검색..."
+                    />
+                  </div>
                 </div>
+              </div>
+              <div class="menu-items"></div>
+            </div>
+          </div>
+        </section>
 
-                <!-- 메뉴 관리 컨텐츠 -->
-                <div class="menu-content" style="display: none;">
-                    <!-- 메뉴 목록 -->
-                    <div class="menu-list mt-4">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h3>메뉴 목록</h3>
-                            <button class="btn btn-primary" onclick="openAddMenuModal()" id="addMenuBtn" disabled>
-                                새 메뉴 추가
-                            </button>
+        <div id="store-management" class="admin-section">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5 class="card-title">가게 관리</h5>
+                  </div>
+                  <div class="card-body">
+                    <!-- 레스토랑 선택기 -->
+                    <div class="form-group mb-4">
+                      <label for="restaurantSelector">레스토랑 선택</label>
+                      <select class="form-control" id="restaurantSelector">
+                        <option value="">새 가게 등록</option>
+                        <option
+                          th:each="restaurant : ${restaurants}"
+                          th:if="${restaurant.ownerId == #authentication.principal.username}"
+                          th:value="${restaurant.id}"
+                          th:text="${restaurant.name} + ' (' + ${restaurant.address} + ')'"
+                        >
+                          가게명
+                        </option>
+                      </select>
+                    </div>
+
+                    <!-- 가게 정보 폼 -->
+                    <form id="restaurantForm" data-mode="create">
+                      <input type="hidden" id="restaurantId" name="id" />
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label for="storeName">가게명</label>
+                            <input
+                              type="text"
+                              class="form-control"
+                              id="storeName"
+                              name="name"
+                              required
+                            />
+                          </div>
                         </div>
-                        <div class="menu-filters mb-3">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <select id="categoryFilter" class="form-control">
-                                        <option value="all">전체 카테고리</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <input type="text" id="menuSearch" class="form-control" placeholder="메뉴 검색...">
-                                </div>
-                            </div>
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label for="storeCategory">카테고리</label>
+                            <input
+                              type="text"
+                              class="form-control"
+                              id="storeCategory"
+                              name="category"
+                            />
+                          </div>
                         </div>
-                        <div class="menu-items"></div>
-                    </div>
-                </div>
-            </section>
-
-            <div id="store-management" class="admin-section">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header">
-                                    <h5 class="card-title">가게 관리</h5>
-                                </div>
-                                <div class="card-body">
-                                    <!-- 레스토랑 선택기 -->
-                                    <div class="form-group mb-4">
-                                        <label for="restaurantSelector">레스토랑 선택</label>
-                                        <select class="form-control" id="restaurantSelector">
-                                            <option value="">새 가게 등록</option>
-                                            <option th:each="restaurant : ${restaurants}"
-                                                    th:value="${restaurant.id}"
-                                                    th:text="${restaurant.name} + ' (' + ${restaurant.address} + ')'}">가게명</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- 가게 정보 폼 -->
-                                    <form id="restaurantForm" data-mode="create">
-                                        <input type="hidden" id="restaurantId" name="id">
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="storeName">가게명</label>
-                                                    <input type="text" class="form-control" id="storeName" name="name" required>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="storeCategory">카테고리</label>
-                                                    <input type="text" class="form-control" id="storeCategory" name="category">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="storeAddress">주소</label>
-                                            <input type="text" class="form-control" id="storeAddress" name="address" required>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <div class="form-group">
-                                                    <label for="storePhone">전화번호</label>
-                                                    <input type="tel" class="form-control" id="storePhone" name="phoneNumber">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label for="openTime">오픈 시간</label>
-                                                    <input type="time" class="form-control" id="openTime" name="openTime">
-                                                </div>
-                                            </div>
-                                            <div class="col-md-3">
-                                                <div class="form-group">
-                                                    <label for="closeTime">마감 시간</label>
-                                                    <input type="time" class="form-control" id="closeTime" name="closeTime">
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="storeNotice">가게 소개</label>
-                                            <textarea class="form-control" id="storeNotice" name="description" rows="3"></textarea>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="storeSns">SNS 링크</label>
-                                            <input type="url" class="form-control" id="storeSns" name="refLink">
-                                        </div>
-                                        <div class="mt-4">
-                                            <button type="submit" class="btn btn-primary">저장</button>
-                                            <button type="button" class="btn btn-danger" id="deleteRestaurantBtn" style="display: none;">삭제</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="storeAddress">주소</label>
+                        <input
+                          type="text"
+                          class="form-control"
+                          id="storeAddress"
+                          name="address"
+                          required
+                        />
+                      </div>
+                      <div class="row">
+                        <div class="col-md-6">
+                          <div class="form-group">
+                            <label for="storePhone">전화번호</label>
+                            <input
+                              type="tel"
+                              class="form-control"
+                              id="storePhone"
+                              name="phoneNumber"
+                            />
+                          </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div id="account-settings" class="admin-section">
-                <h2>계정 설정</h2>
-                <form id="accountSettingsForm" class="settings-form">
-                    <div class="form-group">
-                        <label for="currentPassword">현재 비밀번호</label>
-                        <input type="password" id="currentPassword" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="newPassword">새 비밀번호</label>
-                        <input type="password" id="newPassword" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="confirmPassword">비밀번호 확인</label>
-                        <input type="password" id="confirmPassword" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary">비밀번호 변경</button>
-                </form>
-            </div>
-
-            <div id="table-management" class="admin-section">
-                <div class="section-header">
-                    <h2>테이블 관리</h2>
-                    <div class="table-control">
-                        <input type="number" id="newTableNumber" placeholder="테이블 번호" min="1">
-                        <button onclick="addTable()" class="primary-button">+ 테이블 추가</button>
-                    </div>
-                </div>
-
-                <div class="tables-container">
-                    <div class="table-list">
-                        <!-- 테이블 목록이 여기에 동적으로 추가됨 -->
-                    </div>
-                    <div class="qr-preview">
-                        <h3>QR 코드</h3>
-                        <div class="qr-content">
-                            <div id="qrCode"></div>
-                            <div class="qr-info">
-                                <p class="table-title">테이블 1번</p>
-                                <p class="table-link">테이블 접속 링크: <a href="#" id="tableLink"></a></p>
-                                <button class="download-btn"><i class="fas fa-download"></i> QR 다운로드</button>
-                            </div>
+                        <div class="col-md-3">
+                          <div class="form-group">
+                            <label for="openTime">오픈 시간</label>
+                            <input
+                              type="time"
+                              class="form-control"
+                              id="openTime"
+                              name="openTime"
+                            />
+                          </div>
                         </div>
-                    </div>
+                        <div class="col-md-3">
+                          <div class="form-group">
+                            <label for="closeTime">마감 시간</label>
+                            <input
+                              type="time"
+                              class="form-control"
+                              id="closeTime"
+                              name="closeTime"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <div class="form-group">
+                        <label for="storeNotice">가게 소개</label>
+                        <textarea
+                          class="form-control"
+                          id="storeNotice"
+                          name="description"
+                          rows="3"
+                        ></textarea>
+                      </div>
+                      <div class="form-group">
+                        <label for="storeSns">SNS 링크</label>
+                        <input
+                          type="url"
+                          class="form-control"
+                          id="storeSns"
+                          name="refLink"
+                        />
+                      </div>
+                      <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                          저장
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-danger"
+                          id="deleteRestaurantBtn"
+                          style="display: none"
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    </form>
+                  </div>
                 </div>
+              </div>
             </div>
+          </div>
+        </div>
 
-            <div id="order-management" class="admin-section">
-                <h2>주문 관리</h2>
-                <div id="orderList" class="row">
-                    <!-- 주문 목록이 여기에 동적으로 추가됩니다 -->
-                </div>
+        <div id="account-settings" class="admin-section">
+          <h2>계정 설정</h2>
+          <form id="accountSettingsForm" class="settings-form">
+            <div class="form-group">
+              <label for="currentPassword">현재 비밀번호</label>
+              <input type="password" id="currentPassword" required />
             </div>
-        </main>
+            <div class="form-group">
+              <label for="newPassword">새 비밀번호</label>
+              <input type="password" id="newPassword" required />
+            </div>
+            <div class="form-group">
+              <label for="confirmPassword">비밀번호 확인</label>
+              <input type="password" id="confirmPassword" required />
+            </div>
+            <button type="submit" class="btn btn-primary">비밀번호 변경</button>
+          </form>
+        </div>
+
+        <div id="table-management" class="admin-section">
+          <div class="section-header">
+            <h2>테이블 관리</h2>
+            <div class="table-control">
+              <input
+                type="number"
+                id="newTableNumber"
+                placeholder="테이블 번호"
+                min="1"
+              />
+              <button onclick="addTable()" class="primary-button">
+                + 테이블 추가
+              </button>
+            </div>
+          </div>
+
+          <div class="tables-container">
+            <div class="table-list">
+              <!-- 테이블 목록이 기에 동적으로 추가됨 -->
+            </div>
+            <div class="qr-preview">
+              <h3>QR 코드</h3>
+              <div class="qr-content">
+                <div id="qrCode"></div>
+                <div class="qr-info">
+                  <p class="table-title">테이블 1번</p>
+                  <p class="table-link">
+                    테이블 접속 링크: <a href="#" id="tableLink"></a>
+                  </p>
+                  <button class="download-btn">
+                    <i class="fas fa-download"></i> QR 다운로드
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="order-management" class="admin-section">
+          <h2>주문 관리</h2>
+          <div id="orderList" class="row">
+            <!-- 주문 목록이 여기에 동적으로 추가됩니다 -->
+          </div>
+        </div>
+      </main>
     </div>
 
     <!-- 메뉴 추가/수정 모달 -->
     <div id="menuModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2>메뉴 추가/수정</h2>
-            <form id="menuForm">
-                <div class="form-group">
-                    <label for="menuName">메뉴 이름</label>
-                    <input type="text" id="menuName" required>
-                </div>
-                <div class="form-group">
-                    <label for="menuPrice">가격</label>
-                    <input type="number" id="menuPrice" required>
-                </div>
-                <div class="form-group">
-                    <label for="menuCategory">카테고리</label>
-                    <select id="menuCategory" required>
-                        <option value="">카테고리 선택</option>
-                        <option value="커피">커피</option>
-                        <option value="음료">음료</option>
-                        <option value="디저트">디저트</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="menuDescription">설명</label>
-                    <textarea id="menuDescription"></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary">저장</button>
-            </form>
-        </div>
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>메뉴 추가</h2>
+        <form id="menuForm" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="menuName">메뉴 이름</label>
+            <input
+              type="text"
+              id="menuName"
+              name="name"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="menuPrice">가격</label>
+            <input
+              type="number"
+              id="menuPrice"
+              name="price"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="menuCategory">카테고리</label>
+            <input
+              type="text"
+              id="menuCategory"
+              name="menuCategory"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="menuDescription">설명</label>
+            <textarea
+              id="menuDescription"
+              name="description"
+              class="form-control"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="menuImage">이미지</label>
+            <input
+              type="file"
+              id="menuImage"
+              name="image"
+              accept="image/*"
+              class="form-control"
+            />
+            <div id="currentImage"></div>
+          </div>
+          <input type="hidden" id="menuId" name="id" />
+          <button type="submit" class="btn btn-primary">저장</button>
+        </form>
+      </div>
     </div>
 
     <script th:inline="javascript">
-        // 전역 변수 선언
-        let currentRestaurantId = null;
-        const currentUser = [[${#authentication.principal.username}]];
-        
-        // 대시보드 데이터 로드
-        async function loadDashboardData() {
-            try {
-                // 레스토랑 목록 가져오기
-                const response = await fetch('/api/owner/restaurants');
-                if (!response.ok) {
-                    throw new Error('레스토랑 정보를 불러오는데 실패했습니다.');
-                }
-                
-                const data = await response.json();
-                const restaurants = data.dtoList || [];
-                
-                // 첫 번째 레스토랑을 현재 레스토랑으로 설정
-                if (restaurants.length > 0) {
-                    currentRestaurantId = restaurants[0].id;
-                    // 대시보드 통계 로드
-                    await loadDashboardStats(currentRestaurantId);
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
+      /*<![CDATA[*/
+      // 전역 변수 선언
+      let currentRestaurantId = null;
+      const currentUser = /*[[${#authentication.principal.username}]]*/ null;
 
-        // 대시보드 통계 로드
-        async function loadDashboardStats(restaurantId) {
-            try {
-                const response = await fetch(`/api/owner/restaurants/${restaurantId}/stats`);
-                if (!response.ok) {
-                    throw new Error('통계 정보를 불러오는데 실패했습니다.');
-                }
-                
-                const stats = await response.json();
-                
-                // 통계 정보 업데이트
-                document.getElementById('todayOrders').textContent = stats.todayOrders || '0';
-                document.getElementById('totalSales').textContent = formatCurrency(stats.totalSales || 0);
-                document.getElementById('averageRating').textContent = stats.averageRating || '0.0';
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
+      // 대시보드 데이터 로드
+      async function loadDashboardData() {
+        try {
+          // 현재 로그인한 사용자의 레스토랑만 가져오기
+          const response = await fetch("/api/owner/restaurants");
+          if (!response.ok) {
+            throw new Error("레스토랑 정보를 불러오는데 실패했습니다.");
+          }
 
-        // 숫자 포맷팅 (1000 -> 1,000원)
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('ko-KR').format(amount) + '원';
-        }
+          const restaurants = await response.json();
 
-        // 페이지 로드 시 대시보드 데이터 로드
-        document.addEventListener('DOMContentLoaded', function() {
-            loadDashboardData();
-        });
-        
-        // 폼 요소들 가져오기
-        const restaurantForm = document.getElementById('restaurantForm');
-        const restaurantSelector = document.getElementById('restaurantSelector');
-        
-        // 레스토랑 저장/수정
-        restaurantForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = {
-                id: currentRestaurantId,  // 수정 시 사용
-                name: document.getElementById('storeName').value,
-                category: document.getElementById('storeCategory').value,
-                address: document.getElementById('storeAddress').value,
-                phoneNumber: document.getElementById('storePhone').value,
-                openTime: document.getElementById('openTime').value,
-                closeTime: document.getElementById('closeTime').value,
-                description: document.getElementById('storeNotice').value,
-                refLink: document.getElementById('storeSns').value,
-                ownerId: currentUser
-            };
-            
-            const method = currentRestaurantId ? 'PUT' : 'POST';
-            const url = currentRestaurantId 
-                ? `/api/owner/restaurants/${currentRestaurantId}`
-                : '/api/owner/restaurants';
-            
-            try {
-                const response = await fetch(url, {
-                    method: method,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-                
-                if (!response.ok) {
-                    throw new Error('레스토랑 저장에 실패했습니다.');
-                }
-                
-                alert('레스토랑이 성공적으로 저장되었습니다.');
-                location.reload();
-            } catch (error) {
-                console.error('Error:', error);
-                alert(error.message);
-            }
-        });
-        
-        // 레스토랑 선택 시 이벤트
-        if (restaurantSelector) {
-            restaurantSelector.addEventListener('change', function() {
-                const selectedId = this.value;
-                if (selectedId) {
-                    loadRestaurantInfo(selectedId);
-                } else {
-                    // 새 가게 등록 모드
-                    currentRestaurantId = null;
-                    restaurantForm.reset();
-                }
+          // 레스토랑 선택기 업데이트
+          updateRestaurantSelectors(restaurants);
+
+          // 첫 번째 레스토랑이 있다면 선택
+          if (restaurants.length > 0) {
+            currentRestaurantId = restaurants[0].id;
+            await loadRestaurantInfo(currentRestaurantId);
+            await loadDashboardStats(currentRestaurantId);
+          }
+        } catch (error) {
+          console.error("Error:", error);
+        }
+      }
+
+      // 대스토랑 선택기 업데이트
+      function updateRestaurantSelectors(restaurants) {
+        const selectors = ["restaurantSelector", "restaurantSelect"];
+
+        selectors.forEach((selectorId) => {
+          const selector = document.getElementById(selectorId);
+          if (selector) {
+            // 기존 옵션 제거
+            selector.innerHTML =
+              selectorId === "restaurantSelector"
+                ? '<option value="">새 가게 등록</option>'
+                : '<option value="">레스토랑을 선택하세요</option>';
+
+            // 새 옵션 추가
+            restaurants.forEach((restaurant) => {
+              const option = document.createElement("option");
+              option.value = restaurant.id;
+              option.textContent =
+                selectorId === "restaurantSelector"
+                  ? `${restaurant.name} (${restaurant.address})`
+                  : restaurant.name;
+              selector.appendChild(option);
             });
+          }
+        });
+      }
+
+      // 대시보드 통계 로드
+      async function loadDashboardStats(restaurantId) {
+        try {
+          const response = await fetch(
+            `/api/owner/restaurants/${restaurantId}/stats`
+          );
+          if (!response.ok) {
+            throw new Error("통계 정보를 불러오는데 실패했습니다.");
+          }
+
+          const stats = await response.json();
+
+          // 통계 정보 업데이트
+          document.getElementById("todayOrders").textContent =
+            stats.todayOrders || "0";
+          document.getElementById("totalSales").textContent = formatCurrency(
+            stats.totalSales || 0
+          );
+          document.getElementById("averageRating").textContent =
+            stats.averageRating || "0.0";
+        } catch (error) {
+          console.error("Error:", error);
         }
-        
-        // 레스토랑 정보 로드
-        async function loadRestaurantInfo(id) {
-            try {
-                const response = await fetch(`/api/owner/restaurants/${id}`);
-                if (!response.ok) {
-                    throw new Error('레스토랑 정보를 불러오는데 실패했습니다.');
-                }
-                
-                const data = await response.json();
-                currentRestaurantId = id;
-                
-                // 폼에 데이터 설정
-                document.getElementById('storeName').value = data.name || '';
-                document.getElementById('storeCategory').value = data.category || '';
-                document.getElementById('storeAddress').value = data.address || '';
-                document.getElementById('storePhone').value = data.phoneNumber || '';
-                document.getElementById('openTime').value = data.openTime || '';
-                document.getElementById('closeTime').value = data.closeTime || '';
-                document.getElementById('storeNotice').value = data.description || '';
-                document.getElementById('storeSns').value = data.refLink || '';
-            } catch (error) {
-                console.error('Error:', error);
-                alert(error.message);
-            }
-        }
-        
-        // 레스토랑 삭제
-        window.deleteRestaurant = async function(id) {
-            if (!confirm('정말로 이 레스토랑을 삭제하시겠습니까?')) {
-                return;
-            }
-            
-            try {
-                const response = await fetch(`/api/owner/restaurants/${id}`, {
-                    method: 'DELETE'
-                });
-                
-                if (!response.ok) {
-                    throw new Error('레스토랑 삭제에 실패했습니다.');
-                }
-                
-                alert('레스토랑이 성공적으로 삭제되었습니다.');
-                location.reload();
-            } catch (error) {
-                console.error('Error:', error);
-                alert(error.message);
-            }
+      }
+
+      // 숫자 포맷팅 (1000 -> 1,000원)
+      function formatCurrency(amount) {
+        return new Intl.NumberFormat("ko-KR").format(amount) + "원";
+      }
+
+      // 페이지 로드 시 대시보드 데이터 로드
+      document.addEventListener("DOMContentLoaded", function () {
+        loadDashboardData();
+      });
+
+      // 폼 요소들 가져오기
+      const restaurantForm = document.getElementById("restaurantForm");
+      const restaurantSelector = document.getElementById("restaurantSelector");
+
+      // 레스토랑 저장/수정
+      restaurantForm.addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const formData = {
+          id: currentRestaurantId, // 수정 시 사용
+          name: document.getElementById("storeName").value,
+          category: document.getElementById("storeCategory").value,
+          address: document.getElementById("storeAddress").value,
+          phoneNumber: document.getElementById("storePhone").value,
+          openTime: document.getElementById("openTime").value,
+          closeTime: document.getElementById("closeTime").value,
+          description: document.getElementById("storeNotice").value,
+          refLink: document.getElementById("storeSns").value,
+          ownerId: currentUser,
         };
-        
-        // 초기 레스토랑 목록 로드
-        loadRestaurantList();
+
+        const method = currentRestaurantId ? "PUT" : "POST";
+        const url = currentRestaurantId
+          ? `/api/owner/restaurants/${currentRestaurantId}`
+          : "/api/owner/restaurants";
+
+        try {
+          const response = await fetch(url, {
+            method: method,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          });
+
+          if (!response.ok) {
+            throw new Error("레스토랑 저장에 실패했습니다.");
+          }
+
+          alert("레스토랑이 성공적으로 저장되었습니다.");
+          location.reload();
+        } catch (error) {
+          console.error("Error:", error);
+          alert(error.message);
+        }
+      });
+
+      // 레스토랑 선택 시 이벤트
+      if (restaurantSelector) {
+        restaurantSelector.addEventListener("change", function () {
+          const selectedId = this.value;
+          if (selectedId) {
+            loadRestaurantInfo(selectedId);
+          } else {
+            // 새 가게 등록 모드
+            currentRestaurantId = null;
+            restaurantForm.reset();
+          }
+        });
+      }
+
+      // 레스토랑 정보 로드
+      async function loadRestaurantInfo(id) {
+        try {
+          const response = await fetch(`/api/owner/restaurants/${id}`);
+          if (!response.ok) {
+            throw new Error("레스토랑 정보를 불러오는데 실패했습니다.");
+          }
+
+          const data = await response.json();
+          currentRestaurantId = id;
+
+          // 폼에 데이터 설정
+          document.getElementById("storeName").value = data.name || "";
+          document.getElementById("storeCategory").value = data.category || "";
+          document.getElementById("storeAddress").value = data.address || "";
+          document.getElementById("storePhone").value = data.phoneNumber || "";
+          document.getElementById("openTime").value = data.openTime || "";
+          document.getElementById("closeTime").value = data.closeTime || "";
+          document.getElementById("storeNotice").value = data.description || "";
+          document.getElementById("storeSns").value = data.refLink || "";
+        } catch (error) {
+          console.error("Error:", error);
+          alert(error.message);
+        }
+      }
+
+      // 레스토랑 삭제
+      window.deleteRestaurant = async function (id) {
+        if (!confirm("정말로 이 레스토랑을 삭제하시겠습니까?")) {
+          return;
+        }
+
+        try {
+          const response = await fetch(`/api/owner/restaurants/${id}`, {
+            method: "DELETE",
+          });
+
+          if (!response.ok) {
+            throw new Error("레스토랑 삭제에 실패했습니다.");
+          }
+
+          alert("레스토랑이 성공적으로 삭제되었습니다.");
+          location.reload();
+        } catch (error) {
+          console.error("Error:", error);
+          alert(error.message);
+        }
+      };
+
+      // 초기 레스토랑 목록 로드
+      loadRestaurantList();
     </script>
     <script th:src="@{/js/account-settings.js}"></script>
     <script th:src="@{/js/order-service.js}"></script>
     <script th:src="@{/js/admin.js}"></script>
     <script th:src="@{/js/menu-management.js}"></script>
     <script th:inline="javascript">
-        /*<![CDATA[*/
-        // 로그인한 사용자 정보를 JavaScript 변수로 설정
-        const loggedInUserId = /*[[${#authentication.principal.username}]]*/ '';
-        /*]]>*/
+      /*<![CDATA[*/
+      // 로인한 사용자 정보를 JavaScript 변수로 설정
+      const loggedInUserId = /*[[${#authentication.principal.username}]]*/ null;
+      /*]]>*/
     </script>
-</body>
+    <script>
+      // 메뉴 추가/수정 폼 제출
+      document
+        .getElementById("menuForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const restaurantId =
+            document.getElementById("restaurantSelect").value;
+          if (!restaurantId) {
+            alert("레스토랑을 선택해주세요.");
+            return;
+          }
+
+          // FormData 객체 생성 전에 필수 필드 검증
+          const menuName = document.getElementById("menuName").value;
+          const menuPrice = document.getElementById("menuPrice").value;
+          const menuCategory = document.getElementById("menuCategory").value;
+
+          if (!menuName || !menuPrice || !menuCategory) {
+            alert("메뉴 이름, 가격, 카테고리는 필수 입력사항입니다.");
+            return;
+          }
+
+          const formData = new FormData(this);
+          formData.append("restaurantId", restaurantId); // 레스토랑 ID 추가
+
+          try {
+            const token = document.querySelector("meta[name='_csrf']").content;
+            const header = document.querySelector(
+              "meta[name='_csrf_header']"
+            ).content;
+
+            const response = await fetch(
+              `/api/restaurants/${restaurantId}/menus`,
+              {
+                method: "POST",
+                body: formData,
+                headers: {
+                  [header]: token,
+                },
+              }
+            );
+
+            if (!response.ok) {
+              const errorData = await response.text();
+              throw new Error(errorData || "메뉴 추가에 실패했습니다.");
+            }
+
+            alert("메뉴가 성공적으로 추가되었습니다.");
+            await loadMenus(restaurantId);
+            closeMenuModal();
+          } catch (error) {
+            console.error("Error:", error);
+            alert(error.message);
+          }
+        });
+
+      // 메뉴 모달 초기화 함수
+      function initMenuModal() {
+        const menuForm = document.getElementById("menuForm");
+        menuForm.reset();
+        document.getElementById("menuId").value = "";
+        document.getElementById("currentImage").innerHTML = "";
+      }
+
+      // 메뉴 추가 모달 열기
+      function openAddMenuModal() {
+        const restaurantId = document.getElementById("restaurantSelect").value;
+        if (!restaurantId) {
+          alert("레스토���을 먼저 선택해주세요.");
+          return;
+        }
+        initMenuModal();
+        menuModal.style.display = "block";
+      }
+
+      // 메뉴 모달 닫기
+      function closeMenuModal() {
+        initMenuModal();
+        menuModal.style.display = "none";
+      }
+
+      // 메뉴 수정 모달 열기
+      async function editMenu(menuId) {
+        try {
+          const restaurantId =
+            document.getElementById("restaurantSelect").value;
+          const response = await fetch(
+            `/api/restaurants/${restaurantId}/menus/${menuId}`
+          );
+          if (!response.ok)
+            throw new Error("메뉴 정보를 불러오는데 실패했습니다.");
+
+          const menu = await response.json();
+
+          // 폼에 데이터 설정
+          document.getElementById("menuId").value = menu.id;
+          document.getElementById("menuName").value = menu.name;
+          document.getElementById("menuPrice").value = menu.price;
+          document.getElementById("menuCategory").value = menu.menuCategory;
+          document.getElementById("menuDescription").value =
+            menu.description || "";
+
+          // 현재 이미지 표시
+          const currentImageDiv = document.getElementById("currentImage");
+          if (menu.fileNames && menu.fileNames.length > 0) {
+            currentImageDiv.innerHTML = `
+                      <img src="/menu-images/${menu.fileNames[0]}" 
+                           style="max-width: 200px; margin-top: 10px;" />
+                  `;
+          } else {
+            currentImageDiv.innerHTML = "";
+          }
+
+          menuModal.style.display = "block";
+        } catch (error) {
+          console.error("Error:", error);
+          alert(error.message);
+        }
+      }
+
+      // 메뉴 삭제
+      async function deleteMenu(menuId) {
+        if (!confirm("정말로 이 메뉴를 삭제하시겠습니까?")) return;
+
+        try {
+          const restaurantId =
+            document.getElementById("restaurantSelect").value;
+          const token = document.querySelector("meta[name='_csrf']").content;
+          const header = document.querySelector(
+            "meta[name='_csrf_header']"
+          ).content;
+
+          const response = await fetch(
+            `/api/restaurants/${restaurantId}/menus/${menuId}`,
+            {
+              method: "DELETE",
+              headers: {
+                [header]: token,
+              },
+            }
+          );
+
+          if (!response.ok) throw new Error("메뉴 삭제에 실패했습니다.");
+
+          alert("메뉴가 성공적으로 삭제되었습니다.");
+          await loadMenus(restaurantId);
+        } catch (error) {
+          console.error("Error:", error);
+          alert(error.message);
+        }
+      }
+
+      // 메뉴 목록 로드
+      async function loadMenus(restaurantId) {
+        try {
+          const response = await fetch(
+            `/api/restaurants/${restaurantId}/menus`
+          );
+          if (!response.ok) {
+            throw new Error("메뉴 목록을 불러오는데 실패했습니다.");
+          }
+
+          const menus = await response.json();
+          const menuContainer = document.querySelector(".menu-items");
+
+          if (!menuContainer) {
+            console.error("메뉴 컨테이너를 찾을 수 없습니다.");
+            return;
+          }
+
+          // 메뉴 목록이 비어있는 경우 처리
+          if (!menus || menus.length === 0) {
+            menuContainer.innerHTML =
+              '<p class="text-center">등록된 메뉴가 없습니다.</p>';
+            return;
+          }
+
+          // 메뉴 목록 렌더링
+          menuContainer.innerHTML = menus
+            .map(
+              (menu) => `
+            <div class="menu-item card">
+              <div class="card-body">
+                ${
+                  menu.fileNames && menu.fileNames.length > 0
+                    ? `<img src="/menu-images/${menu.fileNames[0]}" 
+                         class="img-thumbnail" 
+                         alt="${menu.name}"
+                         onerror="this.onerror=null; this.src='/images/default-menu.png';">`
+                    : '<div class="no-image">이미지 없음</div>'
+                }
+                <h5 class="card-title">${menu.name}</h5>
+                <p class="card-text text-muted">
+                  <span class="badge bg-secondary">${
+                    menu.menuCategory || "카테고리 없음"
+                  }</span>
+                </p>
+                <p class="card-text">${menu.description || ""}</p>
+                <p class="card-text">
+                  <strong class="text-primary">${menu.price.toLocaleString()}원</strong>
+                </p>
+                <div class="btn-group mt-3">
+                  <button class="btn btn-sm btn-outline-primary" onclick="editMenu(${
+                    menu.id
+                  })">
+                    <i class="bi bi-pencil"></i> 수정
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteMenu(${
+                    menu.id
+                  })">
+                    <i class="bi bi-trash"></i> 삭제
+                  </button>
+                </div>
+              </div>
+            </div>
+          `
+            )
+            .join("");
+        } catch (error) {
+          console.error("Error:", error);
+          alert("메뉴 목록을 불러오는데 실패했습니다.");
+        }
+      }
+
+      // 메뉴 모달 관련 코드
+      const menuModal = document.getElementById("menuModal");
+      const closeModalBtn = menuModal.querySelector(".close");
+
+      closeModalBtn.onclick = closeMenuModal;
+
+      window.onclick = function (event) {
+        if (event.target == menuModal) {
+          closeMenuModal();
+        }
+      };
+
+      // 레스토랑 선택 이벤트 리스너
+      document
+        .getElementById("restaurantSelect")
+        .addEventListener("change", async function () {
+          const restaurantId = this.value;
+          const addMenuBtn = document.getElementById("addMenuBtn");
+
+          if (restaurantId) {
+            addMenuBtn.disabled = false;
+            document.querySelector(".menu-content").style.display = "block";
+            await loadMenus(restaurantId);
+          } else {
+            addMenuBtn.disabled = true;
+            document.querySelector(".menu-content").style.display = "none";
+          }
+        });
+    </script>
+  </body>
 </html>

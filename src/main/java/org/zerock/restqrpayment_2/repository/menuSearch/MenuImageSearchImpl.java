@@ -49,7 +49,7 @@ public class MenuImageSearchImpl extends QuerydslRepositorySupport implements Me
                     .name(menuEntity.getName())
                     .price(menuEntity.getPrice())
                     .description(menuEntity.getDescription())
-                    .dishes(menuEntity.getDishes())
+                    .menuCategory(menuEntity.getMenuCategory())
                     .menuImages(new ArrayList<>()) // 빈 리스트 초기화
                     .build());
 
@@ -71,14 +71,9 @@ public class MenuImageSearchImpl extends QuerydslRepositorySupport implements Me
                         // 이미지 리스트 정렬
                         dto.getMenuImages().sort(Comparator.comparingInt(MenuImageDTO::getOrd))
                 )
-                // dishes 기준 정렬
-                .sorted(Comparator.comparing(dto -> dto.getDishes(),
-                        Comparator.comparingInt(dishes -> {
-                            if ("main dish".equals(dishes)) return 1;
-                            if ("side dish".equals(dishes)) return 2;
-                            if ("alcohol".equals(dishes)) return 3;
-                            return Integer.MAX_VALUE;
-                        })))
+                // category 기준 정렬
+                .sorted(Comparator.comparing(MenuListAllDTO::getMenuCategory,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
                 .toList();
 
         // 페이징 처리

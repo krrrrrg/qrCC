@@ -21,9 +21,18 @@ public class MenuListAllDTO {
 
     private String description;
 
-    private String dishes;
+    private String menuCategory;
+
+    private Long restaurantId;
 
     private List<MenuImageDTO> menuImages;
 
+    public String getCategory() {
+        return menuCategory;
+    }
+
+    public void setCategory(String category) {
+        this.menuCategory = category;
+    }
 
 }

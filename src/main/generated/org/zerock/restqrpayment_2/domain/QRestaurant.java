@@ -24,7 +24,7 @@ public class QRestaurant extends EntityPathBase<Restaurant> {
 
     public final StringPath address = createString("address");
 
-    public final StringPath category = createString("category");
+    public final StringPath businessType = createString("businessType");
 
     public final StringPath description = createString("description");
 

@@ -5,6 +5,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -12,13 +15,18 @@ import org.zerock.restqrpayment_2.dto.MenuDTO;
 import org.zerock.restqrpayment_2.dto.MenuListAllDTO;
 import org.zerock.restqrpayment_2.dto.PageRequestDTO;
 import org.zerock.restqrpayment_2.dto.PageResponseDTO;
+import org.zerock.restqrpayment_2.dto.RestaurantDTO;
+import org.zerock.restqrpayment_2.domain.Restaurant;
 import org.zerock.restqrpayment_2.service.MenuService;
+import org.zerock.restqrpayment_2.service.RestaurantService;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * MenuController
@@ -30,14 +38,28 @@ import java.util.UUID;
 public class MenuController {
 
     private final MenuService menuService;
+    private final RestaurantService restaurantService;
 
-    // 1. Read - 메뉴 목록 조회 (User, Owner, Admin)
+    // getList와 getMenusByRestaurant를 통합
     @GetMapping
-    public ResponseEntity<PageResponseDTO<MenuListAllDTO>> getList(@PathVariable("restaurantId") Long restaurantId,
-                                                                   PageRequestDTO pageRequestDTO) {
-        PageResponseDTO<MenuListAllDTO> responseDTO = menuService.listWithAll(restaurantId, pageRequestDTO);
-        log.info(responseDTO);
-        return ResponseEntity.ok(responseDTO); // 200 OK
+    public ResponseEntity<?> getMenus(
+            @PathVariable Long restaurantId,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            // 레스토랑 소유자 검증
+            RestaurantDTO restaurantDTO = restaurantService.readOne(restaurantId);
+            if (!restaurantDTO.getOwnerId().equals(userDetails.getUsername())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("해당 레스토랑의 메뉴를 추회할 권한이 없습니다.");
+            }
+
+            List<MenuDTO> menus = menuService.getMenusByRestaurantAndOwner(restaurantId, userDetails.getUsername());
+            return ResponseEntity.ok(menus);
+        } catch (Exception e) {
+            log.error("메뉴 목록 조회 중 오류 발생: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("메뉴 목록을 불러오는데 실패했습니다.");
+        }
     }
 
     // 2. Read - 특정 메뉴 조회 (User는 모든 메뉴 조회, Owner는 자기 식당 메뉴만, Admin은 모든 메뉴 조회)
@@ -52,7 +74,7 @@ public class MenuController {
         }
     }
 
-    // 메뉴 카테고리 목록 조회
+    // 메뉴 카테리 목록 조회
     @GetMapping("/categories")
     public ResponseEntity<List<String>> getCategories(@PathVariable("restaurantId") Long restaurantId) {
         List<String> categories = menuService.getCategories(restaurantId);
@@ -62,30 +84,34 @@ public class MenuController {
     // 3. Create - 메뉴 등록 (Owner는 자기 식당 메뉴만, Admin은 모든 식당 메뉴 등록 가능)
     @PostMapping
     public ResponseEntity<?> registerMenu(
+            @PathVariable Long restaurantId,
             @ModelAttribute @Valid MenuDTO menuDTO,
             @RequestPart(value = "image", required = false) MultipartFile file,
+            @AuthenticationPrincipal UserDetails userDetails,
             BindingResult bindingResult) {
 
-        // 유효성 검사 실패 처리
-        if (bindingResult.hasErrors()) {
-            log.info("Validation errors occurred");
-            return ResponseEntity.badRequest().body(bindingResult.getAllErrors());
-        }
+        try {
+            if (bindingResult.hasErrors()) {
+                String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+                return ResponseEntity.badRequest().body(errorMessage);
+            }
 
-        // 파일 처리
-        if (file != null && !file.isEmpty()) {
-            try {
+            menuDTO.setRestaurantId(restaurantId);
+            
+            if (file != null && !file.isEmpty()) {
                 String fileName = saveFile(file);
                 menuDTO.setFileNames(Collections.singletonList(fileName));
-            } catch (IOException e) {
-                log.error("파일 저장 중 오류 발생", e);
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                        .body("파일 저장에 실패했습니다.");
             }
-        }
 
-        Long registeredId = menuService.register(menuDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(registeredId);
+            MenuDTO savedMenu = menuService.createMenu(menuDTO, userDetails.getUsername());
+            return ResponseEntity.ok(savedMenu);
+        } catch (Exception e) {
+            log.error("메뉴 등록 중 오류 발생: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("메뉴 등록에 실패했습니다: " + e.getMessage());
+        }
     }
 
     // 4. Update - 메뉴 수정
@@ -122,15 +148,10 @@ public class MenuController {
     // 파일 저장 메서드
     private String saveFile(MultipartFile file) throws IOException {
         String originalName = file.getOriginalFilename();
-        
-        // 파일 이름에서 특수 문자 제거 및 공백을 언더스코어로 변경
         String cleanFileName = originalName.replaceAll("[^a-zA-Z0-9.-]", "_");
-        
-        // UUID와 정리된 파일 이름을 조합
         String fileName = UUID.randomUUID().toString() + "_" + cleanFileName;
         
         String savePath = System.getProperty("user.home") + "/menu-images/";
-        
         File saveDir = new File(savePath);
         if (!saveDir.exists()) {
             saveDir.mkdirs();

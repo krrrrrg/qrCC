@@ -25,4 +25,6 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long>, R
     // 레스토랑 ID와 소유자 ID로 레스토랑 찾기
     @Query("SELECT r FROM Restaurant r WHERE r.id = :id AND r.ownerId = :ownerId")
     Optional<Restaurant> findByIdAndOwnerId(@Param("id") Long id, @Param("ownerId") String ownerId);
+
+    List<Restaurant> findByOwnerId(String ownerId);
 }

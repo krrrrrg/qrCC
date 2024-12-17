@@ -24,15 +24,13 @@ public class QMenu extends EntityPathBase<Menu> {
 
     public final QBaseEntity _super = new QBaseEntity(this);
 
-    public final StringPath category = createString("category");
-
     public final StringPath description = createString("description");
-
-    public final StringPath dishes = createString("dishes");
 
     public final NumberPath<Long> id = createNumber("id", Long.class);
 
     public final SetPath<MenuImage, QMenuImage> imageSet = this.<MenuImage, QMenuImage>createSet("imageSet", MenuImage.class, QMenuImage.class, PathInits.DIRECT2);
+
+    public final StringPath menuCategory = createString("menuCategory");
 
     //inherited
     public final DateTimePath<java.time.LocalDateTime> modDate = _super.modDate;

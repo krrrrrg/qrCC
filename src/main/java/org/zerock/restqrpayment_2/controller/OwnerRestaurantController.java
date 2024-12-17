@@ -2,6 +2,7 @@ package org.zerock.restqrpayment_2.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,6 +15,8 @@ import org.zerock.restqrpayment_2.dto.RestaurantDTO;
 import org.zerock.restqrpayment_2.dto.RestaurantListAllDTO;
 import org.zerock.restqrpayment_2.service.RestaurantService;
 
+import java.util.List;
+
 @Controller
 @RequestMapping("/api/owner")
 @Log4j2
@@ -24,21 +27,31 @@ public class OwnerRestaurantController {
 
     @GetMapping("/restaurants")
     @ResponseBody
-    public ResponseEntity<PageResponseDTO<RestaurantListAllDTO>> getRestaurants(
+    public ResponseEntity<List<RestaurantDTO>> getRestaurants(
             @AuthenticationPrincipal UserDetails userDetails) {
-        PageRequestDTO pageRequestDTO = PageRequestDTO.builder()
-                .type("o")  // owner 검색
-                .keyword(userDetails.getUsername())
-                .build();
-        
-        PageResponseDTO<RestaurantListAllDTO> response = restaurantService.listWithAll(pageRequestDTO);
-        return ResponseEntity.ok(response);
+        try {
+            String ownerId = userDetails.getUsername();
+            log.info("Fetching restaurants for owner: " + ownerId);
+            List<RestaurantDTO> restaurants = restaurantService.getRestaurantsByOwnerId(ownerId);
+            return ResponseEntity.ok(restaurants);
+        } catch (Exception e) {
+            log.error("Error fetching restaurants: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("/restaurants/{id}")
     @ResponseBody
-    public ResponseEntity<RestaurantDTO> getRestaurant(@PathVariable Long id) {
+    public ResponseEntity<RestaurantDTO> getRestaurant(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetails userDetails) {
         RestaurantDTO restaurantDTO = restaurantService.readOne(id);
+        
+        // 권한 체크
+        if (!restaurantDTO.getOwnerId().equals(userDetails.getUsername())) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
         return ResponseEntity.ok(restaurantDTO);
     }
 
@@ -73,13 +86,16 @@ public class OwnerRestaurantController {
 
     @GetMapping("/dashboard")
     public String getDashboard(Model model, @AuthenticationPrincipal UserDetails userDetails) {
-        PageRequestDTO pageRequestDTO = PageRequestDTO.builder()
-                .type("o")  // owner 검색
-                .keyword(userDetails.getUsername())
-                .build();
+        String ownerId = userDetails.getUsername();
         
-        PageResponseDTO<RestaurantListAllDTO> response = restaurantService.listWithAll(pageRequestDTO);
-        model.addAttribute("restaurants", response.getDtoList());
-        return "owner/owner-dashboard";
+        try {
+            // 현재 로그인한 사용자의 레스토랑만 조회
+            List<RestaurantDTO> restaurants = restaurantService.getRestaurantsByOwnerId(ownerId);
+            model.addAttribute("restaurants", restaurants);
+            return "owner/owner-dashboard";
+        } catch (Exception e) {
+            log.error("Error fetching restaurants: ", e);
+            return "error/500";
+        }
     }
 }
