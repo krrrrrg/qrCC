@@ -7,24 +7,27 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.zerock.restqrpayment_2.domain.Menu;
 import org.zerock.restqrpayment_2.domain.Restaurant;
 import org.zerock.restqrpayment_2.dto.MenuDTO;
 import org.zerock.restqrpayment_2.dto.MenuListAllDTO;
+import org.zerock.restqrpayment_2.dto.MenuImageDTO;
 import org.zerock.restqrpayment_2.dto.PageRequestDTO;
 import org.zerock.restqrpayment_2.dto.PageResponseDTO;
 import org.zerock.restqrpayment_2.repository.MenuRepository;
 import org.zerock.restqrpayment_2.repository.RestaurantRepository;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Log4j2
+@Transactional
 public class MenuServiceImpl implements MenuService {
 
     private final MenuRepository menuRepository;
@@ -32,7 +35,6 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     public Long register(MenuDTO menuDTO) {
-
         Restaurant restaurant = restaurantRepository.findById(menuDTO.getRestaurantId())
                 .orElseThrow(() -> new IllegalArgumentException("Restaurant not found with id: " + menuDTO.getRestaurantId()));
 
@@ -40,47 +42,32 @@ public class MenuServiceImpl implements MenuService {
         menu.setRestaurant(restaurant);
 
         log.info(menu);
-
-        Long id = menuRepository.save(menu).getId();
-
-        return id;
+        return menuRepository.save(menu).getId();
     }
 
     @Override
     public MenuDTO read(Long id) {
-
         Optional<Menu> menuOptional = menuRepository.findByIdWithImages(id);
-
         Menu menu = menuOptional.orElseThrow();
-
-        MenuDTO menuDTO = entityToDTO(menu);
-
-        log.info(menuDTO);
-
-        return menuDTO;
+        return entityToDTO(menu);
     }
 
     @Override
     public void modify(MenuDTO menuDTO) {
-
         Optional<Menu> menuOptional = menuRepository.findById(menuDTO.getId());
-
         Menu menu = menuOptional.orElseThrow();
 
         menu.changeMenu(menuDTO.getName(), menuDTO.getPrice(), menuDTO.getDescription());
-
         menu.clearMenuImages();
 
         if(menuDTO.getFileNames() != null) {
             for(String fileName : menuDTO.getFileNames()) {
-
                 String[] arr = fileName.split("_");
                 menu.addMenuImage(arr[0], arr[1]);
             }
         }
 
         menuRepository.save(menu);
-
     }
 
     @Override
@@ -90,32 +77,109 @@ public class MenuServiceImpl implements MenuService {
 
     @Override
     public PageResponseDTO<MenuListAllDTO> listWithAll(Long restaurantId, PageRequestDTO pageRequestDTO) {
-
-        // 페이지 구성 - 0보다 작으면 0 페이지, 1보다 크면 -1  페이지
-        // 사이즈 default 값
-        // 정렬 rno 역정렬
         Pageable pageable = PageRequest.of(
                 pageRequestDTO.getPage() <= 0 ? 0 : pageRequestDTO.getPage() - 1,
                 pageRequestDTO.getSize(),
                 Sort.by("id").descending());
 
-        Page<MenuListAllDTO> result = menuRepository.searchWithAll(restaurantId, pageable);
+        Page<Object[]> result = menuRepository.searchWithAll(restaurantId, pageable);
+
+        List<MenuListAllDTO> dtoList = result.get().map(arr -> {
+            MenuListAllDTO menuListAllDTO = MenuListAllDTO.builder()
+                    .id((Long) arr[0])
+                    .name((String) arr[1])
+                    .price(((Integer) arr[2]).doubleValue()) 
+                    .description((String) arr[3])
+                    .dishes((String) arr[4])
+                    .build();
+
+            String imageStr = (String) arr[5];
+            if (imageStr != null) {
+                List<MenuImageDTO> menuImages = Arrays.stream(imageStr.split(","))
+                        .map(str -> {
+                            String[] parts = str.split("_");
+                            return MenuImageDTO.builder()
+                                    .uuid(parts[0])
+                                    .fileName(parts[1])
+                                    .build();
+                        })
+                        .collect(Collectors.toList());
+                menuListAllDTO.setMenuImages(menuImages);
+            }
+            return menuListAllDTO;
+        }).collect(Collectors.toList());
 
         return PageResponseDTO.<MenuListAllDTO>withAll()
                 .pageRequestDTO(pageRequestDTO)
-                .dtoList(result.getContent())
+                .dtoList(dtoList)
                 .total((int)result.getTotalElements())
                 .build();
     }
 
     @Override
     public List<String> getCategories(Long restaurantId) {
-        return menuRepository.findByRestaurantId(restaurantId)
-                .stream()
-                .map(Menu::getDishes)
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted()
+        return menuRepository.findCategoriesByRestaurantId(restaurantId);
+    }
+
+    @Override
+    public List<MenuDTO> getMenusByRestaurantAndOwner(Long restaurantId, String ownerId) {
+        // 먼저 레스토랑이 해당 소유자의 것인지 확인
+        Restaurant restaurant = restaurantRepository.findByIdAndOwnerId(restaurantId, ownerId)
+                .orElseThrow(() -> new IllegalArgumentException("Restaurant not found or not owned by user"));
+
+        // 해당 레스토랑의 메뉴 목록 조회
+        List<Menu> menus = menuRepository.findByRestaurantId(restaurantId);
+        return menus.stream()
+                .map(this::entityToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public MenuDTO createMenu(MenuDTO menuDTO, String ownerId) {
+        // 레스토랑 소유자 확인
+        Restaurant restaurant = restaurantRepository.findByIdAndOwnerId(menuDTO.getRestaurantId(), ownerId)
+                .orElseThrow(() -> new IllegalArgumentException("Restaurant not found or not owned by user"));
+
+        Menu menu = dtoToEntity(menuDTO);
+        menu.setRestaurant(restaurant);
+        Menu savedMenu = menuRepository.save(menu);
+        return entityToDTO(savedMenu);
+    }
+
+    @Override
+    public MenuDTO updateMenu(Long menuId, MenuDTO menuDTO, String ownerId) {
+        // 메뉴가 해당 소유자의 레스토랑에 속하는지 확인
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new IllegalArgumentException("Menu not found"));
+
+        if (!menu.getRestaurant().getOwnerId().equals(ownerId)) {
+            throw new IllegalArgumentException("Not authorized to update this menu");
+        }
+
+        menu.changeMenu(menuDTO.getName(), menuDTO.getPrice(), menuDTO.getDescription());
+        menu.clearMenuImages();
+
+        if (menuDTO.getFileNames() != null) {
+            menuDTO.getFileNames().forEach(fileName -> {
+                String[] arr = fileName.split("_");
+                menu.addMenuImage(arr[0], arr[1]);
+            });
+        }
+
+        Menu updatedMenu = menuRepository.save(menu);
+        return entityToDTO(updatedMenu);
+    }
+
+    @Override
+    public void deleteMenu(Long menuId, String ownerId) {
+        // 메뉴가 해당 소유자의 레스토랑에 속하는지 확인
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new IllegalArgumentException("Menu not found"));
+
+        if (!menu.getRestaurant().getOwnerId().equals(ownerId)) {
+            throw new IllegalArgumentException("Not authorized to delete this menu");
+        }
+
+        menuRepository.delete(menu);
     }
 }

@@ -24,6 +24,18 @@ public interface MenuService {
     // 메뉴 카테고리 목록 조회
     List<String> getCategories(Long restaurantId);
 
+    // 특정 레스토랑과 소유자의 메뉴 목록 조회
+    List<MenuDTO> getMenusByRestaurantAndOwner(Long restaurantId, String ownerId);
+
+    // 메뉴 생성 (소유자 검증 포함)
+    MenuDTO createMenu(MenuDTO menuDTO, String ownerId);
+
+    // 메뉴 수정 (소유자 검증 포함)
+    MenuDTO updateMenu(Long menuId, MenuDTO menuDTO, String ownerId);
+
+    // 메뉴 삭제 (소유자 검증 포함)
+    void deleteMenu(Long menuId, String ownerId);
+
     default Menu dtoToEntity(MenuDTO menuDTO) {
         Menu menu = Menu.builder()
                 .id(menuDTO.getId())
@@ -51,7 +63,6 @@ public interface MenuService {
 
         return menu;
     }
-
 
     default MenuDTO entityToDTO(Menu menu) {
         MenuDTO menuDTO = MenuDTO.builder()

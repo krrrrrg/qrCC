@@ -8,10 +8,10 @@ document.addEventListener('DOMContentLoaded', function() {
     let currentSection = '';
 
     menuItems.forEach(item => {
-        item.addEventListener('click', (e) => {
+        item.addEventListener('click', function(e) {
             e.preventDefault();
-            const targetId = item.getAttribute('href').substring(1);
-            
+            const targetId = this.getAttribute('href').substring(1);
+
             // 이전 섹션의 모달 닫기
             if (currentSection) {
                 const prevModal = document.querySelector(`#${currentSection} .modal`);
@@ -19,22 +19,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     prevModal.style.display = 'none';
                 }
             }
-            
+
             // 활성 탭 변경
-            document.querySelector('.admin-menu li.active')?.classList.remove('active');
-            item.parentElement.classList.add('active');
-            
-            // 섹션 전환
+            menuItems.forEach(menuItem => menuItem.classList.remove('active'));
+            this.classList.add('active');
+
+            // 섹션 표시/숨김
             sections.forEach(section => {
-                section.classList.remove('active');
                 if (section.id === targetId) {
                     section.classList.add('active');
                     currentSection = targetId;
-                    
+
                     // 주문 관리 탭이 활성화되면 주문 목록 새로고침
                     if (targetId === 'order-management') {
                         loadOrders();
                     }
+                } else {
+                    section.classList.remove('active');
                 }
             });
         });
@@ -43,32 +44,154 @@ document.addEventListener('DOMContentLoaded', function() {
     // 메뉴 목록 로드
     loadMenuList();
 
-    // DB에서 가게 정보 불러오기
-    fetch('/api/restaurants/1')
-        .then(response => response.json())
-        .then(storeData => {
-            if (storeData) {
-                document.getElementById('storeName').value = storeData.name || '';
-                document.getElementById('storeAddress').value = storeData.address || '';
-                document.getElementById('storeCategory').value = storeData.category || '';
-                document.getElementById('storePhone').value = storeData.phoneNumber || '';
-                document.getElementById('openTime').value = storeData.openTime || '09:00';
-                document.getElementById('closeTime').value = storeData.closeTime || '22:00';
-                document.getElementById('storeNotice').value = storeData.description || '';
-                document.getElementById('storeSns').value = storeData.refLink || '';
-                
-                // 사이드바 가게 이름 업데이트
-                const sidebarStoreName = document.querySelector('.admin-profile .store-name');
-                if (sidebarStoreName) {
-                    sidebarStoreName.textContent = storeData.name || '';
-                }
-            }
-        })
-        .catch(error => {
-            console.error('가게 정보를 불러오는데 실패했습니다:', error);
-        });
+    // 현재 선택된 레스토랑 ID
+    let currentRestaurantId = null; // 전역 변수로 선언
 
-    // 가게 설정 폼 이벤트 리스너 추가
+    // 레스토랑 선택 이벤트
+    const restaurantSelector = document.getElementById('restaurantSelector');
+    if (restaurantSelector) {
+        restaurantSelector.addEventListener('change', function() {
+            currentRestaurantId = this.value; // 선택된 레스토랑 ID 업데이트
+            if (currentRestaurantId) {
+                loadRestaurantInfo(currentRestaurantId);
+            } else {
+                document.getElementById('storeSettingsForm').reset();
+            }
+        });
+        
+        // 초기 가게 목록 로드
+        loadRestaurantList().then(() => {
+            // 가게 목록을 불러온 후, 첫 번째 가게의 정보를 표시
+            if (restaurantSelector.options.length > 1) {
+                const firstRestaurantId = restaurantSelector.options[1].value;
+                loadRestaurantInfo(firstRestaurantId);
+            }
+        });
+    }
+
+    // 레스토랑 정보 로드
+    async function loadRestaurantInfo(restaurantId) {
+        if (!restaurantId) {
+            // 새 가게 등록 모드
+            document.getElementById('storeSettingsForm').reset();
+            currentRestaurantId = null;
+            document.getElementById('deleteRestaurantBtn').style.display = 'none';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/owner/restaurants/${restaurantId}`, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+            if (!response.ok) {
+                throw new Error('가게 정보를 불러오는데 실패했습니다.');
+            }
+            const storeData = await response.json();
+            
+            // 폼에 데이터 설정
+            document.getElementById('restaurantId').value = storeData.id || '';
+            document.getElementById('storeName').value = storeData.name || '';
+            document.getElementById('storeAddress').value = storeData.address || '';
+            document.getElementById('storeCategory').value = storeData.category || '';
+            document.getElementById('storePhone').value = storeData.phoneNumber || '';
+            document.getElementById('openTime').value = storeData.openTime || '';
+            document.getElementById('closeTime').value = storeData.closeTime || '';
+            document.getElementById('storeNotice').value = storeData.description || '';
+            document.getElementById('storeSns').value = storeData.refLink || '';
+            
+            document.getElementById('deleteRestaurantBtn').style.display = 'inline-block';
+            currentRestaurantId = restaurantId;
+        } catch (error) {
+            console.error('Error:', error);
+            alert(error.message);
+        }
+    }
+
+    // 가게 설정 저장
+    async function handleStoreSettings(e) {
+        e.preventDefault();
+        
+        const formData = {
+            id: currentRestaurantId || null,
+            name: document.getElementById('storeName').value,
+            address: document.getElementById('storeAddress').value,
+            category: document.getElementById('storeCategory').value,
+            phoneNumber: document.getElementById('storePhone').value,
+            openTime: document.getElementById('openTime').value,
+            closeTime: document.getElementById('closeTime').value,
+            description: document.getElementById('storeNotice').value,
+            refLink: document.getElementById('storeSns').value
+        };
+
+        const method = currentRestaurantId ? 'PUT' : 'POST';
+        const url = currentRestaurantId 
+            ? `/api/owner/restaurants/${currentRestaurantId}` 
+            : '/api/owner/restaurants';
+
+        try {
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (!response.ok) {
+                throw new Error('가게 정보 저장에 실패했습니다.');
+            }
+
+            if (!currentRestaurantId) {
+                // 새로 생성된 레스토랑의 ID를 받아옴
+                const newId = await response.json();
+                currentRestaurantId = newId;
+            }
+
+            alert('가게 정보가 성공적으로 저장되었습니다.');
+            location.reload(); // 페이지 새로고침
+        } catch (error) {
+            console.error('Error:', error);
+            alert(error.message);
+        }
+    }
+
+    // 레스토랑 삭제
+    async function deleteRestaurant(restaurantId) {
+        if (!confirm('정말로 이 레스토랑을 삭제하시겠습니까?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/owner/restaurants/${restaurantId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('레스토랑 삭제에 실패했습니다.');
+            }
+
+            alert('레스토랑이 성공적으로 삭제되었습니다.');
+            location.reload(); // 페이지 새로고침
+        } catch (error) {
+            console.error('Error:', error);
+            alert(error.message);
+        }
+    }
+
+    // 삭제 버튼 이벤트 핸들러
+    document.getElementById('deleteRestaurantBtn').addEventListener('click', function() {
+        if (currentRestaurantId) {
+            deleteRestaurant(currentRestaurantId);
+        }
+    });
+
+    // 폼 이벤트 리스너
     const storeSettingsForm = document.getElementById('storeSettingsForm');
     if (storeSettingsForm) {
         storeSettingsForm.addEventListener('submit', handleStoreSettings);
@@ -129,49 +252,64 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // 계정 탈퇴 모달 관련 기능
-    const deleteModal = document.getElementById('deleteAccountModal');
+    // 계정 삭제 모달 관련 변수들
+    const deleteAccountModal = document.getElementById('deleteAccountModal');
     const showDeleteAccountBtn = document.getElementById('showDeleteAccountBtn');
-    const cancelDeleteBtn = document.getElementById('cancelDelete');
+    const closeDeleteModalBtn = document.getElementById('closeDeleteModalBtn');
+    const deleteAccountForm = document.getElementById('deleteAccountForm');
 
-    showDeleteAccountBtn.onclick = () => {
-        deleteModal.style.display = 'block';
-    }
-
-    cancelDeleteBtn.onclick = () => {
-        deleteModal.style.display = 'none';
-    }
-
-    // 계정 탈퇴 처리
-    document.getElementById('deleteAccountForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const password = document.getElementById('deleteConfirmPassword').value;
-        const adminUser = JSON.parse(localStorage.getItem('adminUser'));
-
-        if (!adminUser) {
-            alert('로그인 정보를 찾을 수 없습니다.');
-            return;
-        }
-
-        // 비밀번호 확인 - 하드코딩된 비밀번호와 비교
-        if (password !== 'admin123' && password !== adminUser.password) {
-            alert('비밀번호가 일치하지 않습니다.');
-            return;
-        }
-
-        if (confirm('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-            try {
-                // 관리자 계정 정보 삭제
-                localStorage.removeItem('adminUser');
-                alert('계정이 성공적으로 삭제되었습니다.');
-                window.location.href = 'owner-login.html';
-            } catch (error) {
-                console.error('Error:', error);
-                alert('계정 삭제 중 오류가 발생했습니다.');
+    // 계정 삭제 모달 표시
+    if (showDeleteAccountBtn) {
+        showDeleteAccountBtn.addEventListener('click', function() {
+            if (deleteAccountModal) {
+                deleteAccountModal.style.display = 'block';
             }
+        });
+    }
+
+    // 계정 삭제 모달 닫기
+    if (closeDeleteModalBtn) {
+        closeDeleteModalBtn.addEventListener('click', function() {
+            if (deleteAccountModal) {
+                deleteAccountModal.style.display = 'none';
+            }
+        });
+    }
+
+    // 모달 외부 클릭 시 닫기
+    window.addEventListener('click', function(event) {
+        if (event.target === deleteAccountModal) {
+            deleteAccountModal.style.display = 'none';
         }
     });
+
+    // 계정 삭제 폼 제출
+    if (deleteAccountForm) {
+        deleteAccountForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (confirm('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                try {
+                    const response = await fetch('/api/members/delete', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        alert('계정이 성공적으로 삭제되었습니다.');
+                        window.location.href = '/logout';
+                    } else {
+                        throw new Error('계정 삭제에 실패했습니다.');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert(error.message);
+                }
+            }
+        });
+    }
 
     // 각 섹션별 모달 관리
     sections.forEach(section => {
@@ -194,6 +332,49 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// 레스토랑 목록 로드
+async function loadRestaurantList() {
+    try {
+        const response = await fetch('/api/owner/restaurants', {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        if (!response.ok) {
+            throw new Error('가게 목록을 불러오는데 실패했습니다.');
+        }
+        const data = await response.json();
+        const restaurants = data.dtoList || []; // PageResponseDTO에서 dtoList 추출
+        
+        const selector = document.getElementById('restaurantSelector');
+        if (!selector) return;
+
+        // 기존 옵션 제거 (첫 번째 '새 가게 등록' 옵션 제외)
+        while (selector.options.length > 1) {
+            selector.remove(1);
+        }
+
+        // 가게 목록 추가
+        if (restaurants && restaurants.length > 0) {
+            for (let i = 0; i <restaurants.length; i++) {
+                const restaurant = restaurants[i];
+                const option = document.createElement('option');
+                option.value = restaurant.id;
+                option.textContent = restaurant.name;
+                selector.appendChild(option);
+            }
+        }
+
+        // 현재 선택된 레스토랑이 있다면 선택
+        if (currentRestaurantId) {
+            selector.value = currentRestaurantId;
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert(error.message);
+    }
+}
 
 // 메뉴 관리 함수들
 function loadMenuList() {
@@ -278,67 +459,6 @@ function saveMenu(menuData) {
     
     closeMenuModal();
     loadMenuList();
-}
-
-// 가게 설정 저장
-function handleStoreSettings(e) {
-    e.preventDefault();
-    
-    const storeData = {
-        name: document.getElementById('storeName').value,
-        address: document.getElementById('storeAddress').value,
-        category: document.getElementById('storeCategory').value,
-        phoneNumber: document.getElementById('storePhone').value,
-        openTime: document.getElementById('openTime').value,
-        closeTime: document.getElementById('closeTime').value,
-        description: document.getElementById('storeNotice').value,
-        refLink: document.getElementById('storeSns').value,
-        ownerId: loggedInUserId  // Thymeleaf에서 주입된 사용자 ID 사용
-    };
-
-    console.log('전송할 데이터:', storeData);
-
-    // DB에 저장
-    fetch('/api/restaurants', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(storeData)
-    })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('가게 정보 저장에 실패했습니다.');
-        }
-        return response.json();
-    })
-    .then(data => {
-        // 사이드바 가게 이름 업데이트
-        const sidebarStoreName = document.querySelector('.admin-profile .store-name');
-        if (sidebarStoreName) {
-            sidebarStoreName.textContent = storeData.name;
-        }
-        
-        // 페이지 내의 다른 가게 이름 요소들도 업데이트
-        const storeNameElements = document.querySelectorAll('.store-name');
-        storeNameElements.forEach(element => {
-            if (element !== sidebarStoreName) {
-                element.textContent = storeData.name;
-            }
-        });
-        
-        alert('가게 정보가 성공적으로 저장되었습니다.');
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        alert(error.message);
-    });
-}
-
-// 로그아웃
-function handleAdminLogout() {
-    localStorage.removeItem('adminUser');
-    window.location.href = 'owner-login.html';
 }
 
 // 테이블 관리 함수들
@@ -517,7 +637,11 @@ function getStatusText(status) {
 
 // DB에서 가게 정보 불러오기
 document.addEventListener('DOMContentLoaded', function() {
-    fetch('/api/restaurants/1')
+    fetch('/api/owner/restaurants/1', {
+        headers: {
+            'Accept': 'application/json'
+        }
+    })
         .then(response => response.json())
         .then(storeData => {
             if (storeData) {

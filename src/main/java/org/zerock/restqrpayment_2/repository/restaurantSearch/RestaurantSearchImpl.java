@@ -104,14 +104,14 @@ public class RestaurantSearchImpl extends QuerydslRepositorySupport implements R
                 case "c":
                     booleanBuilder.or(restaurant.category.contains(keyword));
                     break;
-                case "d":
-                    booleanBuilder.or(restaurant.description.contains(keyword));
+                case "a":
+                    booleanBuilder.or(restaurant.address.contains(keyword));
+                    break;
+                case "o":
+                    booleanBuilder.or(restaurant.ownerId.eq(keyword));
                     break;
             }
         }
         return booleanBuilder;
     }
-
-
-
 }

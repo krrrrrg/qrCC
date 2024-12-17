@@ -58,6 +58,25 @@
             background-color: #dc3545;
             color: white;
         }
+        
+        .restaurant-selector {
+            margin-bottom: 20px;
+        }
+        
+        .restaurant-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            background-color: white;
+        }
+        
+        .restaurant-selector select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
     </style>
 </head>
 <body>
@@ -124,11 +143,11 @@
                 <div class="dashboard-stats">
                     <div class="stat-card">
                         <h3>오늘의 주문</h3>
-                        <p class="stat-number">28</p>
+                        <p class="stat-number" id="todayOrders">28</p>
                     </div>
                     <div class="stat-card">
                         <h3>매출액</h3>
-                        <p class="stat-number">487,000원</p>
+                        <p class="stat-number" id="totalSales">487,000원</p>
                     </div>
                     <div class="stat-card">
                         <h3>인기 메뉴</h3>
@@ -177,83 +196,103 @@
             </section>
 
             <div id="store-management" class="admin-section">
-                <h2>가게 관리</h2>
-                <form id="storeSettingsForm" class="settings-form">
-                    <div class="form-group">
-                        <label>가게 이름</label>
-                        <input type="text" id="storeName" class="form-control" placeholder="꽁꽁카페" required>
-                    </div>
-                    <div class="form-group">
-                        <label>주소</label>
-                        <input type="text" id="storeAddress" class="form-control" placeholder="주소를 입력하세요" required>
-                    </div>
-                    <div class="form-group">
-                        <label>카테고리</label>
-                        <select id="storeCategory" class="form-control" required>
-                            <option value="">카테고리 선택</option>
-                            <option value="카페">카페</option>
-                            <option value="레스토랑">레스토랑</option>
-                            <option value="베이커리">베이커리</option>
-                            <option value="기타">기타</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>전화번호</label>
-                        <input type="tel" id="storePhone" class="form-control" placeholder="02-1234-5678" required 
-                               pattern="[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}">
-                    </div>
-                    <div class="form-group">
-                        <label>영업 시간</label>
-                        <div class="time-inputs">
-                            <input type="time" id="openTime" value="09:00" required>
-                            <span>~</span>
-                            <input type="time" id="closeTime" value="22:00" required>
+                <div class="container-fluid">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="card-title">가게 관리</h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- 레스토랑 선택기 -->
+                                    <div class="form-group mb-4">
+                                        <label for="restaurantSelector">레스토랑 선택</label>
+                                        <select class="form-control" id="restaurantSelector">
+                                            <option value="">새 가게 등록</option>
+                                            <option th:each="restaurant : ${restaurants}"
+                                                    th:value="${restaurant.id}"
+                                                    th:text="${restaurant.name} + ' (' + ${restaurant.address} + ')'}">가게명</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- 가게 정보 폼 -->
+                                    <form id="restaurantForm" data-mode="create">
+                                        <input type="hidden" id="restaurantId" name="id">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="storeName">가게명</label>
+                                                    <input type="text" class="form-control" id="storeName" name="name" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="storeCategory">카테고리</label>
+                                                    <input type="text" class="form-control" id="storeCategory" name="category">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="storeAddress">주소</label>
+                                            <input type="text" class="form-control" id="storeAddress" name="address" required>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <div class="form-group">
+                                                    <label for="storePhone">전화번호</label>
+                                                    <input type="tel" class="form-control" id="storePhone" name="phoneNumber">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label for="openTime">오픈 시간</label>
+                                                    <input type="time" class="form-control" id="openTime" name="openTime">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="form-group">
+                                                    <label for="closeTime">마감 시간</label>
+                                                    <input type="time" class="form-control" id="closeTime" name="closeTime">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="storeNotice">가게 소개</label>
+                                            <textarea class="form-control" id="storeNotice" name="description" rows="3"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="storeSns">SNS 링크</label>
+                                            <input type="url" class="form-control" id="storeSns" name="refLink">
+                                        </div>
+                                        <div class="mt-4">
+                                            <button type="submit" class="btn btn-primary">저장</button>
+                                            <button type="button" class="btn btn-danger" id="deleteRestaurantBtn" style="display: none;">삭제</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>공지사항</label>
-                        <input type="text" id="storeNotice" class="form-control" placeholder="공지사항을 입력하세요">
-                    </div>
-                    <div class="form-group">
-                        <label>SNS 링크</label>
-                        <input type="text" id="storeSns" class="form-control" placeholder="SNS 링크를 입력하세요">
-                    </div>
-                    <button type="submit" class="save-btn">저장하기</button>
-                </form>
+                </div>
             </div>
 
             <div id="account-settings" class="admin-section">
                 <h2>계정 설정</h2>
-                <div class="settings-container">
-                    <!-- 비밀번호 변경 폼 -->
-                    <form id="passwordChangeForm" class="settings-form">
-                        <h3>비밀번호 변경</h3>
-                        <div class="form-group">
-                            <label for="currentPassword">현재 비밀번호</label>
-                            <input type="password" id="currentPassword" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="newPassword">새 비밀번호</label>
-                            <input type="password" id="newPassword" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="confirmPassword">새 비밀번호 확인</label>
-                            <input type="password" id="confirmPassword" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary">비밀번호 변경</button>
-                    </form>
-
-                    <!-- 계정 삭제 폼 -->
-                    <form id="deleteAccountForm" class="settings-form">
-                        <h3>계정 삭제</h3>
-                        <p class="warning-text">계정을 삭제하면 모든 데이터가 영구적으로 삭제됩니다.</p>
-                        <div class="form-group">
-                            <label for="deleteConfirmPassword">비밀번호 확인</label>
-                            <input type="password" id="deleteConfirmPassword" class="form-control" required>
-                        </div>
-                        <button type="submit" class="btn btn-danger">계정 삭제</button>
-                    </form>
-                </div>
+                <form id="accountSettingsForm" class="settings-form">
+                    <div class="form-group">
+                        <label for="currentPassword">현재 비밀번호</label>
+                        <input type="password" id="currentPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">새 비밀번호</label>
+                        <input type="password" id="newPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">비밀번호 확인</label>
+                        <input type="password" id="confirmPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">비밀번호 변경</button>
+                </form>
             </div>
 
             <div id="table-management" class="admin-section">
@@ -325,14 +364,184 @@
     </div>
 
     <script th:inline="javascript">
-        /*<![CDATA[*/
-        // 로그인한 사용자 정보를 JavaScript 변수로 설정
-        const loggedInUserId = /*[[${#authentication.principal.username}]]*/ '';
-        /*]]>*/
+        // 전역 변수 선언
+        let currentRestaurantId = null;
+        const currentUser = [[${#authentication.principal.username}]];
+        
+        // 대시보드 데이터 로드
+        async function loadDashboardData() {
+            try {
+                // 레스토랑 목록 가져오기
+                const response = await fetch('/api/owner/restaurants');
+                if (!response.ok) {
+                    throw new Error('레스토랑 정보를 불러오는데 실패했습니다.');
+                }
+                
+                const data = await response.json();
+                const restaurants = data.dtoList || [];
+                
+                // 첫 번째 레스토랑을 현재 레스토랑으로 설정
+                if (restaurants.length > 0) {
+                    currentRestaurantId = restaurants[0].id;
+                    // 대시보드 통계 로드
+                    await loadDashboardStats(currentRestaurantId);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // 대시보드 통계 로드
+        async function loadDashboardStats(restaurantId) {
+            try {
+                const response = await fetch(`/api/owner/restaurants/${restaurantId}/stats`);
+                if (!response.ok) {
+                    throw new Error('통계 정보를 불러오는데 실패했습니다.');
+                }
+                
+                const stats = await response.json();
+                
+                // 통계 정보 업데이트
+                document.getElementById('todayOrders').textContent = stats.todayOrders || '0';
+                document.getElementById('totalSales').textContent = formatCurrency(stats.totalSales || 0);
+                document.getElementById('averageRating').textContent = stats.averageRating || '0.0';
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        // 숫자 포맷팅 (1000 -> 1,000원)
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('ko-KR').format(amount) + '원';
+        }
+
+        // 페이지 로드 시 대시보드 데이터 로드
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+        });
+        
+        // 폼 요소들 가져오기
+        const restaurantForm = document.getElementById('restaurantForm');
+        const restaurantSelector = document.getElementById('restaurantSelector');
+        
+        // 레스토랑 저장/수정
+        restaurantForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                id: currentRestaurantId,  // 수정 시 사용
+                name: document.getElementById('storeName').value,
+                category: document.getElementById('storeCategory').value,
+                address: document.getElementById('storeAddress').value,
+                phoneNumber: document.getElementById('storePhone').value,
+                openTime: document.getElementById('openTime').value,
+                closeTime: document.getElementById('closeTime').value,
+                description: document.getElementById('storeNotice').value,
+                refLink: document.getElementById('storeSns').value,
+                ownerId: currentUser
+            };
+            
+            const method = currentRestaurantId ? 'PUT' : 'POST';
+            const url = currentRestaurantId 
+                ? `/api/owner/restaurants/${currentRestaurantId}`
+                : '/api/owner/restaurants';
+            
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (!response.ok) {
+                    throw new Error('레스토랑 저장에 실패했습니다.');
+                }
+                
+                alert('레스토랑이 성공적으로 저장되었습니다.');
+                location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+            }
+        });
+        
+        // 레스토랑 선택 시 이벤트
+        if (restaurantSelector) {
+            restaurantSelector.addEventListener('change', function() {
+                const selectedId = this.value;
+                if (selectedId) {
+                    loadRestaurantInfo(selectedId);
+                } else {
+                    // 새 가게 등록 모드
+                    currentRestaurantId = null;
+                    restaurantForm.reset();
+                }
+            });
+        }
+        
+        // 레스토랑 정보 로드
+        async function loadRestaurantInfo(id) {
+            try {
+                const response = await fetch(`/api/owner/restaurants/${id}`);
+                if (!response.ok) {
+                    throw new Error('레스토랑 정보를 불러오는데 실패했습니다.');
+                }
+                
+                const data = await response.json();
+                currentRestaurantId = id;
+                
+                // 폼에 데이터 설정
+                document.getElementById('storeName').value = data.name || '';
+                document.getElementById('storeCategory').value = data.category || '';
+                document.getElementById('storeAddress').value = data.address || '';
+                document.getElementById('storePhone').value = data.phoneNumber || '';
+                document.getElementById('openTime').value = data.openTime || '';
+                document.getElementById('closeTime').value = data.closeTime || '';
+                document.getElementById('storeNotice').value = data.description || '';
+                document.getElementById('storeSns').value = data.refLink || '';
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+            }
+        }
+        
+        // 레스토랑 삭제
+        window.deleteRestaurant = async function(id) {
+            if (!confirm('정말로 이 레스토랑을 삭제하시겠습니까?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/owner/restaurants/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    throw new Error('레스토랑 삭제에 실패했습니다.');
+                }
+                
+                alert('레스토랑이 성공적으로 삭제되었습니다.');
+                location.reload();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+            }
+        };
+        
+        // 초기 레스토랑 목록 로드
+        loadRestaurantList();
     </script>
     <script th:src="@{/js/account-settings.js}"></script>
     <script th:src="@{/js/order-service.js}"></script>
     <script th:src="@{/js/admin.js}"></script>
     <script th:src="@{/js/menu-management.js}"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // 로그인한 사용자 정보를 JavaScript 변수로 설정
+        const loggedInUserId = /*[[${#authentication.principal.username}]]*/ '';
+        /*]]>*/
+    </script>
 </body>
 </html>
