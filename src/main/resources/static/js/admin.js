@@ -293,7 +293,7 @@ function handleStoreSettings(e) {
         closeTime: document.getElementById('closeTime').value,
         description: document.getElementById('storeNotice').value,
         refLink: document.getElementById('storeSns').value,
-        ownerId: "owner1"     // TODO: 실제 로그인한 owner ID로 대체 필요
+        ownerId: loggedInUserId  // Thymeleaf에서 주입된 사용자 ID 사용
     };
 
     console.log('전송할 데이터:', storeData);
@@ -307,20 +307,31 @@ function handleStoreSettings(e) {
         body: JSON.stringify(storeData)
     })
     .then(response => {
-        if (response.ok) {
-            // 사이드바 가게 이름 업데이트
-            const sidebarStoreName = document.querySelector('.admin-profile .store-name');
-            if (sidebarStoreName) {
-                sidebarStoreName.textContent = storeData.name;
-            }
-            alert('가게 정보가 성공적으로 저장되었습니다.');
-        } else {
+        if (!response.ok) {
             throw new Error('가게 정보 저장에 실패했습니다.');
         }
+        return response.json();
+    })
+    .then(data => {
+        // 사이드바 가게 이름 업데이트
+        const sidebarStoreName = document.querySelector('.admin-profile .store-name');
+        if (sidebarStoreName) {
+            sidebarStoreName.textContent = storeData.name;
+        }
+        
+        // 페이지 내의 다른 가게 이름 요소들도 업데이트
+        const storeNameElements = document.querySelectorAll('.store-name');
+        storeNameElements.forEach(element => {
+            if (element !== sidebarStoreName) {
+                element.textContent = storeData.name;
+            }
+        });
+        
+        alert('가게 정보가 성공적으로 저장되었습니다.');
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('가게 정보 저장에 실패했습니다. 다시 시도해주세요.');
+        alert(error.message);
     });
 }
 
