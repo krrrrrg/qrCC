@@ -713,9 +713,9 @@
         e.preventDefault();
 
         const formData = {
-          id: currentRestaurantId, // 수정 시 사용
+          id: currentRestaurantId,
           name: document.getElementById("storeName").value,
-          category: document.getElementById("storeCategory").value,
+          category: document.getElementById("storeCategory").value || "기타",
           address: document.getElementById("storeAddress").value,
           phoneNumber: document.getElementById("storePhone").value,
           openTime: document.getElementById("openTime").value,
@@ -731,20 +731,33 @@
           : "/api/owner/restaurants";
 
         try {
+          // CSRF 토큰 가져오기
+          const token = document.querySelector("meta[name='_csrf']").content;
+          const header = document.querySelector(
+            "meta[name='_csrf_header']"
+          ).content;
+
           const response = await fetch(url, {
             method: method,
             headers: {
               "Content-Type": "application/json",
+              [header]: token, // CSRF 토큰 추가
             },
             body: JSON.stringify(formData),
           });
 
           if (!response.ok) {
-            throw new Error("레스토랑 저장에 실패했습니다.");
+            const errorData = await response.text();
+            throw new Error(errorData || "레스토랑 저장에 실패했습니다.");
           }
 
           alert("레스토랑이 성공적으로 저장되었습니다.");
-          location.reload();
+          await loadDashboardData(); // 데이터 새로고침
+
+          // 저장 성공 후 선택된 레스토랑 정보 다시 로드
+          if (currentRestaurantId) {
+            await loadRestaurantInfo(currentRestaurantId);
+          }
         } catch (error) {
           console.error("Error:", error);
           alert(error.message);
@@ -806,7 +819,7 @@
             throw new Error("레스토랑 삭제에 실패했습니다.");
           }
 
-          alert("레스토랑이 성공적으로 삭제되었습니다.");
+          alert("레스토랑이 성공적으�� 삭제되었습니다.");
           location.reload();
         } catch (error) {
           console.error("Error:", error);
@@ -897,7 +910,7 @@
       function openAddMenuModal() {
         const restaurantId = document.getElementById("restaurantSelect").value;
         if (!restaurantId) {
-          alert("레스토���을 먼저 선택해주세요.");
+          alert("레스토랑을 먼저 선택해주세요.");
           return;
         }
         initMenuModal();

@@ -1,11 +1,12 @@
 package org.zerock.restqrpayment_2.dto;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
+import org.zerock.restqrpayment_2.domain.Restaurant;
 
 import java.util.List;
 
@@ -14,7 +15,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RestaurantDTO {
-
     private Long id;
 
     @NotEmpty
@@ -23,9 +23,6 @@ public class RestaurantDTO {
 
     @NotEmpty
     private String address;
-
-    @NotEmpty
-    private String businessType;
 
     @NotEmpty
     private String phoneNumber;
@@ -41,7 +38,22 @@ public class RestaurantDTO {
     
     private String closeTime;
 
-    // 첨부파일의 이름들
     private List<String> fileNames;
 
+    @Builder.Default
+    private String category = "기타";
+
+    public Restaurant toEntity() {
+        return Restaurant.builder()
+                .id(id)
+                .name(name)
+                .category(category)
+                .businessType(category)
+                .address(address)
+                .phoneNumber(phoneNumber)
+                .description(description)
+                .refLink(refLink)
+                .ownerId(ownerId)
+                .build();
+    }
 }

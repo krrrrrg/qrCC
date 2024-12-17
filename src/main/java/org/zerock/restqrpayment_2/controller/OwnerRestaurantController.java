@@ -17,9 +17,9 @@ import org.zerock.restqrpayment_2.service.RestaurantService;
 
 import java.util.List;
 
+@Log4j2
 @Controller
 @RequestMapping("/api/owner")
-@Log4j2
 @RequiredArgsConstructor
 public class OwnerRestaurantController {
 
@@ -60,9 +60,18 @@ public class OwnerRestaurantController {
     public ResponseEntity<Long> createRestaurant(
             @RequestBody RestaurantDTO restaurantDTO,
             @AuthenticationPrincipal UserDetails userDetails) {
+        
+        log.info("Restaurant DTO: " + restaurantDTO);
+        
+        // category 값이 전달되는지 확인
+        if (restaurantDTO.getCategory() == null || restaurantDTO.getCategory().trim().isEmpty()) {
+            throw new IllegalArgumentException("카테고리는 필수 입력 항목입니다.");
+        }
+        
         restaurantDTO.setOwnerId(userDetails.getUsername());
+        
         Long id = restaurantService.register(restaurantDTO);
-        return ResponseEntity.ok(id);
+        return new ResponseEntity<>(id, HttpStatus.CREATED);
     }
 
     @PutMapping("/restaurants/{id}")

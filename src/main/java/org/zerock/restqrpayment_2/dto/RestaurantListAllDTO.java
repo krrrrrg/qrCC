@@ -5,21 +5,15 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 @Data
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
 public class RestaurantListAllDTO {
     private Long id;
-
     private String name;
-
-    private String businessType;
-
-    private LocalDateTime regDate;
-
-    private List<RestaurantImageDTO> restaurantImages;
+    private String category;
+    private String address;
+    private String phoneNumber;
+    private String description;
 }

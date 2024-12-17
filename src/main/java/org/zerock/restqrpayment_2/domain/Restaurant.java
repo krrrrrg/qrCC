@@ -7,78 +7,82 @@ import org.hibernate.annotations.BatchSize;
 import java.util.HashSet;
 import java.util.Set;
 
+@Entity
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ToString
-@Entity
+@ToString(exclude = {"imageSet", "menuSet"})  // 순환 참조 방지
+@Table(name = "restaurant")
 public class Restaurant extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 500, nullable = false)
+    @Column(nullable = false)
     private String name;
 
-    @Column(length = 500, nullable = false)
-    private String address;
+    @Column(nullable = false)
+    private String category;
 
-    @Column(length = 500, nullable = false)
+    @Column(name = "business_type", nullable = false)
     private String businessType;
 
-    @Column(length = 500, nullable = false)
+    @Column
+    private String address;
+
+    @Column
     private String phoneNumber;
 
-    private String refLink;
-
+    @Column
     private String description;
 
-    // 레스토랑 주인 구별 프로퍼티
+    @Column
+    private String refLink;
+
+    @Column(nullable = false)
     private String ownerId;
 
-    // Restaurant 업데이트
-    public void changeRestaurant(String name, String address, String businessType, String phoneNumber, String refLink, String description) {
-        this.name = name;
-        this.address = address;
-        this.businessType = businessType;
-        this.phoneNumber = phoneNumber;
-        this.refLink = refLink;
-        this.description = description;
-    }
-
     @OneToMany(mappedBy = "restaurant",
-            cascade = {CascadeType.ALL},
-            fetch = FetchType.LAZY,
+            cascade = CascadeType.ALL,
             orphanRemoval = true)
     @Builder.Default
     @BatchSize(size = 20)
     private Set<RestaurantImage> imageSet = new HashSet<>();
 
-    // RestaurantImage 추가
+    @OneToMany(mappedBy = "restaurant",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true)
+    @Builder.Default
+    private Set<Menu> menuSet = new HashSet<>();
+
     public void addRestaurantImage(String uuid, String fileName) {
-        RestaurantImage restaurantImage = RestaurantImage.builder()
+        RestaurantImage image = RestaurantImage.builder()
                 .uuid(uuid)
                 .fileName(fileName)
                 .restaurant(this)
                 .ord(imageSet.size())
                 .build();
-        imageSet.add(restaurantImage);
+        imageSet.add(image);
     }
 
-    // RestaurantImage 삭제
     public void clearRestaurantImages() {
-        imageSet.forEach(restaurantImage -> restaurantImage.changeRestaurant(null));
-
-        this.imageSet.clear();
+        imageSet.forEach(image -> image.changeRestaurant(null));
+        imageSet.clear();
     }
 
-    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    @Builder.Default
-    private Set<Menu> menuSet = new HashSet<>();
+    public void changeRestaurant(String name, String address, String category,
+                               String phoneNumber, String description, String refLink) {
+        this.name = name;
+        this.address = address;
+        this.category = category;
+        this.businessType = category;
+        this.phoneNumber = phoneNumber;
+        this.description = description;
+        this.refLink = refLink;
+    }
 
-    // 메뉴 추가
     public void addMenu(String name, Double price, String description) {
         Menu menu = Menu.builder()
                 .name(name)
@@ -89,9 +93,12 @@ public class Restaurant extends BaseEntity {
         menuSet.add(menu);
     }
 
-    // 메뉴 삭제
     public void clearMenuSet() {
         menuSet.forEach(menu -> menu.setRestaurant(null));
-        this.menuSet.clear();
+        menuSet.clear();
+    }
+
+    public void setBusinessType(String businessType) {
+        this.businessType = businessType;
     }
 }
