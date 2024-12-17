@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.zerock.restqrpayment_2.dto.MemberDTO;
+import org.zerock.restqrpayment_2.dto.PasswordChangeDTO;
 import org.zerock.restqrpayment_2.service.MemberService;
 
 import java.util.List;
@@ -85,6 +86,30 @@ public class MemberController {
         } catch (Exception e) {
             log.error("Error deleting member: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Deletion failed");
+        }
+    }
+
+    // 비밀번호 변경
+    @PutMapping("/{mid}/password")
+    public ResponseEntity<String> changePassword(
+            @PathVariable String mid,
+            @RequestBody PasswordChangeDTO passwordChangeDTO) {
+        log.info("changePassword for user: " + mid);
+
+        try {
+            if (!passwordChangeDTO.getNewPassword().equals(passwordChangeDTO.getConfirmPassword())) {
+                return ResponseEntity.badRequest().body("새 비밀번호와 확인 비밀번호가 일치하지 않습니다.");
+            }
+
+            memberService.changePassword(
+                mid,
+                passwordChangeDTO.getCurrentPassword(),
+                passwordChangeDTO.getNewPassword()
+            );
+            
+            return ResponseEntity.ok("비밀번호가 성공적으로 변경되었습니다.");
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

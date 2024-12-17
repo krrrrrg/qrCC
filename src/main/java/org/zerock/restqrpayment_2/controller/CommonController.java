@@ -5,11 +5,13 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.zerock.restqrpayment_2.dto.MemberDTO;
 import org.zerock.restqrpayment_2.service.MemberService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.zerock.restqrpayment_2.domain.MemberRole;
+import org.springframework.ui.Model;
 
 @Controller
 @Log4j2
@@ -25,7 +27,19 @@ public class CommonController {
     }
 
     @GetMapping("/login")
-    public String login() {
+    public String loginGET(@RequestParam(value = "error", required = false) String error, 
+                           @RequestParam(value = "logout", required = false) String logout, Model model) {
+        log.info("login get.....");
+        log.info("logout: " + logout);
+
+        if(logout != null) {
+            model.addAttribute("msg", "로그아웃 되었습니다.");
+        }
+
+        if(error != null) {
+            model.addAttribute("error", "로그인 에러입니다. 계정을 확인하세요");
+        }
+
         return "common/login";
     }
 

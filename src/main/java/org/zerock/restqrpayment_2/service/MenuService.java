@@ -1,7 +1,5 @@
 package org.zerock.restqrpayment_2.service;
 
-
-
 import org.zerock.restqrpayment_2.domain.Menu;
 import org.zerock.restqrpayment_2.dto.MenuDTO;
 import org.zerock.restqrpayment_2.dto.MenuListAllDTO;
@@ -23,6 +21,9 @@ public interface MenuService {
 
     PageResponseDTO<MenuListAllDTO> listWithAll(Long restaurantId, PageRequestDTO pageRequestDTO);
 
+    // 메뉴 카테고리 목록 조회
+    List<String> getCategories(Long restaurantId);
+
     default Menu dtoToEntity(MenuDTO menuDTO) {
         Menu menu = Menu.builder()
                 .id(menuDTO.getId())
@@ -34,13 +35,14 @@ public interface MenuService {
 
         if (menuDTO.getFileNames() != null) {
             menuDTO.getFileNames().forEach(fileName -> {
+                String uuid = "";
+                String originalFileName = fileName;
+                
                 if (fileName != null && fileName.contains("_")) {
-                    String[] arr = fileName.split("_");
-                    if (arr.length == 2) {
-                        menu.addMenuImage(arr[0], arr[1]);
-                    } else {
-                        throw new IllegalArgumentException("Invalid fileName format: " + fileName);
-                    }
+                    int firstUnderscoreIdx = fileName.indexOf("_");
+                    uuid = fileName.substring(0, firstUnderscoreIdx);
+                    originalFileName = fileName.substring(firstUnderscoreIdx + 1);
+                    menu.addMenuImage(uuid, originalFileName);
                 } else {
                     throw new IllegalArgumentException("Invalid fileName or missing '_': " + fileName);
                 }

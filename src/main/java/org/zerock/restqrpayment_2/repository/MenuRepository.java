@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.zerock.restqrpayment_2.domain.Menu;
 import org.zerock.restqrpayment_2.repository.menuSearch.MenuImageSearch;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface MenuRepository extends JpaRepository<Menu, Long>, MenuImageSearch {
@@ -15,4 +16,8 @@ public interface MenuRepository extends JpaRepository<Menu, Long>, MenuImageSear
     @EntityGraph(attributePaths = {"imageSet"})
     @Query("select m from Menu m where m.id =:menuId")
     Optional<Menu> findByIdWithImages(Long menuId);
+
+    // 레스토랑 ID로 메뉴 목록 조회
+    @Query("select m from Menu m where m.restaurant.id = :restaurantId")
+    List<Menu> findByRestaurantId(Long restaurantId);
 }

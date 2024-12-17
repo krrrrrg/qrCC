@@ -23,6 +23,9 @@ public class Menu extends BaseEntity {
     @Column(length = 500, nullable = false)
     private String name; // 메뉴 이름
 
+    @Column(length = 100)
+    private String category; // 메뉴 카테고리
+
     private Double price; // 메뉴 가격
 
     private String description; // 메뉴 설명
@@ -31,6 +34,10 @@ public class Menu extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Restaurant restaurant; // Restaurant과 연관 관계
+
+    public void setRestaurant(Restaurant restaurant) {
+        this.restaurant = restaurant;
+    }
 
     // 메뉴 업데이트
     public void changeMenu(String name, Double price, String description) {

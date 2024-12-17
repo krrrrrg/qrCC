@@ -6,10 +6,15 @@ import java.util.List;
 
 public interface MemberService {
     String register(MemberDTO memberDTO); // Create
-    MemberDTO read(String mid);           // Read
+    MemberDTO read(String userId);           // Read
     void modify(MemberDTO memberDTO);     // Update
-    void remove(String mid);              // Delete
+    void remove(String userId);              // Delete
 
     List<MemberDTO> getMemberList();
     
+    void changePassword(String userId, String currentPassword, String newPassword);
+    
+    void deleteAccount(String userId, String password);
+    
+    boolean authenticate(String userId, String password);
 }

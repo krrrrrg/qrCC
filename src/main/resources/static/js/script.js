@@ -109,10 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeEventListeners();  // 이벤트 리스너 초기화 추가
     
     // 가게 정보 업데이트
-    const storeSettings = JSON.parse(localStorage.getItem('storeSettings'));
-    if (storeSettings) {
-        updateStoreInfo();
-    }
+    updateStoreInfo();
     
     // 메뉴 리스트가 있으면 추천 메뉴 표시
     if (document.getElementById('menu-list')) {
@@ -292,80 +289,100 @@ function initializeTableInfo() {
 
 // 가게 정보 업데이트
 function updateStoreInfo() {
-    const storeSettings = JSON.parse(localStorage.getItem('storeSettings'));
-    console.log('현재 가게 설정:', storeSettings); // 디버깅용
+    // DB에서 가게 정보 가져오기
+    fetch('/api/restaurants/1')
+        .then(response => response.json())
+        .then(storeData => {
+            console.log('현재 가게 설정:', storeData);
 
-    // 가게 이름 업데이트
-    const storeNameElement = document.querySelector('.store-name');
-    if (storeNameElement) {
-        storeNameElement.textContent = storeSettings?.name || '투스 카페';
-    }
+            // 가게 이름 업데이트
+            const storeNameElement = document.querySelector('.store-name');
+            if (storeNameElement) {
+                storeNameElement.textContent = storeData?.name || '투스 카페';
+            }
 
-    // 공지사항 업데이트
-    const promotionBanner = document.querySelector('.promotion-banner');
-    if (promotionBanner) {
-        if (storeSettings?.notice) {
-            promotionBanner.innerHTML = `
-                <span class="promotion-icon">📢</span>
-                ${storeSettings.notice}
-            `;
-        } else {
-            promotionBanner.innerHTML = `
-                <span class="promotion-icon">📢</span>
-                1인당 1메뉴 부탁드려요 :)
-            `;
-        }
-    }
+            // 공지사항 업데이트
+            const promotionBanner = document.querySelector('.promotion-banner');
+            if (promotionBanner) {
+                if (storeData?.notice) {
+                    promotionBanner.innerHTML = `
+                        <span class="promotion-icon">📢</span>
+                        ${storeData.notice}
+                    `;
+                } else {
+                    promotionBanner.innerHTML = `
+                        <span class="promotion-icon">📢</span>
+                        1인당 1메뉴 부탁드려요 :)
+                    `;
+                }
+            }
 
-    // SNS 링크 업데이트
-    if (storeSettings?.snsLink) {
-        // 기존 SNS 링크가 있다면 제거
-        const existingSnsLink = document.querySelector('.sns-link');
-        if (existingSnsLink) {
-            existingSnsLink.remove();
-        }
+            // SNS 링크 업데이트
+            if (storeData?.snsLink) {
+                // 기존 SNS 링크가 있다면 제거
+                const existingSnsLink = document.querySelector('.sns-link');
+                if (existingSnsLink) {
+                    existingSnsLink.remove();
+                }
 
-        // 새로운 SNS 링크 추가
-        const snsLink = document.createElement('a');
-        snsLink.href = storeSettings.snsLink;
-        snsLink.className = 'sns-link';
-        snsLink.target = '_blank';
-        snsLink.innerHTML = `
-            <i class="fab fa-instagram"></i>
-            <span>Instagram</span>
-        `;
+                // 새로운 SNS 링크 추가
+                const snsLink = document.createElement('a');
+                snsLink.href = storeData.snsLink;
+                snsLink.className = 'sns-link';
+                snsLink.target = '_blank';
+                snsLink.innerHTML = `
+                    <i class="fab fa-instagram"></i>
+                    <span>Instagram</span>
+                `;
 
-        // 드롭다운 메뉴에 SNS 링크 추가
-        const menuList = document.querySelector('.menu-list');
-        if (menuList) {
-            menuList.appendChild(snsLink);
-        }
-    }
+                // 드롭다운 메뉴에 SNS 링크 추가
+                const menuList = document.querySelector('.menu-list');
+                if (menuList) {
+                    menuList.appendChild(snsLink);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('가게 정보를 불러오는데 실패했습니다:', error);
+        });
 }
 
-// 메뉴 드롭다운 업데이트
-function updateMenuDropdown() {
+// SNS 링크 업데이트
+function updateSnsLink() {
     const snsSection = document.getElementById('snsSection');
     const snsLink = document.getElementById('snsLink');
-    const storeSettings = JSON.parse(localStorage.getItem('storeSettings'));
     
-    if (storeSettings?.snsLink?.trim()) {
-        snsSection.style.display = 'block';
-        snsLink.href = storeSettings.snsLink;
-    } else {
-        snsSection.style.display = 'none';
-    }
+    fetch('/api/restaurant/1')
+        .then(response => response.json())
+        .then(storeData => {
+            if (storeData?.snsLink?.trim()) {
+                snsSection.style.display = 'block';
+                snsLink.href = storeData.snsLink;
+            } else {
+                snsSection.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('가게 정보를 불러오는데 실패했습니다:', error);
+            snsSection.style.display = 'none';
+        });
 }
 
 // 공지사항 업데이트
-function updateNoticeBanner() {
+function updatePromotionBanner() {
     const promotionBanner = document.querySelector('.promotion-banner');
-    const storeSettings = JSON.parse(localStorage.getItem('storeSettings'));
     
-    if (storeSettings?.notice) {
-        promotionBanner.innerHTML = `
-            <span class="promotion-icon">📢</span>
-            ${storeSettings.notice}
-        `;
-    }
+    fetch('/api/restaurant/1')
+        .then(response => response.json())
+        .then(storeData => {
+            if (storeData?.notice) {
+                promotionBanner.innerHTML = `
+                    <span class="promotion-icon">📢</span>
+                    ${storeData.notice}
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('가게 정보를 불러오는데 실패했습니다:', error);
+        });
 }

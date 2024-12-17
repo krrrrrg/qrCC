@@ -1,6 +1,5 @@
 package org.zerock.restqrpayment_2.domain;
 
-
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -11,13 +10,14 @@ import org.zerock.restqrpayment_2.dto.MemberDTO;
 import java.util.HashSet;
 import java.util.Set;
 
+@Entity
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
 @ToString(exclude = "roleSet")
-public class Member extends BaseEntity{
+public class Member extends BaseEntity {
 
     @Id
     private String userId;
@@ -27,12 +27,12 @@ public class Member extends BaseEntity{
     private String name;
     private String phone;
 
-    @ElementCollection(fetch = FetchType.LAZY)
+    @ElementCollection(fetch = FetchType.EAGER)
     @Builder.Default
     private Set<MemberRole> roleSet = new HashSet<>();
 
-    public void changePassword(String password) {
-        this.password = password;
+    public void changePassword(String newPassword) {
+        this.password = newPassword;
     }
 
     public void addRole(MemberRole role) {

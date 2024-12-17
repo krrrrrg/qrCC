@@ -8,13 +8,19 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.zerock.restqrpayment_2.domain.Menu;
+import org.zerock.restqrpayment_2.domain.Restaurant;
 import org.zerock.restqrpayment_2.dto.MenuDTO;
 import org.zerock.restqrpayment_2.dto.MenuListAllDTO;
 import org.zerock.restqrpayment_2.dto.PageRequestDTO;
 import org.zerock.restqrpayment_2.dto.PageResponseDTO;
 import org.zerock.restqrpayment_2.repository.MenuRepository;
+import org.zerock.restqrpayment_2.repository.RestaurantRepository;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -22,11 +28,16 @@ import java.util.Optional;
 public class MenuServiceImpl implements MenuService {
 
     private final MenuRepository menuRepository;
+    private final RestaurantRepository restaurantRepository;
 
     @Override
     public Long register(MenuDTO menuDTO) {
 
+        Restaurant restaurant = restaurantRepository.findById(menuDTO.getRestaurantId())
+                .orElseThrow(() -> new IllegalArgumentException("Restaurant not found with id: " + menuDTO.getRestaurantId()));
+
         Menu menu = dtoToEntity(menuDTO);
+        menu.setRestaurant(restaurant);
 
         log.info(menu);
 
@@ -97,4 +108,14 @@ public class MenuServiceImpl implements MenuService {
                 .build();
     }
 
+    @Override
+    public List<String> getCategories(Long restaurantId) {
+        return menuRepository.findByRestaurantId(restaurantId)
+                .stream()
+                .map(Menu::getDishes)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
 }

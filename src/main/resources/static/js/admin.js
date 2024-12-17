@@ -43,26 +43,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // 메뉴 목록 로드
     loadMenuList();
 
-    // 저장된 가게 설정 불러오기
-    const storeSettings = JSON.parse(localStorage.getItem('storeSettings'));
-    if (storeSettings) {
-        // 각 입력 필드에 저장된 값 설정
-        document.getElementById('storeName').value = storeSettings.name || '';
-        document.getElementById('openTime').value = storeSettings.openTime || '09:00';
-        document.getElementById('closeTime').value = storeSettings.closeTime || '22:00';
-        document.getElementById('storeNotice').value = storeSettings.notice || '';
-        document.getElementById('storeSns').value = storeSettings.snsLink || '';
-    }
+    // DB에서 가게 정보 불러오기
+    fetch('/api/restaurants/1')
+        .then(response => response.json())
+        .then(storeData => {
+            if (storeData) {
+                document.getElementById('storeName').value = storeData.name || '';
+                document.getElementById('storeAddress').value = storeData.address || '';
+                document.getElementById('storeCategory').value = storeData.category || '';
+                document.getElementById('storePhone').value = storeData.phoneNumber || '';
+                document.getElementById('openTime').value = storeData.openTime || '09:00';
+                document.getElementById('closeTime').value = storeData.closeTime || '22:00';
+                document.getElementById('storeNotice').value = storeData.description || '';
+                document.getElementById('storeSns').value = storeData.refLink || '';
+                
+                // 사이드바 가게 이름 업데이트
+                const sidebarStoreName = document.querySelector('.admin-profile .store-name');
+                if (sidebarStoreName) {
+                    sidebarStoreName.textContent = storeData.name || '';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('가게 정보를 불러오는데 실패했습니다:', error);
+        });
 
     // 가게 설정 폼 이벤트 리스너 추가
     const storeSettingsForm = document.getElementById('storeSettingsForm');
     if (storeSettingsForm) {
         storeSettingsForm.addEventListener('submit', handleStoreSettings);
-        
-        // 저장 버튼 클릭 시 콘솔에 데이터 출력 (디버깅용)
-        storeSettingsForm.addEventListener('submit', function(e) {
-            console.log('저장된 데이터:', JSON.parse(localStorage.getItem('storeSettings')));
-        });
     }
 
     // 테이블 관리 기능 초기화
@@ -272,22 +281,47 @@ function saveMenu(menuData) {
 }
 
 // 가게 설정 저장
-function handleStoreSettings(event) {
-    event.preventDefault();
+function handleStoreSettings(e) {
+    e.preventDefault();
     
     const storeData = {
         name: document.getElementById('storeName').value,
+        address: document.getElementById('storeAddress').value,
+        category: document.getElementById('storeCategory').value,
+        phoneNumber: document.getElementById('storePhone').value,
         openTime: document.getElementById('openTime').value,
         closeTime: document.getElementById('closeTime').value,
-        notice: document.getElementById('storeNotice').value,
-        snsLink: document.getElementById('storeSns').value
+        description: document.getElementById('storeNotice').value,
+        refLink: document.getElementById('storeSns').value,
+        ownerId: "owner1"     // TODO: 실제 로그인한 owner ID로 대체 필요
     };
 
-    console.log('저장하려는 데이터:', storeData);
-    localStorage.setItem('storeSettings', JSON.stringify(storeData));
-    
-    alert('가게 정보가 저장되었습니다.');
-    window.location.reload(); // 페이지 새로고침하여 변경사항 즉시 반영
+    console.log('전송할 데이터:', storeData);
+
+    // DB에 저장
+    fetch('/api/restaurants', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(storeData)
+    })
+    .then(response => {
+        if (response.ok) {
+            // 사이드바 가게 이름 업데이트
+            const sidebarStoreName = document.querySelector('.admin-profile .store-name');
+            if (sidebarStoreName) {
+                sidebarStoreName.textContent = storeData.name;
+            }
+            alert('가게 정보가 성공적으로 저장되었습니다.');
+        } else {
+            throw new Error('가게 정보 저장에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('가게 정보 저장에 실패했습니다. 다시 시도해주세요.');
+    });
 }
 
 // 로그아웃
@@ -469,3 +503,30 @@ function getStatusText(status) {
     };
     return statusMap[status] || status;
 }
+
+// DB에서 가게 정보 불러오기
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/restaurants/1')
+        .then(response => response.json())
+        .then(storeData => {
+            if (storeData) {
+                document.getElementById('storeName').value = storeData.name || '';
+                document.getElementById('storeAddress').value = storeData.address || '';
+                document.getElementById('storeCategory').value = storeData.category || '';
+                document.getElementById('storePhone').value = storeData.phoneNumber || '';
+                document.getElementById('openTime').value = storeData.openTime || '09:00';
+                document.getElementById('closeTime').value = storeData.closeTime || '22:00';
+                document.getElementById('storeNotice').value = storeData.description || '';
+                document.getElementById('storeSns').value = storeData.refLink || '';
+                
+                // 사이드바 가게 이름 업데이트
+                const sidebarStoreName = document.querySelector('.admin-profile .store-name');
+                if (sidebarStoreName) {
+                    sidebarStoreName.textContent = storeData.name || '';
+                }
+            }
+        })
+        .catch(error => {
+            console.error('가게 정보를 불러오는데 실패했습니다:', error);
+        });
+});

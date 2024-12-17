@@ -4,9 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>점주 로그인</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
     <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css}">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script th:src="@{/js/owner-auth.js}"></script>
 </head>
 <body>
@@ -16,17 +19,12 @@
                 <div class="profile-image">🏪</div>
                 <h1>점주 로그인</h1>
             </div>
-            <form action="/owner/login" method="post" onsubmit="return handleOwnerLogin(event)">
+            <form id="ownerLoginForm" onsubmit="return handleOwnerLogin(event)" action="/owner/login" method="post">
+                <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
                 <!-- 에러 메시지 -->
                 <div th:if="${param.error}" class="error-message">
-                    <p th:if="${param.error[0] == 'notfound'}" class="text-danger">
-                        존재하지 않는 아이디입니다.
-                    </p>
-                    <p th:if="${param.error[0] == 'invalid'}" class="text-danger">
-                        비밀번호가 일치하지 않습니다.
-                    </p>
-                    <p th:if="${param.error[0] == 'unauthorized'}" class="text-danger">
-                        점주 권한이 없는 계정입니다.
+                    <p class="text-danger">
+                        아이디 또는 비밀번호가 올바르지 않습니다.
                     </p>
                 </div>
                 
@@ -41,7 +39,7 @@
                 <button type="submit" class="primary-button">로그인</button>
             </form>
             <div class="auth-links">
-                <a href="/owner/signup">회원가입</a>
+                <a href="/owner/signup">점주 회원가입</a>
                 <div class="auth-separator">|</div>
                 <a href="/find/id">아이디 찾기</a>
                 <div class="auth-separator">|</div>
@@ -49,5 +47,27 @@
             </div>
         </div>
     </div>
+
+    <script>
+    function handleOwnerLogin(event) {
+        const userId = document.getElementById('userId').value;
+        const password = document.getElementById('password').value;
+
+        // 아이디 형식 검증
+        if (!/^[a-zA-Z0-9]{4,20}$/.test(userId)) {
+            event.preventDefault();
+            alert('올바른 아이디 형식을 입력해주세요.');
+            return false;
+        }
+
+        // 비밀번호 길이 검증
+        if (password.length < 8) {
+            event.preventDefault();
+            alert('비밀번호는 8자 이상이어야 합니다.');
+            return false;
+        }
+        return true;
+    }
+    </script>
 </body>
 </html>

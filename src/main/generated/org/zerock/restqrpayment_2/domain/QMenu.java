@@ -24,6 +24,8 @@ public class QMenu extends EntityPathBase<Menu> {
 
     public final QBaseEntity _super = new QBaseEntity(this);
 
+    public final StringPath category = createString("category");
+
     public final StringPath description = createString("description");
 
     public final StringPath dishes = createString("dishes");

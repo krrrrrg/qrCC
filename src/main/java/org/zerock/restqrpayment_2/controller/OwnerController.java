@@ -2,14 +2,14 @@ package org.zerock.restqrpayment_2.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.zerock.restqrpayment_2.dto.MemberDTO;
 import org.zerock.restqrpayment_2.service.MemberService;
 import org.zerock.restqrpayment_2.domain.MemberRole;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.log4j.Log4j2;
 
 import java.util.HashSet;
@@ -17,30 +17,28 @@ import java.util.HashSet;
 @Controller
 @Log4j2
 @RequiredArgsConstructor
+@RequestMapping("/owner")
 public class OwnerController {
 
     private final MemberService memberService;
-    private final PasswordEncoder passwordEncoder;
 
-    @GetMapping("/owner/login")
+    @GetMapping("/login")
     public String ownerLogin() {
         return "owner/owner-login";
     }
 
-    @GetMapping("/owner/dashboard")
+    @GetMapping("/dashboard")
     public String ownerDashboard() {
         return "owner/owner-dashboard";
     }
 
-    @GetMapping("/owner/signup")
+    @GetMapping("/signup")
     public String ownerSignup() {
         return "owner/owner-signup";
     }
 
-    @PostMapping("/owner/signup")
-    public String ownerSignupPost(
-            MemberDTO memberDTO
-    ) {
+    @PostMapping("/signup")
+    public String ownerSignupPost(MemberDTO memberDTO) {
         HashSet<MemberRole> roles = new HashSet<>();
         roles.add(MemberRole.OWNER);
         memberDTO.setRoles(roles);
@@ -50,7 +48,7 @@ public class OwnerController {
         return "redirect:/owner/login";
     }
 
-    @PostMapping("/owner/login")
+    @PostMapping("/login")
     public String ownerLoginPost(MemberDTO memberDTO, RedirectAttributes redirectAttributes) {
         log.info("Login attempt for user: " + memberDTO.getUserId());
         
@@ -59,7 +57,7 @@ public class OwnerController {
             MemberDTO existingMember = memberService.read(memberDTO.getUserId());
             
             // 비밀번호 확인
-            if (passwordEncoder.matches(memberDTO.getPassword(), existingMember.getPassword())) {
+            if (memberService.authenticate(memberDTO.getUserId(), memberDTO.getPassword())) {
                 // 점주 권한 확인
                 if (existingMember.getRoles().contains(MemberRole.OWNER)) {
                     log.info("Login successful for owner: " + memberDTO.getUserId());

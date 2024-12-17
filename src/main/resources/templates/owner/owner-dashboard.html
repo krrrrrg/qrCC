@@ -1,8 +1,12 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" 
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}"/>
     <title>점주 관리자</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}" />
     <link rel="stylesheet" th:href="@{/css/admin-styles.css}">
@@ -120,49 +124,37 @@
             <section id="menu-management" class="admin-section">
                 <div class="section-header">
                     <h2>메뉴 관리</h2>
-                    <button onclick="openAddMenuModal()" class="primary-button">+ 새 메뉴 추가</button>
-                </div>
-
-                <!-- 카테고리 관리 -->
-                <div class="category-list-container">
-                    <h3>카테고리 관리</h3>
-                    <div class="category-items">
-                        <div class="category-row">
-                            <span>커피</span>
-                            <div class="category-actions">
-                                <button class="edit-btn"><i class="fas fa-edit"></i></button>
-                                <button class="delete-btn"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </div>
-                        <!-- 다른 카테고리들... -->
-                    </div>
-                    <button onclick="openAddCategoryModal()" class="add-category-btn">+ 새 카테고리</button>
-                </div>
-
-                <!-- 메뉴 목록 -->
-                <div class="menu-list-section">
-                    <div class="menu-filters">
-                        <select id="categoryFilter">
-                            <option value="all">전체 카테고리</option>
+                    <div class="form-group mb-3">
+                        <label for="restaurantSelect">레스토랑 선택</label>
+                        <select class="form-control" id="restaurantSelect">
+                            <option value="">레스토랑을 선택하세요</option>
                         </select>
-                        <div class="search-box">
-                            <input type="text" id="menuSearch" placeholder="메뉴 검색...">
-                        </div>
                     </div>
-                    
-                    <div class="menu-items">
-                        <div class="menu-item">
-                            <div class="menu-info">
-                                <h4>쌍화커피</h4>
-                                <p>4,321원</p>
-                            </div>
-                            <div class="menu-actions">
-                                <button class="edit-btn">수정</button>
-                                <button class="delete-btn">삭제</button>
-                                <button class="soldout-btn">품절</button>
+                </div>
+
+                <!-- 메뉴 관리 컨텐츠 -->
+                <div class="menu-content" style="display: none;">
+                    <!-- 메뉴 목록 -->
+                    <div class="menu-list mt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3>메뉴 목록</h3>
+                            <button class="btn btn-primary" onclick="openAddMenuModal()" id="addMenuBtn" disabled>
+                                새 메뉴 추가
+                            </button>
+                        </div>
+                        <div class="menu-filters mb-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <select id="categoryFilter" class="form-control">
+                                        <option value="all">전체 카테고리</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="text" id="menuSearch" class="form-control" placeholder="메뉴 검색...">
+                                </div>
                             </div>
                         </div>
-                        <!-- 다른 메뉴 아이템들... -->
+                        <div class="menu-items"></div>
                     </div>
                 </div>
             </section>
@@ -175,20 +167,39 @@
                         <input type="text" id="storeName" class="form-control" placeholder="꽁꽁카페" required>
                     </div>
                     <div class="form-group">
+                        <label>주소</label>
+                        <input type="text" id="storeAddress" class="form-control" placeholder="주소를 입력하세요" required>
+                    </div>
+                    <div class="form-group">
+                        <label>카테고리</label>
+                        <select id="storeCategory" class="form-control" required>
+                            <option value="">카테고리 선택</option>
+                            <option value="카페">카페</option>
+                            <option value="레스토랑">레스토랑</option>
+                            <option value="베이커리">베이커리</option>
+                            <option value="기타">기타</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>전화번호</label>
+                        <input type="tel" id="storePhone" class="form-control" placeholder="02-1234-5678" required 
+                               pattern="[0-9]{2,3}-[0-9]{3,4}-[0-9]{4}">
+                    </div>
+                    <div class="form-group">
                         <label>영업 시간</label>
                         <div class="time-inputs">
-                            <input type="time" id="openTime" value="09:00">
+                            <input type="time" id="openTime" value="09:00" required>
                             <span>~</span>
-                            <input type="time" id="closeTime" value="22:00">
+                            <input type="time" id="closeTime" value="22:00" required>
                         </div>
                     </div>
                     <div class="form-group">
                         <label>공지사항</label>
-                        <input type="text" id="storeNotice" value="" placeholder="공지사항을 입력하세요">
+                        <input type="text" id="storeNotice" class="form-control" placeholder="공지사항을 입력하세요">
                     </div>
                     <div class="form-group">
                         <label>SNS 링크</label>
-                        <input type="text" id="storeSns" value="" placeholder="SNS 링크를 입력하세요">
+                        <input type="text" id="storeSns" class="form-control" placeholder="SNS 링크를 입력하세요">
                     </div>
                     <button type="submit" class="save-btn">저장하기</button>
                 </form>
@@ -196,49 +207,33 @@
 
             <div id="account-settings" class="admin-section">
                 <h2>계정 설정</h2>
-                <!-- 비밀번호 변경 폼 -->
-                <form id="accountSettingsForm" class="settings-form">
-                    <h3>비밀번호 변경</h3>
-                    <div class="form-group">
-                        <label>현재 비밀번호</label>
-                        <input type="password" id="currentPassword">
-                    </div>
-                    <div class="form-group">
-                        <label>새 비밀번호</label>
-                        <input type="password" id="newPassword">
-                    </div>
-                    <div class="form-group">
-                        <label>새 비밀번호 확인</label>
-                        <input type="password" id="confirmPassword">
-                    </div>
-                    <button type="submit" class="save-btn">비밀번호 변경</button>
-                </form>
+                <div class="account-settings-section">
+                    <h2>비밀번호 변경</h2>
+                    <form id="passwordChangeForm" class="settings-form">
+                        <div class="form-group">
+                            <label for="currentPassword">현재 비밀번호</label>
+                            <input type="password" id="currentPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="newPassword">새 비밀번호</label>
+                            <input type="password" id="newPassword" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirmPassword">새 비밀번호 확인</label>
+                            <input type="password" id="confirmPassword" required>
+                        </div>
+                        <button type="submit" class="btn-primary">비밀번호 변경</button>
+                    </form>
 
-                <!-- 계정 탈퇴 섹션 -->
-                <div class="settings-form" style="margin-top: 20px;">
-                    <h3>계정 탈퇴</h3>
-                    <p style="color: var(--secondary-color); margin-bottom: 20px;">
-                        계정을 삭제하면 모든 데이터가 영구적으로 삭제되며 복구할 수 없습니다.
-                    </p>
-                    <button id="showDeleteAccountBtn" class="delete-btn" style="width: 100%; padding: 12px;">
-                        계정 탈퇴하기
-                    </button>
-                </div>
-
-                <!-- 계정 탈퇴 확인 모달 -->
-                <div id="deleteAccountModal" class="modal">
-                    <div class="modal-content">
-                        <h3>계정 탈퇴 확인</h3>
-                        <p style="margin-bottom: 20px;">정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.</p>
-                        <form id="deleteAccountForm">
+                    <h2>계정 탈퇴</h2>
+                    <div class="delete-account-section">
+                        <p class="warning-text">계정을 삭제하면 모든 데이터가 영구적으로 삭제되며 이 작업은 되돌릴 수 없습니다.</p>
+                        <form id="deleteAccountForm" class="settings-form">
                             <div class="form-group">
-                                <label>비밀번호를 입력하세요</label>
-                                <input type="password" id="deleteConfirmPassword" required>
+                                <label for="deleteAccountPassword">비밀번호 확인</label>
+                                <input type="password" id="deleteAccountPassword" required>
                             </div>
-                            <div class="modal-buttons">
-                                <button type="submit" class="delete-btn">계정 삭제 확인</button>
-                                <button type="button" class="secondary-button" id="cancelDelete">취소</button>
-                            </div>
+                            <button type="submit" class="btn-danger">계정 탈퇴하기</button>
                         </form>
                     </div>
                 </div>
@@ -346,144 +341,41 @@
     <!-- 메뉴 추가/수정 모달 -->
     <div id="menuModal" class="modal">
         <div class="modal-content">
-            <h3>메뉴 추가/수정</h3>
+            <h2 id="menuModalTitle">새 메뉴 추가</h2>
             <form id="menuForm">
+                <input type="hidden" id="menuId">
                 <div class="form-group">
-                    <label>메뉴 이미지</label>
-                    <input type="file" id="menuImage" accept="image/*">
-                    <div id="imagePreview"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label>메뉴명</label>
+                    <label for="menuName">메뉴 이름</label>
                     <input type="text" id="menuName" required>
                 </div>
-                
                 <div class="form-group">
-                    <label>카테고리</label>
-                    <select id="menuCategory" required>
-                        <!-- 카테고리 옵션들이 동적으로 추가됨 -->
-                    </select>
+                    <label for="dishes">카테고리</label>
+                    <input type="text" id="dishes" required>
                 </div>
-                
                 <div class="form-group">
-                    <label>가격</label>
-                    <input type="number" id="menuPrice" required>
+                    <label for="price">가격</label>
+                    <input type="number" id="price" required>
                 </div>
-                
                 <div class="form-group">
-                    <label>설명</label>
-                    <textarea id="menuDescription"></textarea>
+                    <label for="description">설명</label>
+                    <textarea id="description"></textarea>
                 </div>
-                
                 <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="menuRecommended">
-                        추천 메뉴로 설정
-                    </label>
+                    <label for="menuImage">이미지</label>
+                    <input type="file" id="menuImage" accept="image/*" onchange="handleImagePreview(event)">
+                    <div id="imagePreviewContainer" style="display: none;"></div>
                 </div>
-                
-                <div class="form-group">
-                    <label>
-                        <input type="checkbox" id="menuSoldOut">
-                        품절 표시
-                    </label>
-                </div>
-                
-                <div class="modal-footer">
-                    <button type="button" class="cancel-button" onclick="closeMenuModal()">취소</button>
-                    <button type="submit" class="save-button">저장</button>
+                <div class="button-group">
+                    <button type="button" class="save" onclick="handleMenuSubmit(event)">저장</button>
+                    <button type="button" class="cancel" onclick="closeMenuModal()">취소</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script th:inline="javascript">
-        // 페이지 로드 시 저장된 가게 정보 불러오기
-        document.addEventListener('DOMContentLoaded', function() {
-            // 서버에서 가게 정보 가져오기
-            fetch('/api/restaurant/1')  // 여기서 1은 restaurant ID입니다
-                .then(response => response.json())
-                .then(storeInfo => {
-                    const storeNameInput = document.getElementById('storeName');
-                    const sidebarStoreName = document.querySelector('.admin-profile .store-name');
-                    
-                    console.log('가게 정보:', storeInfo);
-
-                    if (storeInfo.name) {
-                        // 입력 필드에 가게 이름 설정
-                        if (storeNameInput) {
-                            storeNameInput.value = storeInfo.name;
-                        }
-                        // 사이드바에 가게 이름 설정
-                        if (sidebarStoreName) {
-                            sidebarStoreName.textContent = storeInfo.name;
-                        }
-                    }
-
-                    // 다른 필드들도 저장된 값으로 설정
-                    if (storeInfo.openTime) {
-                        const openTimeInput = document.querySelector('input[placeholder="오전 09:00"]');
-                        if (openTimeInput) openTimeInput.value = storeInfo.openTime;
-                    }
-                    if (storeInfo.closeTime) {
-                        const closeTimeInput = document.querySelector('input[placeholder="오후 10:00"]');
-                        if (closeTimeInput) closeTimeInput.value = storeInfo.closeTime;
-                    }
-                    if (storeInfo.notice) {
-                        const noticeInput = document.querySelector('input[placeholder="안녕하세요 1인 1메뉴 해주세요"]');
-                        if (noticeInput) noticeInput.value = storeInfo.notice;
-                    }
-                    if (storeInfo.snsLink) {
-                        const snsInput = document.querySelector('input[placeholder="ddd"]');
-                        if (snsInput) snsInput.value = storeInfo.snsLink;
-                    }
-                })
-                .catch(error => {
-                    console.error('가게 정보를 불러오는데 실패했습니다:', error);
-                });
-        });
-
-        // 가게 정보 저장
-        document.getElementById('storeSettingsForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const storeInfo = {
-                name: document.getElementById('storeName').value,
-                openTime: document.querySelector('input[placeholder="오전 09:00"]').value,
-                closeTime: document.querySelector('input[placeholder="오후 10:00"]').value,
-                notice: document.querySelector('input[placeholder="안녕하세요 1인 1메뉴 해주세요"]').value,
-                snsLink: document.querySelector('input[placeholder="ddd"]').value
-            };
-            
-            // API 호출하여 가게 정보 저장
-            fetch('/api/restaurant', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(storeInfo)
-            })
-            .then(response => {
-                if (response.ok) {
-                    // 사이드바 가게 이름 업데이트
-                    const sidebarStoreName = document.querySelector('.admin-profile .store-name');
-                    if (sidebarStoreName) {
-                        sidebarStoreName.textContent = storeInfo.name;
-                    }
-                    
-                    alert('가게 정보가 성공적으로 저장되었습니다.');
-                } else {
-                    throw new Error('가게 정보 저장에 실패했습니다.');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('가게 정보 저장에 실패했습니다. 다시 시도해주세요.');
-            });
-        });
+        
     </script>
-
-
+    <script src="/js/account-settings.js"></script>
 </body>
 </html>

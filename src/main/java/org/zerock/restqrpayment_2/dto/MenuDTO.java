@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 
 import java.util.List;
 
+// TODO: Add restaurant field
+// TODO: Modify constructor
 
 @Data
 @Builder
@@ -24,6 +26,9 @@ public class MenuDTO {
 
     @NotEmpty
     private String name;
+
+    @NotEmpty
+    private String category;  // 메뉴 카테고리
 
     @Positive
     private Double price;

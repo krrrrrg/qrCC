@@ -19,6 +19,7 @@ import org.zerock.restqrpayment_2.service.RestaurantService;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Log4j2
 @RequiredArgsConstructor
@@ -33,9 +34,19 @@ public class RestaurantController {
 
     // 1. Read - 식당 목록 조회 (User, Owner, Admin)
     @GetMapping
-    public ResponseEntity<PageResponseDTO<RestaurantListAllDTO>> getList(PageRequestDTO pageRequestDTO) {
+    public ResponseEntity<List<RestaurantDTO>> getList() {
+        PageRequestDTO pageRequestDTO = PageRequestDTO.builder()
+                .page(1)
+                .size(100)  // 충분히 큰 수로 설정
+                .build();
         PageResponseDTO<RestaurantListAllDTO> responseDTO = restaurantService.listWithAll(pageRequestDTO);
-        return ResponseEntity.ok(responseDTO); // 200 OK
+        List<RestaurantDTO> restaurants = responseDTO.getDtoList().stream()
+                .map(dto -> RestaurantDTO.builder()
+                        .id(dto.getId())
+                        .name(dto.getName())
+                        .build())
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(restaurants);
     }
 
     // 2. Read - 특정 식당 조회 (Owner는 자기 식당만, Admin은 모든 식당 조회 가능)

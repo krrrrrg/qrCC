@@ -37,6 +37,10 @@ public class RestaurantDTO {
     @NotEmpty
     private String ownerId;
 
+    private String openTime;
+    
+    private String closeTime;
+
     // 첨부파일의 이름들
     private List<String> fileNames;
 
