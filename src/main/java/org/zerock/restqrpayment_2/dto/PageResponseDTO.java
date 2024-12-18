@@ -11,7 +11,7 @@ import java.util.List;
 public class PageResponseDTO<E> {
     private int page;
     private int size;
-    private int total;
+    private Long total;
 
     private int start;
     private int end;
@@ -22,7 +22,7 @@ public class PageResponseDTO<E> {
     private List<E> dtoList;
 
     @Builder(builderMethodName = "withAll")
-    public PageResponseDTO(PageRequestDTO pageRequestDTO, List<E> dtoList, int total) {
+    public PageResponseDTO(PageRequestDTO pageRequestDTO, List<E> dtoList, Long total) {
 
         if(total <= 0) {
             return;

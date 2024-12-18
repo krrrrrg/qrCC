@@ -506,14 +506,21 @@
         <div id="table-management" class="admin-section">
           <div class="section-header">
             <h2>테이블 관리</h2>
+            <div class="restaurant-selector mb-4">
+              <label for="tableRestaurantSelect">레스토랑 선택</label>
+              <select class="form-control" id="tableRestaurantSelect">
+                <option value="">레스토랑을 선택하세요</option>
+                <!-- 레스토랑 목록은 JavaScript에서 동적으로 추가됨 -->
+              </select>
+            </div>
+
             <div class="table-control">
-              <input
-                type="number"
-                id="newTableNumber"
-                placeholder="테이블 번호"
-                min="1"
-              />
-              <button onclick="addTable()" class="primary-button">
+              <button
+                onclick="addTable()"
+                class="btn btn-primary"
+                id="addTableBtn"
+                disabled
+              >
                 + 테이블 추가
               </button>
             </div>
@@ -521,18 +528,19 @@
 
           <div class="tables-container">
             <div class="table-list">
-              <!-- 테이블 목록이 기에 동적으로 추가됨 -->
+              <!-- 테이블 목록이 여기에 동적으로 추가됨 -->
             </div>
             <div class="qr-preview">
               <h3>QR 코드</h3>
               <div class="qr-content">
                 <div id="qrCode"></div>
                 <div class="qr-info">
-                  <p class="table-title">테이블 1번</p>
-                  <p class="table-link">
-                    테이블 접속 링크: <a href="#" id="tableLink"></a>
-                  </p>
-                  <button class="download-btn">
+                  <p class="table-number"></p>
+                  <p class="restaurant-name"></p>
+                  <button
+                    class="btn btn-primary download-btn"
+                    onclick="downloadQR()"
+                  >
                     <i class="fas fa-download"></i> QR 다운로드
                   </button>
                 </div>
@@ -613,46 +621,49 @@
 
     <script th:inline="javascript">
       /*<![CDATA[*/
-      // 전역 변수 선언
-      let currentRestaurantId = null;
       const currentUser = /*[[${#authentication.principal.username}]]*/ null;
 
       // 페이지 로드 시 실행되는 초기화 함수
       document.addEventListener("DOMContentLoaded", async function () {
         try {
-          // 레스토랑 데이터 로드
           await loadDashboardData();
-
-          // 레스토랑 선택기 이벤트 리스너 설정
-          const restaurantSelector =
-            document.getElementById("restaurantSelector");
-          if (restaurantSelector) {
-            restaurantSelector.addEventListener("change", function () {
-              const selectedId = this.value;
-              if (selectedId) {
-                loadRestaurantInfo(selectedId);
-              } else {
-                // 새 가게 등록 모드
-                currentRestaurantId = null;
-                restaurantForm.reset();
-                document.getElementById("deleteRestaurantBtn").style.display =
-                  "none";
-              }
-            });
-
-            // 첫 번째 레스토랑 자동 선택
-            if (restaurantSelector.options.length > 1) {
-              const firstRestaurantId = restaurantSelector.options[1].value;
-              restaurantSelector.value = firstRestaurantId;
-              await loadRestaurantInfo(firstRestaurantId);
-            }
-          }
         } catch (error) {
           console.error("초기화 중 오류 발생:", error);
         }
       });
 
-      // 대시보드 데이터 로드 함수 수정
+      // 대스토랑 선택기 업데이트 함수
+      function updateRestaurantSelectors(restaurants) {
+        const selectors = [
+          "restaurantSelector",
+          "restaurantSelect",
+          "tableRestaurantSelect",
+        ];
+
+        selectors.forEach((selectorId) => {
+          const selector = document.getElementById(selectorId);
+          if (selector) {
+            selector.innerHTML =
+              selectorId === "restaurantSelector"
+                ? '<option value="">새 가게 등록</option>'
+                : '<option value="">레스토랑을 선택하세요</option>';
+
+            if (restaurants && restaurants.length > 0) {
+              restaurants.forEach((restaurant) => {
+                const option = document.createElement("option");
+                option.value = restaurant.id;
+                option.textContent =
+                  selectorId === "restaurantSelector"
+                    ? `${restaurant.name} (${restaurant.address})`
+                    : restaurant.name;
+                selector.appendChild(option);
+              });
+            }
+          }
+        });
+      }
+
+      // 대시보드 데이터 로드 함수
       async function loadDashboardData() {
         try {
           const response = await fetch("/api/owner/restaurants");
@@ -666,143 +677,30 @@
           updateRestaurantSelectors(restaurants);
 
           // 첫 번째 레스토랑이 있다면 해당 정보 로드
-          if (restaurants.length > 0) {
+          if (restaurants && restaurants.length > 0) {
             currentRestaurantId = restaurants[0].id;
             await loadRestaurantInfo(currentRestaurantId);
-            await loadDashboardStats(currentRestaurantId);
+
+            // 테이블 관리를 위한 레스토랑 선택기 초기화
+            const tableRestaurantSelect = document.getElementById(
+              "tableRestaurantSelect"
+            );
+            if (tableRestaurantSelect) {
+              tableRestaurantSelect.value = currentRestaurantId;
+              if (typeof loadTables === "function") {
+                await loadTables(currentRestaurantId);
+              }
+            }
           }
-
-          return restaurants;
-        } catch (error) {
-          console.error("Error:", error);
-          throw error;
-        }
-      }
-
-      // 대스토랑 선택기 업데이트
-      function updateRestaurantSelectors(restaurants) {
-        const selectors = ["restaurantSelector", "restaurantSelect"];
-
-        selectors.forEach((selectorId) => {
-          const selector = document.getElementById(selectorId);
-          if (selector) {
-            // 기존 옵션 제거
-            selector.innerHTML =
-              selectorId === "restaurantSelector"
-                ? '<option value="">새 가게 등록</option>'
-                : '<option value="">레스토랑을 선택하세요</option>';
-
-            // 새 옵션 추가
-            restaurants.forEach((restaurant) => {
-              const option = document.createElement("option");
-              option.value = restaurant.id;
-              option.textContent =
-                selectorId === "restaurantSelector"
-                  ? `${restaurant.name} (${restaurant.address})`
-                  : restaurant.name;
-              selector.appendChild(option);
-            });
-          }
-        });
-      }
-
-      // 대시보드 통계 로드
-      async function loadDashboardStats(restaurantId) {
-        try {
-          const response = await fetch(
-            `/api/owner/restaurants/${restaurantId}/stats`
-          );
-          if (!response.ok) {
-            throw new Error("통계 정보를 불러오는데 실패했습니다.");
-          }
-
-          const stats = await response.json();
-
-          // 통계 정보 업데이트
-          document.getElementById("todayOrders").textContent =
-            stats.todayOrders || "0";
-          document.getElementById("totalSales").textContent = formatCurrency(
-            stats.totalSales || 0
-          );
-          document.getElementById("averageRating").textContent =
-            stats.averageRating || "0.0";
         } catch (error) {
           console.error("Error:", error);
         }
       }
 
-      // 숫자 포맷팅 (1000 -> 1,000원)
-      function formatCurrency(amount) {
-        return new Intl.NumberFormat("ko-KR").format(amount) + "원";
-      }
-
-      // 페이지 로드 시 대시보드 데이터 로드
-      document.addEventListener("DOMContentLoaded", function () {
-        loadDashboardData();
-      });
-
-      // 폼 요소들 가져오기
-      const restaurantForm = document.getElementById("restaurantForm");
-      const restaurantSelector = document.getElementById("restaurantSelector");
-
-      // 레스토랑 저장/수정
-      restaurantForm.addEventListener("submit", async function (e) {
-        e.preventDefault();
-
-        const formData = {
-          id: currentRestaurantId,
-          name: document.getElementById("storeName").value,
-          category: document.getElementById("storeCategory").value || "기타",
-          address: document.getElementById("storeAddress").value,
-          phoneNumber: document.getElementById("storePhone").value,
-          openTime: document.getElementById("openTime").value,
-          closeTime: document.getElementById("closeTime").value,
-          description: document.getElementById("storeNotice").value,
-          refLink: document.getElementById("storeSns").value,
-          ownerId: currentUser,
-        };
-
-        const method = currentRestaurantId ? "PUT" : "POST";
-        const url = currentRestaurantId
-          ? `/api/owner/restaurants/${currentRestaurantId}`
-          : "/api/owner/restaurants";
-
-        try {
-          // CSRF 토큰 가져오기
-          const token = document.querySelector("meta[name='_csrf']").content;
-          const header = document.querySelector(
-            "meta[name='_csrf_header']"
-          ).content;
-
-          const response = await fetch(url, {
-            method: method,
-            headers: {
-              "Content-Type": "application/json",
-              [header]: token, // CSRF 토큰 추가
-            },
-            body: JSON.stringify(formData),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.text();
-            throw new Error(errorData || "레스토랑 저장에 실패했습니다.");
-          }
-
-          alert("레스토랑이 성공적으로 저장되었습니다.");
-          await loadDashboardData(); // 데이터 새로고침
-
-          // 저장 성공 후 선택된 레스토랑 정보 다시 로드
-          if (currentRestaurantId) {
-            await loadRestaurantInfo(currentRestaurantId);
-          }
-        } catch (error) {
-          console.error("Error:", error);
-          alert(error.message);
-        }
-      });
-
-      // 레스토랑 정보 로드 함수 수정
+      // 레스토랑 정보 로드 함수
       async function loadRestaurantInfo(id) {
+        if (!id) return;
+
         try {
           const response = await fetch(`/api/owner/restaurants/${id}`);
           if (!response.ok) {
@@ -825,43 +723,21 @@
           document.getElementById("storeSns").value = data.refLink || "";
 
           // 삭제 버튼 표시
-          document.getElementById("deleteRestaurantBtn").style.display =
-            "inline-block";
+          const deleteBtn = document.getElementById("deleteRestaurantBtn");
+          if (deleteBtn) {
+            deleteBtn.style.display = "inline-block";
+          }
         } catch (error) {
           console.error("Error:", error);
         }
       }
-
-      // 레스토랑 삭제
-      window.deleteRestaurant = async function (id) {
-        if (!confirm("정말로 이 레스토랑을 삭제하시겠습니까?")) {
-          return;
-        }
-
-        try {
-          const response = await fetch(`/api/owner/restaurants/${id}`, {
-            method: "DELETE",
-          });
-
-          if (!response.ok) {
-            throw new Error("레스토랑 삭제에 실패했습니다.");
-          }
-
-          alert("레스토랑이 성공적으로 삭제되었습니다.");
-          location.reload();
-        } catch (error) {
-          console.error("Error:", error);
-          alert(error.message);
-        }
-      };
-
-      // 초기 레스토랑 목록 로드
-      loadRestaurantList();
+      /*]]>*/
     </script>
     <script th:src="@{/js/account-settings.js}"></script>
     <script th:src="@{/js/order-service.js}"></script>
     <script th:src="@{/js/admin.js}"></script>
     <script th:src="@{/js/menu-management.js}"></script>
+    <script th:src="@{/js/table-management.js}"></script>
     <script th:inline="javascript">
       /*<![CDATA[*/
       // 로인한 사용자 정보를 JavaScript 변수로 설정
@@ -1043,7 +919,7 @@
           // 메뉴 목록이 비어있는 경우 처리
           if (!menus || menus.length === 0) {
             menuContainer.innerHTML =
-              '<p class="text-center">등록된 메뉴가 없습니다.</p>';
+              '<p class="text-center">록된 메뉴가 없습니다.</p>';
             return;
           }
 
@@ -1123,123 +999,52 @@
           }
         });
     </script>
-    <script>
-      // 테이블 관리 관련 JavaScript
-      document.addEventListener("DOMContentLoaded", function () {
-        const restaurantSelect = document.getElementById("restaurantSelector");
-        if (restaurantSelect) {
-          restaurantSelect.addEventListener("change", loadTables);
-        }
-      });
-
-      async function loadTables() {
-        const restaurantId =
-          document.getElementById("restaurantSelector").value;
-        if (!restaurantId) return;
-
+    <script th:inline="javascript">
+      /*<![CDATA[*/
+      async function loadDashboardStats(restaurantId) {
         try {
           const response = await fetch(
-            `/api/tables/restaurant/${restaurantId}`
+            `/api/owner/restaurants/${restaurantId}/stats`
           );
-          if (!response.ok)
-            throw new Error("테이블 목록을 불러오는데 실패했습니다.");
+          if (!response.ok) {
+            console.warn("통계 정보를 불러오는데 실패했습니다.");
+            // 기본값 설정
+            document.getElementById("todayOrders").textContent = "0";
+            document.getElementById("totalSales").textContent =
+              formatCurrency(0);
+            if (document.getElementById("averageRating")) {
+              document.getElementById("averageRating").textContent = "0.0";
+            }
+            return;
+          }
 
-          const tables = await response.json();
-          displayTables(tables);
+          const stats = await response.json();
+
+          // 통계 정보 업데이트
+          if (document.getElementById("todayOrders")) {
+            document.getElementById("todayOrders").textContent =
+              stats.todayOrders || "0";
+          }
+          if (document.getElementById("totalSales")) {
+            document.getElementById("totalSales").textContent = formatCurrency(
+              stats.totalSales || 0
+            );
+          }
+          if (document.getElementById("averageRating")) {
+            document.getElementById("averageRating").textContent =
+              stats.averageRating || "0.0";
+          }
         } catch (error) {
           console.error("Error:", error);
+          // 에러 시 기본값 표시
+          document.getElementById("todayOrders").textContent = "0";
+          document.getElementById("totalSales").textContent = formatCurrency(0);
+          if (document.getElementById("averageRating")) {
+            document.getElementById("averageRating").textContent = "0.0";
+          }
         }
       }
-
-      function displayTables(tables) {
-        const tableList = document.querySelector(".table-list");
-        if (!tableList) return;
-
-        tableList.innerHTML = tables
-          .map(
-            (table) => `
-          <div class="table-item">
-            <h3>테이블 ${table.tableNumber}</h3>
-            <div class="table-actions">
-              <button onclick="generateQR(${table.id})" class="btn btn-primary">QR 생성</button>
-              <button onclick="deleteTable(${table.id})" class="btn btn-danger">삭제</button>
-            </div>
-          </div>
-        `
-          )
-          .join("");
-      }
-
-      async function addTable() {
-        const restaurantId =
-          document.getElementById("restaurantSelector").value;
-        if (!restaurantId) {
-          alert("레스토랑을 선택해주세요.");
-          return;
-        }
-
-        try {
-          const response = await fetch("/api/tables", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              [document.querySelector('meta[name="_csrf_header"]').content]:
-                document.querySelector('meta[name="_csrf"]').content,
-            },
-            body: JSON.stringify({ restaurantId: restaurantId }),
-          });
-
-          if (!response.ok) throw new Error("테이블 추가에 실패했습니다.");
-
-          await loadTables();
-        } catch (error) {
-          console.error("Error:", error);
-          alert(error.message);
-        }
-      }
-
-      async function generateQR(tableId) {
-        try {
-          const response = await fetch(`/api/tables/${tableId}/qr`);
-          if (!response.ok) throw new Error("QR 코드 생성에 실패했습니다.");
-
-          const qrCode = await response.text();
-
-          // QR 코드 표시
-          const qrDiv = document.getElementById("qrCode");
-          qrDiv.innerHTML = ""; // 기존 QR 코드 제거
-
-          new QRCode(qrDiv, {
-            text: qrCode,
-            width: 128,
-            height: 128,
-          });
-        } catch (error) {
-          console.error("Error:", error);
-          alert(error.message);
-        }
-      }
-
-      async function deleteTable(tableId) {
-        if (!confirm("정말로 이 테이블을 삭제하시겠습니까?")) return;
-
-        try {
-          const response = await fetch(`/api/tables/${tableId}`, {
-            method: "DELETE",
-            headers: {
-              [document.querySelector('meta[name="_csrf_header"]').content]:
-                document.querySelector('meta[name="_csrf"]').content,
-            },
-          });
-
-          if (!response.ok) throw new Error("테이블 삭제에 실패했습니다.");
-
-          await loadTables();
-        } catch (error) {
-          console.error("Error:", error);
-          alert(error.message);
-        }
-      }
+      /*]]>*/
     </script>
   </body>
 </html>

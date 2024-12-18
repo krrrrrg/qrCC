@@ -15,7 +15,9 @@ import org.zerock.restqrpayment_2.dto.RestaurantDTO;
 import org.zerock.restqrpayment_2.dto.RestaurantListAllDTO;
 import org.zerock.restqrpayment_2.service.RestaurantService;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Log4j2
 @Controller
@@ -106,5 +108,16 @@ public class OwnerRestaurantController {
             log.error("Error fetching restaurants: ", e);
             return "error/500";
         }
+    }
+
+    @GetMapping("/{id}/stats")
+    public ResponseEntity<?> getRestaurantStats(@PathVariable Long id) {
+        // 현재는 더미 데이터 반환
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("todayOrders", 0);
+        stats.put("totalSales", 0);
+        stats.put("averageRating", 0.0);
+        
+        return ResponseEntity.ok(stats);
     }
 }

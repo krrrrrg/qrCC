@@ -95,7 +95,7 @@ public class MenuServiceImpl implements MenuService {
         return PageResponseDTO.<MenuListAllDTO>withAll()
             .pageRequestDTO(pageRequestDTO)
             .dtoList(dtoList)
-            .total((int)result.getTotalElements())
+            .total(result.getTotalElements())
             .build();
     }
 

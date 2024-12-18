@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.BatchSize;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -23,7 +24,6 @@ public class Restaurant extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
     private String category;
 
     @Column(name = "business_type", nullable = false)
@@ -100,5 +100,20 @@ public class Restaurant extends BaseEntity {
 
     public void setBusinessType(String businessType) {
         this.businessType = businessType;
+    }
+
+    public void change(String name, String address, String phoneNumber, String description) {
+        this.name = name;
+        this.address = address;
+        this.phoneNumber = phoneNumber;
+        this.description = description;
+    }
+
+    public void changeCategory(String category) {
+        this.category = category;
+    }
+
+    public void changeRefLink(String refLink) {
+        this.refLink = refLink;
     }
 }
