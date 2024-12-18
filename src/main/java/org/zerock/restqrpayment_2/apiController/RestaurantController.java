@@ -15,6 +15,7 @@ import org.zerock.restqrpayment_2.dto.PageResponseDTO;
 import org.zerock.restqrpayment_2.dto.RestaurantDTO;
 import org.zerock.restqrpayment_2.dto.RestaurantListAllDTO;
 import org.zerock.restqrpayment_2.service.RestaurantService;
+import org.zerock.restqrpayment_2.exception.RestaurantNotFoundException;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -141,5 +142,13 @@ public class RestaurantController {
             }
 
         }//end for
+    }
+
+    @ExceptionHandler(RestaurantNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ResponseEntity<String> handleRestaurantNotFoundException(RestaurantNotFoundException ex) {
+        return ResponseEntity
+            .status(HttpStatus.NOT_FOUND)
+            .body(ex.getMessage());
     }
 }

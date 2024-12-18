@@ -13,6 +13,7 @@ import org.zerock.restqrpayment_2.dto.PageResponseDTO;
 import org.zerock.restqrpayment_2.dto.RestaurantDTO;
 import org.zerock.restqrpayment_2.dto.RestaurantListAllDTO;
 import org.zerock.restqrpayment_2.repository.RestaurantRepository;
+import org.zerock.restqrpayment_2.exception.RestaurantNotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -29,15 +30,10 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     public RestaurantDTO readOne(Long id) {
-        Optional<Restaurant> result = restaurantRepository.findByIdWithImages(id);
-
-        Restaurant restaurant = result.orElseThrow();
-
-        RestaurantDTO restaurantDTO = entityToDTO(restaurant);
-
-        log.info(restaurantDTO);
-
-        return restaurantDTO;
+        Restaurant restaurant = restaurantRepository.findByIdWithImages(id)
+                .orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with id: " + id));
+        
+        return entityToDTO(restaurant);
     }
 
     @Override

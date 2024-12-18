@@ -21,4 +21,17 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long>, R
 
     @Query("select r from Restaurant r where r.id = :id and r.ownerId = :ownerId")
     Optional<Restaurant> findByIdAndOwnerId(@Param("id") Long id, @Param("ownerId") String ownerId);
+
+    @Query("select r from Restaurant r where r.category = :category")
+    List<Restaurant> findByCategory(@Param("category") String category);
+
+    @Query("select r from Restaurant r where r.name like %:keyword%")
+    List<Restaurant> findByNameContaining(@Param("keyword") String keyword);
+
+    @Query("select r from Restaurant r where r.address like %:address%")
+    List<Restaurant> findByAddressContaining(@Param("address") String address);
+
+    @EntityGraph(attributePaths = {"imageSet", "menuList"})
+    @Query("select r from Restaurant r where r.id = :id")
+    Optional<Restaurant> findByIdWithImagesAndMenus(@Param("id") Long id);
 }
