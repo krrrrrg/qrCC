@@ -58,9 +58,10 @@ public class MenuServiceImpl implements MenuService {
         Menu menu = menuOptional.orElseThrow();
 
         menu.changeMenu(menuDTO.getName(), menuDTO.getPrice(), menuDTO.getDescription());
-        menu.clearMenuImages();
 
-        if(menuDTO.getFileNames() != null) {
+        // 새로운 이미지가 있는 경우에만 기존 이미지를 삭제하고 새 이미지를 추가
+        if(menuDTO.getFileNames() != null && !menuDTO.getFileNames().isEmpty()) {
+            menu.clearMenuImages();
             for(String fileName : menuDTO.getFileNames()) {
                 String[] arr = fileName.split("_");
                 menu.addMenuImage(arr[0], arr[1]);
