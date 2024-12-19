@@ -20,14 +20,21 @@ public class TableService {
     private final TableRepository tableRepository;
     private final RestaurantRepository restaurantRepository;
 
-    public RestaurantTable createTable(Long restaurantId) {
+    public boolean isRestaurantOwner(Long restaurantId, String ownerId) {
         Restaurant restaurant = restaurantRepository.findById(restaurantId)
             .orElseThrow(() -> new RuntimeException("레스토랑을 찾을 수 없습니다."));
+        return restaurant.getOwnerId().equals(ownerId);
+    }
+
+    public RestaurantTable createTable(Long restaurantId) {
+        if (!isRestaurantOwner(restaurantId, restaurantRepository.findById(restaurantId).orElseThrow().getOwnerId())) {
+            throw new AccessDeniedException("접근 권한이 없습니다.");
+        }
             
         int currentTableCount = tableRepository.countByRestaurantId(restaurantId);
         
         RestaurantTable table = RestaurantTable.builder()
-                .restaurant(restaurant)
+                .restaurant(restaurantRepository.findById(restaurantId).orElseThrow())
                 .tableNumber(currentTableCount + 1)
                 .status("AVAILABLE")
                 .build();
@@ -36,10 +43,7 @@ public class TableService {
     }
 
     public List<RestaurantTable> getTablesByRestaurant(Long restaurantId, String ownerId) {
-        Restaurant restaurant = restaurantRepository.findById(restaurantId)
-            .orElseThrow(() -> new RuntimeException("레스토랑을 찾을 수 없습니다."));
-            
-        if (!restaurant.getOwnerId().equals(ownerId)) {
+        if (!isRestaurantOwner(restaurantId, ownerId)) {
             throw new AccessDeniedException("접근 권한이 없습니다.");
         }
         
@@ -50,7 +54,7 @@ public class TableService {
         RestaurantTable table = tableRepository.findById(tableId)
             .orElseThrow(() -> new RuntimeException("테이블을 찾을 수 없습니다."));
             
-        if (!table.getRestaurant().getOwnerId().equals(ownerId)) {
+        if (!isRestaurantOwner(table.getRestaurant().getId(), ownerId)) {
             throw new AccessDeniedException("접근 권한이 없습니다.");
         }
         
@@ -63,7 +67,7 @@ public class TableService {
         
         Restaurant restaurant = table.getRestaurant();
         
-        if (!restaurant.getOwnerId().equals(ownerId)) {
+        if (!isRestaurantOwner(restaurant.getId(), ownerId)) {
             throw new AccessDeniedException("접근 권한이 없습니다.");
         }
         

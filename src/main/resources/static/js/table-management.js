@@ -13,7 +13,7 @@ function initializeTableManagement() {
   if (tableRestaurantSelect) {
     // 레스토랑 선택 이벤트
     tableRestaurantSelect.addEventListener("change", async function () {
-      currentRestaurantId = this.value;
+      currentRestaurantId = parseInt(this.value, 10); // 문자열을 숫자로 변환
       addTableBtn.disabled = !currentRestaurantId;
 
       if (currentRestaurantId) {
@@ -60,6 +60,7 @@ function displayTables(tables) {
       (table) => `
             <div class="table-item">
                 <h3>테이블 ${table.tableNumber}</h3>
+                <p class="restaurant-name">${table.restaurantName}</p>
                 <div class="table-actions">
                     <button onclick="generateQR(${table.id})" class="btn btn-primary">QR 생성</button>
                     <button onclick="deleteTable(${table.id})" class="btn btn-danger">삭제</button>
@@ -89,8 +90,10 @@ async function addTable() {
       body: JSON.stringify({ restaurantId: currentRestaurantId }),
     });
 
+    const data = await response.json();
+    
     if (!response.ok) {
-      throw new Error("테이블 추가에 실패했습니다.");
+      throw new Error(data.message || "테이블 추가에 실패했습니다.");
     }
 
     await loadTables(currentRestaurantId);
