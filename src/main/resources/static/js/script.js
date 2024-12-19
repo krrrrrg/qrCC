@@ -101,9 +101,36 @@ function initializeEventListeners() {
     }
 }
 
+// URL에서 파라미터 가져오기
+function getUrlParameter(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
+// 테이블 정보 설정
+function setTableInfo() {
+    const tableId = getUrlParameter('tableId');
+    const restaurantId = getUrlParameter('restaurantId');
+    
+    if (tableId && restaurantId) {
+        // 테이블 정보를 세션 스토리지에 저장
+        sessionStorage.setItem('tableId', tableId);
+        sessionStorage.setItem('restaurantId', restaurantId);
+        
+        // 테이블 번호 표시
+        fetch(`/api/tables/${tableId}`)
+            .then(response => response.json())
+            .then(table => {
+                document.getElementById('tableNumber').textContent = table.tableNumber;
+            })
+            .catch(error => console.error('Error:', error));
+    }
+}
+
 // 페이지 로드 시 초기화
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM Content Loaded');
+    setTableInfo();
     initializeTableInfo();
     initializeMenus();
     initializeEventListeners();  // 이벤트 리스너 초기화 추가

@@ -50,6 +50,11 @@ public class TableService {
         return tableRepository.findByRestaurantId(restaurantId);
     }
 
+    public RestaurantTable getTable(Long tableId) {
+        return tableRepository.findById(tableId)
+            .orElseThrow(() -> new RuntimeException("테이블을 찾을 수 없습니다."));
+    }
+
     public void deleteTable(Long tableId, String ownerId) {
         RestaurantTable table = tableRepository.findById(tableId)
             .orElseThrow(() -> new RuntimeException("테이블을 찾을 수 없습니다."));
