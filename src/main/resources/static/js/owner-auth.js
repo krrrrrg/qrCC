@@ -3,7 +3,7 @@ function validateOwnerSignup(event) {
     const name = document.getElementById('name').value;
     const userId = document.getElementById('userId').value;
     const password = document.getElementById('password').value;
-    const passwordConfirm = document.getElementById('passwordConfirm').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
     const phone = document.getElementById('phone').value;
 
     // 아이디 유효성 검사
@@ -19,7 +19,7 @@ function validateOwnerSignup(event) {
     }
 
     // 비밀번호 확인
-    if (password !== passwordConfirm) {
+    if (password !== confirmPassword) {
         alert('비밀번호가 일치하지 않습니다.');
         return false;
     }

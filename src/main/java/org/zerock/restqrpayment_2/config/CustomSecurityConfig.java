@@ -38,10 +38,10 @@ public class CustomSecurityConfig {
         http
             .securityMatcher("/owner/**", "/api/owner/**")
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/owner/**")
+                .ignoringRequestMatchers("/api/owner/**", "/owner/signup")
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/owner/login", "/owner/signup", "/css/**", "/js/**", "/images/**").permitAll()
+                .requestMatchers("/owner/login", "/owner/signup", "/api/owner/signup", "/css/**", "/js/**", "/images/**").permitAll()
                 .anyRequest().hasRole("OWNER")
             )
             .formLogin(login -> login

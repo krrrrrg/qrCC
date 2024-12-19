@@ -289,8 +289,17 @@ function initializeTableInfo() {
 
 // 가게 정보 업데이트
 function updateStoreInfo() {
+    // URL에서 레스토랑 ID 가져오기
+    const urlParams = new URLSearchParams(window.location.search);
+    const restaurantId = urlParams.get('restaurantId');
+    
+    if (!restaurantId) {
+        console.log('레스토랑 ID가 없습니다.');
+        return;
+    }
+
     // DB에서 가게 정보 가져오기
-    fetch('/api/restaurants/1')
+    fetch(`/api/restaurants/${restaurantId}`)
         .then(response => response.json())
         .then(storeData => {
             console.log('현재 가게 설정:', storeData);
