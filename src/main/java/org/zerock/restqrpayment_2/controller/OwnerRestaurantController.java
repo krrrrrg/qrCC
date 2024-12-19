@@ -67,7 +67,7 @@ public class OwnerRestaurantController {
         
         // category 값이 전달되는지 확인
         if (restaurantDTO.getCategory() == null || restaurantDTO.getCategory().trim().isEmpty()) {
-            throw new IllegalArgumentException("카테고리는 필수 입력 항목입니다.");
+            return ResponseEntity.badRequest().build();
         }
         
         restaurantDTO.setOwnerId(userDetails.getUsername());

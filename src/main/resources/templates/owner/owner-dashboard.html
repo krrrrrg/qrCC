@@ -396,6 +396,8 @@
                               class="form-control"
                               id="storeCategory"
                               name="category"
+                              placeholder="예: 한식, 중식, 카페, 주점 등"
+                              required
                             />
                           </div>
                         </div>
@@ -731,6 +733,115 @@
           console.error("Error:", error);
         }
       }
+
+      // 레스토랑 폼 제출 이벤트 핸들러 추가
+      document.getElementById('restaurantForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        // 필수 필드 검증
+        const name = document.getElementById('storeName').value;
+        const address = document.getElementById('storeAddress').value;
+        const category = document.getElementById('storeCategory').value;
+        const phoneNumber = document.getElementById('storePhone').value;
+
+        if (!name || !address || !phoneNumber || !category) {
+          alert('가게명, 주소, 전화번호, 카테고리는 필수 입력 항목입니다.');
+          return;
+        }
+
+        const formData = {
+          id: document.getElementById('restaurantId').value || null,
+          name: name,
+          category: category,
+          address: address,
+          phoneNumber: phoneNumber,
+          openTime: document.getElementById('openTime').value,
+          closeTime: document.getElementById('closeTime').value,
+          description: document.getElementById('storeNotice').value,
+          refLink: document.getElementById('storeSns').value,
+          ownerId: currentUser
+        };
+
+        try {
+          const token = document.querySelector("meta[name='_csrf']").content;
+          const header = document.querySelector("meta[name='_csrf_header']").content;
+          
+          const method = formData.id ? 'PUT' : 'POST';
+          const url = formData.id 
+            ? `/api/owner/restaurants/${formData.id}`
+            : '/api/owner/restaurants';
+
+          const response = await fetch(url, {
+            method: method,
+            headers: {
+              'Content-Type': 'application/json',
+              [header]: token
+            },
+            body: JSON.stringify(formData)
+          });
+
+          if (!response.ok) {
+            const errorData = await response.text();
+            throw new Error(errorData || '레스토랑 저장에 실패했습니다.');
+          }
+
+          alert('레스토랑이 성공적으로 저장되었습니다.');
+          await loadDashboardData();
+        } catch (error) {
+          console.error('Error:', error);
+          alert(error.message);
+        }
+      });
+
+      // 레스토랑 선택기 이벤트 핸들러
+      document.getElementById('restaurantSelector').addEventListener('change', async function() {
+        const selectedId = this.value;
+        const form = document.getElementById('restaurantForm');
+        
+        if (selectedId) {
+          await loadRestaurantInfo(selectedId);
+          form.setAttribute('data-mode', 'edit');
+        } else {
+          form.reset();
+          document.getElementById('restaurantId').value = '';
+          form.setAttribute('data-mode', 'create');
+          document.getElementById('deleteRestaurantBtn').style.display = 'none';
+        }
+      });
+
+      // 레스토랑 삭제 버튼 이벤트 핸들러
+      document.getElementById('deleteRestaurantBtn').addEventListener('click', async function() {
+        if (!confirm('정말로 이 레스토랑을 삭제하시겠습니까?')) {
+          return;
+        }
+
+        const restaurantId = document.getElementById('restaurantId').value;
+        if (!restaurantId) return;
+
+        try {
+          const token = document.querySelector("meta[name='_csrf']").content;
+          const header = document.querySelector("meta[name='_csrf_header']").content;
+
+          const response = await fetch(`/api/owner/restaurants/${restaurantId}`, {
+            method: 'DELETE',
+            headers: {
+              [header]: token
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error('레스토랑 삭제에 실패했습니다.');
+          }
+
+          alert('레스토랑이 성공적으로 삭제되었습니다.');
+          document.getElementById('restaurantSelector').value = '';
+          document.getElementById('restaurantForm').reset();
+          await loadDashboardData();
+        } catch (error) {
+          console.error('Error:', error);
+          alert(error.message);
+        }
+      });
       /*]]>*/
     </script>
     <script th:src="@{/js/account-settings.js}"></script>

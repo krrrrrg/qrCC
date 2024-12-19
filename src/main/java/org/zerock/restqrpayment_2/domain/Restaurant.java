@@ -24,10 +24,8 @@ public class Restaurant extends BaseEntity {
     @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private String category;
-
-    @Column(name = "business_type", nullable = false)
-    private String businessType;
 
     @Column
     private String address;
@@ -77,7 +75,6 @@ public class Restaurant extends BaseEntity {
         this.name = name;
         this.address = address;
         this.category = category;
-        this.businessType = category;
         this.phoneNumber = phoneNumber;
         this.description = description;
         this.refLink = refLink;
@@ -98,18 +95,11 @@ public class Restaurant extends BaseEntity {
         menuSet.clear();
     }
 
-    public void setBusinessType(String businessType) {
-        this.businessType = businessType;
-    }
-
-    public void change(String name, String address, String phoneNumber, String description) {
+    public void change(String name, String address, String phoneNumber, String description, String category) {
         this.name = name;
         this.address = address;
         this.phoneNumber = phoneNumber;
         this.description = description;
-    }
-
-    public void changeCategory(String category) {
         this.category = category;
     }
 

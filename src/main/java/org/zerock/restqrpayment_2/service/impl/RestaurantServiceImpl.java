@@ -44,7 +44,9 @@ public class RestaurantServiceImpl implements RestaurantService {
 
     @Override
     public Long register(RestaurantDTO restaurantDTO) {
+        log.info("Restaurant DTO: " + restaurantDTO);
         Restaurant restaurant = dtoToEntity(restaurantDTO);
+        log.info("Restaurant Entity: " + restaurant);
         Restaurant saved = restaurantRepository.save(restaurant);
         return saved.getId();
     }
@@ -54,7 +56,8 @@ public class RestaurantServiceImpl implements RestaurantService {
         Optional<Restaurant> result = restaurantRepository.findById(restaurantDTO.getId());
         Restaurant restaurant = result.orElseThrow();
         restaurant.change(restaurantDTO.getName(), restaurantDTO.getAddress(), 
-                        restaurantDTO.getPhoneNumber(), restaurantDTO.getDescription());
+                        restaurantDTO.getPhoneNumber(), restaurantDTO.getDescription(),
+                        restaurantDTO.getCategory());
         restaurantRepository.save(restaurant);
     }
 

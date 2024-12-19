@@ -40,15 +40,14 @@ public class RestaurantDTO {
 
     private List<String> fileNames;
 
-    @Builder.Default
-    private String category = "기타";
+    @NotEmpty
+    private String category;
 
     public Restaurant toEntity() {
         return Restaurant.builder()
                 .id(id)
                 .name(name)
                 .category(category)
-                .businessType(category)
                 .address(address)
                 .phoneNumber(phoneNumber)
                 .description(description)
