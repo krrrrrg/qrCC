@@ -36,10 +36,15 @@ public class RestaurantServiceImpl implements RestaurantService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RestaurantDTO readOne(Long id) {
+        log.info("Reading restaurant with id: {}", id);
         Optional<Restaurant> result = restaurantRepository.findById(id);
         Restaurant restaurant = result.orElseThrow();
-        return entityToDTO(restaurant);
+        log.info("Found restaurant entity: {}", restaurant);
+        RestaurantDTO dto = entityToDTO(restaurant);
+        log.info("Converted to DTO: {}", dto);
+        return dto;
     }
 
     @Override

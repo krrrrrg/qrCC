@@ -73,6 +73,16 @@ public class TableController {
         }
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<TableDTO> getTable(@PathVariable Long id) {
+        try {
+            RestaurantTable table = tableService.getTable(id);
+            return ResponseEntity.ok(convertToDTO(table));
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteTable(
             @PathVariable Long id,

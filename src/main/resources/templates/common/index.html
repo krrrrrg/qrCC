@@ -35,7 +35,7 @@
     <header class="store-header">
       <div class="header-title">
         <span class="store-name">공공</span>
-        <span class="table-indicator">테이블 <span id="tableNumber"></span>번</span>
+        <span class="table-indicator" style="display: none;">테이블 <span id="tableNumber"></span>번</span>
       </div>
       <button class="menu-button">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -65,19 +65,17 @@
 
     <nav class="category-nav">
       <ul>
-        <li><a href="#recommended">추천메뉴</a></li>
-        <li><a href="#all">전체</a></li>
-        <li><a href="#sandwiches">샌드위치</a></li>
-        <li><a href="#coffee">커피</a></li>
-        <li><a href="#beverages">음료</a></li>
-        <li><a href="#desserts">디저트</a></li>
+        <li><a href="#all" th:text="전체">전체</a></li>
+        <li th:each="category : ${categories}">
+            <a th:href="'#' + ${category}" th:text="${category}"></a>
+        </li>
       </ul>
     </nav>
 
     <main>
-      <div class="promotion-banner">
+      <div class="promotion-banner" th:if="${restaurant != null}">
         <span class="promotion-icon">📢</span>
-        1인당 1메뉴 부탁드려요 :)
+        <span th:text="${restaurant.description}"></span>
       </div>
 
       <section id="menu-list">
@@ -92,11 +90,29 @@
       </button>
     </footer>
     <script th:inline="javascript">
-      // URL에서 테이블 번호 가져오기
+      // 서버에서 받은 메뉴 데이터
+      const menuData = {
+        menus: /*[[${menus}]]*/ [],
+        categories: /*[[${categories}]]*/ []
+      };
+      
+      // localStorage에 메뉴 데이터 저장
+      localStorage.setItem('menuData', JSON.stringify(menuData));
+
+      // URL에서 테이블 번호와 식당 ID 가져오기
       function getTableNumber() {
         const urlParams = new URLSearchParams(window.location.search);
-        const tableNo = urlParams.get('table') || '1';
-        document.getElementById('tableNumber').textContent = tableNo;
+        const tableId = urlParams.get('tableId') || '1';
+        const restaurantId = urlParams.get('restaurantId');
+        
+        // 테이블 번호 표시
+        document.getElementById('tableNumber').textContent = tableId;
+        document.querySelector('.table-indicator').style.display = 'inline-block';
+
+        // 메뉴 페이지로 리다이렉트 (현재 /menu가 아닌 경우)
+        if (!window.location.pathname.includes('/menu') && restaurantId) {
+          window.location.href = `/menu?restaurantId=${restaurantId}&tableId=${tableId}`;
+        }
       }
       getTableNumber();
     </script>

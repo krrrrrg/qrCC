@@ -19,16 +19,8 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
     @Query("select m, mi from Menu m left outer join MenuImage mi on mi.menu = m where m.restaurant.id = :restaurantId")
     Page<Object[]> searchWithAll(@Param("restaurantId") Long restaurantId, Pageable pageable);
 
-    @Query("SELECT DISTINCT m.menuCategory FROM Menu m WHERE m.restaurant.id = :restaurantId AND m.menuCategory IS NOT NULL ORDER BY m.menuCategory")
-    List<String> findCategoriesByRestaurantId(@Param("restaurantId") Long restaurantId);
-
-    // 레스토랑 ID로 메뉴 목록 조회
-    @Query("SELECT m FROM Menu m WHERE m.restaurant.id = :restaurantId")
-    List<Menu> findByRestaurantId(@Param("restaurantId") Long restaurantId);
-
-    // 레스토랑 ID와 소유자 ID로 메뉴 목록 조회
-    @Query("SELECT m FROM Menu m WHERE m.restaurant.id = :restaurantId AND m.restaurant.ownerId = :ownerId")
+    @Query("select m from Menu m where m.restaurant.id = :restaurantId and m.restaurant.ownerId = :ownerId")
     List<Menu> findByRestaurantIdAndOwnerId(@Param("restaurantId") Long restaurantId, @Param("ownerId") String ownerId);
 
-    Page<Menu> findByRestaurantId(Long restaurantId, Pageable pageable);
+    List<Menu> findByRestaurantId(Long restaurantId);
 }

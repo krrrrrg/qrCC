@@ -35,22 +35,22 @@ function initializeEventListeners() {
     // 주문내역 버튼
     if (orderHistoryBtn) {
         orderHistoryBtn.addEventListener('click', () => {
-            const { tableNumber, tableId } = getTableInfo();
+            const { tableId, restaurantId } = getTableInfo();
             
-            if (!tableNumber) {
+            if (!tableId || !restaurantId) {
                 alert('테이블 정보가 없습니다.');
                 return;
             }
 
             const orders = JSON.parse(localStorage.getItem('orders') || '[]');
-            const tableOrders = orders.filter(order => order.tableNumber === tableNumber);
+            const tableOrders = orders.filter(order => order.tableId === tableId);
 
             if (tableOrders.length === 0) {
                 alert('주문 내역이 없습니다.');
                 return;
             }
 
-            window.location.href = `order-history.html?table=${tableNumber}&id=${tableId}`;
+            window.location.href = `/order-history?restaurantId=${restaurantId}&tableId=${tableId}`;
         });
     }
 
@@ -76,11 +76,11 @@ function initializeEventListeners() {
             `;
             loginBtn.addEventListener('click', () => {
                 const urlParams = new URLSearchParams(window.location.search);
-                const tableNo = urlParams.get('table');
-                const id = urlParams.get('id');
+                const tableId = urlParams.get('tableId');
+                const restaurantId = urlParams.get('restaurantId');
                 
-                if (tableNo && id) {
-                    window.location.href = `/login?table=${tableNo}&id=${id}`;
+                if (tableId && restaurantId) {
+                    window.location.href = `/login?restaurantId=${restaurantId}&tableId=${tableId}`;
                 } else {
                     window.location.href = '/login';
                 }
@@ -91,12 +91,15 @@ function initializeEventListeners() {
     // 장바구니 버튼
     if (cartButton) {
         cartButton.addEventListener('click', () => {
-            const { tableNumber, tableId } = getTableInfo();
-            if (!tableNumber) {
+            const urlParams = new URLSearchParams(window.location.search);
+            const tableId = urlParams.get('tableId');
+            const restaurantId = urlParams.get('restaurantId');
+            
+            if (!tableId || !restaurantId) {
                 alert('테이블 정보가 없습니다.');
                 return;
             }
-            window.location.href = `cart.html?table=${tableNumber}&id=${tableId}`;
+            window.location.href = `/cart?restaurantId=${restaurantId}&tableId=${tableId}`;
         });
     }
 }
@@ -111,6 +114,7 @@ function getUrlParameter(name) {
 function setTableInfo() {
     const tableId = getUrlParameter('tableId');
     const restaurantId = getUrlParameter('restaurantId');
+    const tableIndicator = document.querySelector('.table-indicator');
     
     if (tableId && restaurantId) {
         // 테이블 정보를 세션 스토리지에 저장
@@ -119,11 +123,29 @@ function setTableInfo() {
         
         // 테이블 번호 표시
         fetch(`/api/tables/${tableId}`)
-            .then(response => response.json())
-            .then(table => {
-                document.getElementById('tableNumber').textContent = table.tableNumber;
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('테이블 정보를 가져올 수 없습니다.');
+                }
+                return response.json();
             })
-            .catch(error => console.error('Error:', error));
+            .then(table => {
+                const tableNumberElement = document.getElementById('tableNumber');
+                if (tableNumberElement) {
+                    tableNumberElement.textContent = table.tableNumber;
+                    tableIndicator.style.display = 'inline-block';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                if (tableIndicator) {
+                    tableIndicator.style.display = 'none';
+                }
+            });
+    } else {
+        if (tableIndicator) {
+            tableIndicator.style.display = 'none';
+        }
     }
 }
 
@@ -171,14 +193,14 @@ categoryLinks.forEach(link => {
 
 // 장바구니 관련 함수들 수정
 function getCartKey() {
-    const { tableNumber } = getTableInfo();
-    return `cart_table_${tableNumber}`;
+    const { tableId } = getTableInfo();
+    return `cart_table_${tableId}`;
 }
 
 // 장바구니 수량 표시 함수 수정
 function updateCartCount() {
-    const { tableNumber } = getTableInfo();
-    if (!tableNumber) {
+    const { tableId } = getTableInfo();
+    if (!tableId) {
         const cartCount = document.querySelector('.cart-count');
         if (cartCount) {
             cartCount.style.display = 'none';
@@ -186,7 +208,7 @@ function updateCartCount() {
         return;
     }
 
-    const cartItems = CartService.getCartItems(tableNumber);
+    const cartItems = CartService.getCartItems(tableId);
     const totalItems = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
     
     const cartCount = document.querySelector('.cart-count');
@@ -202,13 +224,16 @@ function updateCartCount() {
 
 // 메뉴 아이템 클릭 시 상세 페이지로 이동
 function handleMenuClick(item) {
-    const { tableNumber, tableId } = getTableInfo();
-    if (!tableNumber) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tableId = urlParams.get('tableId');
+    const restaurantId = urlParams.get('restaurantId');
+    
+    if (!tableId || !restaurantId) {
         alert('테이블 정보가 없습니다.');
         return;
     }
-    localStorage.setItem("menuDetail", JSON.stringify(item));
-    window.location.href = `menu-detail.html?table=${tableNumber}&id=${tableId}`;
+    
+    window.location.href = `/menu-detail?restaurantId=${restaurantId}&tableId=${tableId}&menuId=${item.id}`;
 }
 
 // menuData 객체 제거하고 대신 localStorage에서 데이터를 가져오는 함수 추가
@@ -241,6 +266,51 @@ function getMenuData() {
 function initializeMenus() {
     const menuData = getMenuData();
     renderMenuItems('recommended'); // 추천 메뉴를 기본으로 표시
+}
+
+// 메뉴 표시 함수
+function displayMenus(menus) {
+    const menuContainer = document.querySelector('.menu-container');
+    if (!menuContainer) return;
+
+    // 메뉴 카테고리별로 그룹화
+    const menusByCategory = menus.reduce((acc, menu) => {
+        const category = menu.menuCategory || '기타';
+        if (!acc[category]) {
+            acc[category] = [];
+        }
+        acc[category].push(menu);
+        return acc;
+    }, {});
+
+    // 카테고리별로 메뉴 표시
+    let html = '';
+    Object.keys(menusByCategory).sort().forEach(category => {
+        html += `
+            <div class="menu-category">
+                <h2 class="category-title">${category}</h2>
+                <div class="menu-items">
+                    ${menusByCategory[category].map(menu => `
+                        <div class="menu-item">
+                            ${menu.imageURL ? 
+                                `<img src="${menu.imageURL}" alt="${menu.name}" class="menu-image">` : 
+                                '<div class="menu-image-placeholder"></div>'
+                            }
+                            <div class="menu-details">
+                                <h3 class="menu-name">${menu.name}</h3>
+                                <p class="menu-price">${menu.price.toLocaleString()}원</p>
+                                <button onclick="addToCart(${menu.id})" class="add-to-cart-btn">
+                                    장바구니 담기
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    });
+
+    menuContainer.innerHTML = html;
 }
 
 // 메뉴 렌더링 함수 수정
@@ -288,28 +358,28 @@ function getCategoryName(categoryId, categories) {
 function getTableInfo() {
     const urlParams = new URLSearchParams(window.location.search);
     return {
-        tableNumber: urlParams.get('table'),
-        tableId: urlParams.get('id')
+        tableId: urlParams.get('tableId'),
+        restaurantId: urlParams.get('restaurantId')
     };
 }
 
 function initializeTableInfo() {
-    const { tableNumber } = getTableInfo();
+    const { tableId } = getTableInfo();
     const tableInfoElements = document.querySelectorAll('.table-info');
     
     tableInfoElements.forEach(element => {
-        if (!tableNumber) {
+        if (!tableId) {
             element.style.display = 'none';
             return;
         }
 
         // 테이블 번호 표시
-        element.textContent = `테이블 ${tableNumber}번`;
+        element.textContent = `테이블 ${tableId}번`;
         element.style.display = 'inline-block';
     });
 
     // 테이블 번호가 있는 경우 가게 정보도 업데이트
-    if (tableNumber) {
+    if (tableId) {
         updateStoreInfo();
     }
 }
@@ -340,15 +410,10 @@ function updateStoreInfo() {
             // 공지사항 업데이트
             const promotionBanner = document.querySelector('.promotion-banner');
             if (promotionBanner) {
-                if (storeData?.notice) {
+                if (storeData?.description) {
                     promotionBanner.innerHTML = `
                         <span class="promotion-icon">📢</span>
-                        ${storeData.notice}
-                    `;
-                } else {
-                    promotionBanner.innerHTML = `
-                        <span class="promotion-icon">📢</span>
-                        1인당 1메뉴 부탁드려요 :)
+                        ${storeData.description}
                     `;
                 }
             }
@@ -411,10 +476,10 @@ function updatePromotionBanner() {
     fetch('/api/restaurant/1')
         .then(response => response.json())
         .then(storeData => {
-            if (storeData?.notice) {
+            if (storeData?.description) {
                 promotionBanner.innerHTML = `
                     <span class="promotion-icon">📢</span>
-                    ${storeData.notice}
+                    ${storeData.description}
                 `;
             }
         })
