@@ -1,6 +1,7 @@
 package org.zerock.restqrpayment_2.controller;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
@@ -10,7 +11,6 @@ import org.zerock.restqrpayment_2.domain.MemberRole;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
-import lombok.extern.log4j.Log4j2;
 
 import java.util.HashSet;
 
@@ -35,17 +35,6 @@ public class OwnerController {
     @GetMapping("/signup")
     public String ownerSignup() {
         return "owner/owner-signup";
-    }
-
-    @PostMapping("/signup")
-    public String ownerSignupPost(MemberDTO memberDTO) {
-        // 기존 roles를 clear하고 OWNER 권한만 설정
-        memberDTO.getRoles().clear();
-        memberDTO.getRoles().add(MemberRole.OWNER);
-        
-        log.info("Owner signup with roles: " + memberDTO.getRoles());
-        memberService.register(memberDTO);
-        return "redirect:/owner/login";
     }
 
     @PostMapping("/login")

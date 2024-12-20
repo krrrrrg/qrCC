@@ -7,8 +7,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.zerock.restqrpayment_2.dto.MemberDTO;
 import org.zerock.restqrpayment_2.dto.PasswordChangeDTO;
 import org.zerock.restqrpayment_2.service.MemberService;
+import org.zerock.restqrpayment_2.domain.MemberRole;
 
 import java.util.Map;
 
@@ -19,6 +21,29 @@ import java.util.Map;
 public class OwnerApiController {
 
     private final MemberService memberService;
+
+    @PostMapping("/signup")
+    public ResponseEntity<?> signup(@RequestBody MemberDTO memberDTO) {
+        try {
+            // OWNER 권한 설정
+            memberDTO.getRoles().clear();
+            memberDTO.getRoles().add(MemberRole.OWNER);
+            
+            log.info("Owner signup request: " + memberDTO.getUserId());
+            memberService.register(memberDTO);
+            
+            return ResponseEntity.ok().body(Map.of(
+                "success", true,
+                "message", "회원가입이 완료되었습니다."
+            ));
+        } catch (Exception e) {
+            log.error("Owner signup failed: ", e);
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "회원가입에 실패했습니다: " + e.getMessage()
+            ));
+        }
+    }
 
     @PutMapping("/password")
     public ResponseEntity<?> changePassword(

@@ -4,9 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>점주 회원가입</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
-    <script th:src="@{/js/owner-auth.js}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script th:src="@{/js/owner-auth.js}" defer></script>
 </head>
 <body>
     <header class="detail-header">
@@ -20,7 +23,7 @@
 
     <main class="center-container">
         <div class="auth-form">
-            <form action="/owner/signup" method="post" onsubmit="return validateOwnerSignup(event)">
+            <form id="signupForm" onsubmit="return handleOwnerSignup(event)">
                 <div class="input-group">
                     <label for="name">이름</label>
                     <input type="text" id="name" name="name" required placeholder="이름을 입력하세요">
@@ -35,8 +38,8 @@
                            placeholder="비밀번호를 입력하세요 (8자 이상)">
                 </div>
                 <div class="input-group">
-                    <label for="passwordConfirm">비밀번호 확인</label>
-                    <input type="password" id="passwordConfirm" name="passwordConfirm" required 
+                    <label for="confirmPassword">비밀번호 확인</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required 
                            placeholder="비밀번호를 다시 입력하세요">
                 </div>
                 <div class="input-group">

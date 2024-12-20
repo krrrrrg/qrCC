@@ -33,8 +33,63 @@ function validateOwnerSignup(event) {
     return true;
 }
 
+// 점주 회원가입 처리
+async function handleOwnerSignup(event) {
+    event.preventDefault();
+    
+    const name = document.getElementById('name').value;
+    const userId = document.getElementById('userId').value;
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const phone = document.getElementById('phone').value;
+
+    // 아이디 유효성 검사
+    if (userId.length < 4) {
+        alert('아이디는 4자 이상이어야 합니다.');
+        return false;
+    }
+
+    // 전화번호 유효성 검사
+    if (!/^[0-9]{11}$/.test(phone)) {
+        alert('올바른 전화번호를 입력해주세요.');
+        return false;
+    }
+
+    // 비밀번호 확인
+    if (password !== confirmPassword) {
+        alert('비밀번호가 일치하지 않습니다.');
+        return false;
+    }
+
+    // 비밀번호 길이 체크
+    if (password.length < 8) {
+        alert('비밀번호는 8자 이상이어야 합니다.');
+        return false;
+    }
+
+    try {
+        const response = await axios.post('/api/owner/signup', {
+            name: name,
+            userId: userId,
+            password: password,
+            phone: phone
+        });
+
+        if (response.data.success) {
+            alert('회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.');
+            window.location.href = '/owner/login';
+        } else {
+            alert(response.data.message || '회원가입에 실패했습니다.');
+        }
+    } catch (error) {
+        console.error('회원가입 오류:', error);
+        alert(error.response?.data?.message || '회원가입 처리 중 오류가 발생했습니다.');
+    }
+
+    return false;
+}
+
 // axios 기본 설정
-axios.defaults.baseURL = '/api';
 axios.defaults.headers.common['Content-Type'] = 'application/json';
 
 // CSRF 토큰 설정
