@@ -38,23 +38,26 @@ public class CustomSecurityConfig {
         http
             .securityMatcher("/owner/**", "/api/owner/**")
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/api/owner/**", "/owner/signup")
+                .ignoringRequestMatchers(
+                    "/api/owner/signup",
+                    "/api/owner/account",
+                    "/api/owner/password"
+                )
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/owner/login", "/owner/signup", "/api/owner/signup", "/css/**", "/js/**", "/images/**").permitAll()
-                .anyRequest().hasRole("OWNER")
+                .requestMatchers("/owner/login", "/owner/signup", "/api/owner/signup", 
+                               "/css/**", "/js/**", "/images/**", "/webjars/**", "/assets/**").permitAll()
+                .requestMatchers("/owner/dashboard", "/owner/dashboard/**").hasAuthority("ROLE_OWNER")
+                .requestMatchers("/api/owner/**").hasAuthority("ROLE_OWNER")
+                .anyRequest().authenticated()
             )
             .formLogin(login -> login
                 .loginPage("/owner/login")
                 .loginProcessingUrl("/owner/login")
+                .defaultSuccessUrl("/owner/dashboard", true)
+                .failureUrl("/owner/login?error=true")
                 .usernameParameter("userId")
                 .passwordParameter("password")
-                .successHandler((request, response, authentication) -> {
-                    response.sendRedirect("/owner/dashboard");
-                })
-                .failureHandler((request, response, exception) -> {
-                    response.sendRedirect("/owner/login?error=true");
-                })
                 .permitAll()
             )
             .userDetailsService(userDetailsService)
@@ -73,11 +76,12 @@ public class CustomSecurityConfig {
     @Order(2)
     public SecurityFilterChain userFilterChain(HttpSecurity http) throws Exception {
         http
+            .securityMatcher("/**")
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/signup", "/login", "/css/**", "/js/**", "/images/**").permitAll()
-                .requestMatchers("/api/users/**").hasAnyRole("USER", "OWNER")
-                .anyRequest().permitAll()
+                .requestMatchers("/signup", "/login", "/css/**", "/js/**", "/images/**", "/").permitAll()
+                .requestMatchers("/api/users/**").hasAnyAuthority("ROLE_USER", "ROLE_OWNER")
+                .anyRequest().authenticated()
             )
             .formLogin(login -> login
                 .loginPage("/login")

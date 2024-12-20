@@ -1,76 +1,53 @@
 package org.zerock.restqrpayment_2.service;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.zerock.restqrpayment_2.domain.Member;
+import org.zerock.restqrpayment_2.domain.MemberRole;
 import org.zerock.restqrpayment_2.dto.MemberDTO;
 import org.zerock.restqrpayment_2.repository.MemberRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
+@Log4j2
 @RequiredArgsConstructor
+@Transactional
 public class MemberServiceImpl implements MemberService {
 
     private final MemberRepository memberRepository;
-
     private final PasswordEncoder passwordEncoder;
-
-    private static final Logger log = LoggerFactory.getLogger(MemberServiceImpl.class);
 
     @Override
     public String register(MemberDTO memberDTO) {
-        log.info("Registering new member: " + memberDTO.getUserId());
-        log.info("Original password length: " + memberDTO.getPassword().length());
-        
-        String encodedPassword = passwordEncoder.encode(memberDTO.getPassword());
-        log.info("Encoded password length: " + encodedPassword.length());
-        
-        Member member = Member.builder()
-                .userId(memberDTO.getUserId())
-                .password(encodedPassword)
-                .roleSet(memberDTO.getRoles())
-                .name(memberDTO.getName())
-                .phone(memberDTO.getPhone())
-                .build();
-
+        Member member = dtoToEntity(memberDTO);
         memberRepository.save(member);
-        log.info("Member saved successfully with roles: " + member.getRoleSet());
         return member.getUserId();
     }
 
     @Override
     public MemberDTO read(String userId) {
-        Optional<Member> memberOptional = memberRepository.findById(userId);
-        Member member = memberOptional.orElseThrow(() -> new IllegalArgumentException("Member not found"));
-
-        return MemberDTO.builder()
-                .userId(member.getUserId())
-                .password(member.getPassword())
-                .roles(member.getRoleSet())
-                .name(member.getName())
-                .phone(member.getPhone())
-                .build();
+        Optional<Member> result = memberRepository.findById(userId);
+        Member member = result.orElseThrow(() -> 
+            new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+        return entityToDTO(member);
     }
 
     @Override
     public void modify(MemberDTO memberDTO) {
-        Member member = memberRepository.findById(memberDTO.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("Member not found"));
-
-        if (memberDTO.getPassword() != null) {
-            member.changePassword(passwordEncoder.encode(memberDTO.getPassword()));
-        }
-
-        if (memberDTO.getRoles() != null) {
-            member.clearRoles();
-            memberDTO.getRoles().forEach(member::addRole);
-        }
-
+        Optional<Member> result = memberRepository.findById(memberDTO.getUserId());
+        Member member = result.orElseThrow(() -> 
+            new IllegalArgumentException("사용자를 찾을 수 없습니다: " + memberDTO.getUserId()));
+        
+        member.changePassword(passwordEncoder.encode(memberDTO.getPassword()));
+        member.setName(memberDTO.getName());
+        member.setPhone(memberDTO.getPhone());
+        
         memberRepository.save(member);
     }
 
@@ -81,63 +58,80 @@ public class MemberServiceImpl implements MemberService {
 
     @Override
     public List<MemberDTO> getMemberList() {
-        // MemberEntity를 MemberDTO로 변환하여 반환
         return memberRepository.findAll().stream()
-                .map(Member::toDTO)
-                .toList();
+                .map(this::entityToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
     public void changePassword(String userId, String currentPassword, String newPassword) {
-        log.info("Changing password for user: " + userId);
-        
         Member member = memberRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-                
+            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+        
         if (!passwordEncoder.matches(currentPassword, member.getPassword())) {
-            throw new IllegalArgumentException("Current password is incorrect");
+            throw new IllegalArgumentException("현재 비밀번호가 일치하지 않습니다.");
         }
         
-        member.setPassword(passwordEncoder.encode(newPassword));
+        member.changePassword(passwordEncoder.encode(newPassword));
         memberRepository.save(member);
-        
-        log.info("Password changed successfully for user: " + userId);
     }
 
     @Override
-    public void deleteAccount(String userId, String password) {
-        log.info("Deleting account for user: " + userId);
-        
+    public void verifyPassword(String userId, String password) {
         Member member = memberRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-                
-        if (!passwordEncoder.matches(password, member.getPassword())) {
-            throw new IllegalArgumentException("Password is incorrect");
-        }
+            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
         
-        memberRepository.delete(member);
-        log.info("Account deleted successfully for user: " + userId);
+        if (!passwordEncoder.matches(password, member.getPassword())) {
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
     }
-    
+
+    @Override
+    public void deleteAccount(String userId) {
+        Member member = memberRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+        
+        // 연관된 데이터 삭제 로직 추가
+        memberRepository.delete(member);
+    }
+
     @Override
     public boolean authenticate(String userId, String password) {
-        log.info("Authenticating user: " + userId);
-        
-        Optional<Member> memberOptional = memberRepository.findById(userId);
-        if (memberOptional.isEmpty()) {
-            log.warn("User not found: " + userId);
+        Optional<Member> result = memberRepository.findById(userId);
+        if (result.isEmpty()) {
             return false;
         }
+        Member member = result.get();
+        return passwordEncoder.matches(password, member.getPassword());
+    }
+
+    private Member dtoToEntity(MemberDTO memberDTO) {
+        Member member = Member.builder()
+                .userId(memberDTO.getUserId())
+                .password(passwordEncoder.encode(memberDTO.getPassword()))
+                .name(memberDTO.getName())
+                .phone(memberDTO.getPhone())
+                .build();
         
-        Member member = memberOptional.get();
-        boolean matches = passwordEncoder.matches(password, member.getPassword());
-        
-        if (matches) {
-            log.info("Authentication successful for user: " + userId);
+        // roles가 비어있으면 USER 권한 부여, 아니면 DTO의 roles 사용
+        if (memberDTO.getRoles() == null || memberDTO.getRoles().isEmpty()) {
+            member.addRole(MemberRole.USER);
+            log.info("Adding default USER role");
         } else {
-            log.warn("Authentication failed for user: " + userId);
+            memberDTO.getRoles().forEach(role -> {
+                member.addRole(role);
+                log.info("Adding role: " + role);
+            });
         }
         
-        return matches;
+        return member;
+    }
+
+    private MemberDTO entityToDTO(Member member) {
+        return MemberDTO.builder()
+                .userId(member.getUserId())
+                .name(member.getName())
+                .phone(member.getPhone())
+                .build();
     }
 }

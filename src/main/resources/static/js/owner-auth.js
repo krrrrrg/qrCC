@@ -91,22 +91,33 @@ document.addEventListener('DOMContentLoaded', function() {
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
+            // 새 비밀번호 유효성 검사
+            if (newPassword.length < 8) {
+                alert('새 비밀번호는 8자 이상이어야 합니다.');
+                return;
+            }
+
+            // 비밀번호 확인
             if (newPassword !== confirmPassword) {
                 alert('새 비밀번호가 일치하지 않습니다.');
                 return;
             }
 
             try {
-                await axios.put('/owner/password', {
-                    currentPassword,
-                    newPassword
+                const response = await axios.post('/owner/password', {
+                    currentPassword: currentPassword,
+                    newPassword: newPassword
                 });
-                
-                alert('비밀번호가 성공적으로 변경되었습니다.');
-                passwordChangeForm.reset();
+
+                if (response.data.success) {
+                    alert('비밀번호가 성공적으로 변경되었습니다.');
+                    passwordChangeForm.reset();
+                } else {
+                    alert(response.data.message || '비밀번호 변경에 실패했습니다.');
+                }
             } catch (error) {
-                console.error('비밀번호 변경 실패:', error);
-                alert('비밀번호 변경에 실패했습니다.');
+                console.error('비밀번호 변경 오류:', error);
+                alert(error.response?.data?.message || '비밀번호 변경 중 오류가 발생했습니다.');
             }
         });
     }
@@ -124,51 +135,59 @@ document.addEventListener('DOMContentLoaded', function() {
             const password = document.getElementById('deleteConfirmPassword').value;
 
             try {
-                await axios.delete('/owner/account', {
-                    data: { password }
+                const response = await axios.delete('/api/owner/account', {
+                    data: {
+                        currentPassword: password
+                    }
                 });
-                
-                alert('계정이 성공적으로 삭제되었습니다.');
-                window.location.href = '/owner/login';
+
+                if (response.data.success) {
+                    alert('계정이 성공적으로 삭제되었습니다.');
+                    window.location.href = '/owner/login';
+                } else {
+                    alert(response.data.message || '계정 삭제에 실패했습니다.');
+                }
             } catch (error) {
-                console.error('계정 삭제 실패:', error);
-                alert('계정 삭제에 실패했습니다.');
+                console.error('계정 삭제 중 오류 발생:', error);
+                alert(error.response?.data?.message || '계정 삭제 중 오류가 발생했습니다.');
             }
         });
     }
 });
 
 document.addEventListener('DOMContentLoaded', async function() {
-    try {
-        // 현재 로그인한 점주의 가게 정보 불러오기
-        const { data: storeInfo } = await axios.get('/owner/restaurant');
-        
-        console.log('가게 정보:', storeInfo);
+    // 가게 설정 폼이 있을 때만 가게 정보를 불러옴
+    const storeSettingsForm = document.getElementById('storeSettingsForm');
+    if (storeSettingsForm) {
+        try {
+            // 현재 로그인한 점주의 가게 정보 불러오기
+            const { data: storeInfo } = await axios.get('/owner/restaurant');
+            
+            // DOM 요소 업데이트 함수
+            const updateElement = (id, value) => {
+                const element = document.getElementById(id);
+                if (element && value) element.value = value;
+            };
 
-        // DOM 요소 업데이트 함수
-        const updateElement = (id, value) => {
-            const element = document.getElementById(id);
-            if (element && value) element.value = value;
-        };
-
-        // 가게 정보 설정
-        updateElement('storeName', storeInfo.name);
-        updateElement('storeAddress', storeInfo.address);
-        updateElement('storeCategory', storeInfo.category);
-        updateElement('storePhone', storeInfo.phoneNumber);
-        updateElement('openTime', storeInfo.openTime);
-        updateElement('closeTime', storeInfo.closeTime);
-        updateElement('storeNotice', storeInfo.notice);
-        updateElement('storeSns', storeInfo.snsLink);
-        
-        // 사이드바 가게 이름 업데이트
-        const sidebarStoreName = document.querySelector('.admin-profile .store-name');
-        if (sidebarStoreName && storeInfo.name) {
-            sidebarStoreName.textContent = storeInfo.name;
+            // 가게 정보 설정
+            updateElement('storeName', storeInfo.name);
+            updateElement('storeAddress', storeInfo.address);
+            updateElement('storeCategory', storeInfo.category);
+            updateElement('storePhone', storeInfo.phoneNumber);
+            updateElement('openTime', storeInfo.openTime);
+            updateElement('closeTime', storeInfo.closeTime);
+            updateElement('storeNotice', storeInfo.notice);
+            updateElement('storeSns', storeInfo.snsLink);
+            
+            // 사이드바 가게 이름 업데이트
+            const sidebarStoreName = document.querySelector('.admin-profile .store-name');
+            if (sidebarStoreName && storeInfo.name) {
+                sidebarStoreName.textContent = storeInfo.name;
+            }
+            
+        } catch (error) {
+            console.error('가게 정보 로딩 실패:', error);
         }
-        
-    } catch (error) {
-        console.error('가게 정보 로딩 실패:', error);
     }
 });
 

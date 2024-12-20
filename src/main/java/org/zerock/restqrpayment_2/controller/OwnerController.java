@@ -39,11 +39,11 @@ public class OwnerController {
 
     @PostMapping("/signup")
     public String ownerSignupPost(MemberDTO memberDTO) {
-        HashSet<MemberRole> roles = new HashSet<>();
-        roles.add(MemberRole.OWNER);
-        memberDTO.setRoles(roles);
+        // 기존 roles를 clear하고 OWNER 권한만 설정
+        memberDTO.getRoles().clear();
+        memberDTO.getRoles().add(MemberRole.OWNER);
         
-        log.info(memberDTO);
+        log.info("Owner signup with roles: " + memberDTO.getRoles());
         memberService.register(memberDTO);
         return "redirect:/owner/login";
     }

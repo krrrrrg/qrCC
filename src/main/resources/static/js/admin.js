@@ -333,6 +333,30 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// 로그아웃 함수
+function handleAdminLogout() {
+    const csrfToken = document.querySelector("meta[name='_csrf']").getAttribute("content");
+    
+    fetch('/owner/logout', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.href = '/owner/login';
+        } else {
+            console.error('로그아웃 실패');
+        }
+    })
+    .catch(error => {
+        console.error('로그아웃 중 오류 발생:', error);
+    });
+}
+
 // 레스토랑 목록 로드
 async function loadRestaurantList() {
     try {

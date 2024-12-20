@@ -14,7 +14,9 @@ public interface MemberService {
     
     void changePassword(String userId, String currentPassword, String newPassword);
     
-    void deleteAccount(String userId, String password);
+    void deleteAccount(String userId);
+    
+    void verifyPassword(String userId, String password);
     
     boolean authenticate(String userId, String password);
 }

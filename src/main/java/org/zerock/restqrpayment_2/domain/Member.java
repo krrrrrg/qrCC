@@ -35,8 +35,20 @@ public class Member extends BaseEntity {
         this.password = newPassword;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
     public void addRole(MemberRole role) {
+        if (this.roleSet == null) {
+            this.roleSet = new HashSet<>();
+        }
         this.roleSet.add(role);
+        System.out.println("Added role " + role + " to user " + this.userId);
     }
 
     public void clearRoles() {

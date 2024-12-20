@@ -36,18 +36,28 @@ public class RestaurantController {
     // 1. Read - 식당 목록 조회 (User, Owner, Admin)
     @GetMapping
     public ResponseEntity<List<RestaurantDTO>> getList() {
-        PageRequestDTO pageRequestDTO = PageRequestDTO.builder()
-                .page(1)
-                .size(100)  // 충분히 큰 수로 설정
-                .build();
-        PageResponseDTO<RestaurantListAllDTO> responseDTO = restaurantService.listWithAll(pageRequestDTO);
-        List<RestaurantDTO> restaurants = responseDTO.getDtoList().stream()
-                .map(dto -> RestaurantDTO.builder()
-                        .id(dto.getId())
-                        .name(dto.getName())
-                        .build())
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(restaurants);
+        try {
+            PageRequestDTO pageRequestDTO = PageRequestDTO.builder()
+                    .page(1)
+                    .size(100)  // 충분히 큰 수로 설정
+                    .build();
+            PageResponseDTO<RestaurantListAllDTO> responseDTO = restaurantService.listWithAll(pageRequestDTO);
+            
+            if (responseDTO == null || responseDTO.getDtoList() == null) {
+                return ResponseEntity.ok(List.of()); // 빈 리스트 반환
+            }
+            
+            List<RestaurantDTO> restaurants = responseDTO.getDtoList().stream()
+                    .map(dto -> RestaurantDTO.builder()
+                            .id(dto.getId())
+                            .name(dto.getName())
+                            .build())
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(restaurants);
+        } catch (Exception e) {
+            log.error("Error fetching restaurant list: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     // 2. Read - 특정 식당 조회 (Owner는 자기 식당만, Admin은 모든 식당 조회 가능)

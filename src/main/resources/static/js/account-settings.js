@@ -67,7 +67,7 @@ async function handleAccountDeletion(event) {
         return;
     }
     
-    const password = document.querySelector('#deleteAccountPassword').value;
+    const password = document.querySelector('#deleteConfirmPassword').value;
     
     try {
         const headers = {
@@ -84,13 +84,13 @@ async function handleAccountDeletion(event) {
             headers: headers,
             credentials: 'include',
             body: JSON.stringify({
-                password: password
+                currentPassword: password
             })
         });
 
         if (response.ok) {
             alert('계정이 성공적으로 삭제되었습니다.');
-            window.location.href = '/'; // 메인 페이지로 리다이렉트
+            window.location.href = '/owner/login'; // 로그인 페이지로 리다이렉트
         } else {
             const error = await response.text();
             alert('계정 삭제 실패: ' + error);
