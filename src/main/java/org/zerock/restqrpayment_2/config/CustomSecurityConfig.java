@@ -41,12 +41,13 @@ public class CustomSecurityConfig {
                 .ignoringRequestMatchers(
                     "/api/owner/signup",
                     "/api/owner/account",
-                    "/api/owner/password"
+                    "/api/owner/password",
+                    "/owner/find/id",
+                    "/owner/find/password"
                 )
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/owner/login", "/owner/signup", "/api/owner/signup", 
-                               "/css/**", "/js/**", "/images/**", "/webjars/**", "/assets/**").permitAll()
+                .requestMatchers("/owner/login", "/owner/signup", "/api/owner/signup", "/owner/find/id", "/owner/find/password", "/css/**", "/js/**", "/images/**", "/webjars/**", "/assets/**").permitAll()
                 .requestMatchers("/owner/dashboard", "/owner/dashboard/**").hasAuthority("ROLE_OWNER")
                 .requestMatchers("/api/owner/**").hasAuthority("ROLE_OWNER")
                 .anyRequest().authenticated()
@@ -77,9 +78,12 @@ public class CustomSecurityConfig {
     public SecurityFilterChain userFilterChain(HttpSecurity http) throws Exception {
         http
             .securityMatcher("/**")
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf
+                .ignoringRequestMatchers("/find/id", "/find/password")
+                .disable()
+            )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/signup", "/login", "/css/**", "/js/**", "/images/**", "/").permitAll()
+                .requestMatchers("/signup", "/login", "/find/id", "/find/password", "/css/**", "/js/**", "/images/**", "/").permitAll()
                 .requestMatchers("/api/users/**").hasAnyAuthority("ROLE_USER", "ROLE_OWNER")
                 .anyRequest().authenticated()
             )

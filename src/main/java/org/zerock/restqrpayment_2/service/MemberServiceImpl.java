@@ -12,6 +12,7 @@ import org.zerock.restqrpayment_2.repository.MemberRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -103,6 +104,70 @@ public class MemberServiceImpl implements MemberService {
         }
         Member member = result.get();
         return passwordEncoder.matches(password, member.getPassword());
+    }
+
+    @Override
+    public List<String> findIdsByNameAndPhone(String name, String phone) {
+        List<Member> members = memberRepository.findAllByNameAndPhone(name, phone);
+        if (members.isEmpty()) {
+            throw new IllegalArgumentException("일치하는 회원 정보를 찾을 수 없습니다.");
+        }
+        return members.stream()
+                     .map(Member::getUserId)
+                     .collect(Collectors.toList());
+    }
+
+    @Override
+    public void resetPasswordAndSendToPhone(String userId, String phone) {
+        Optional<Member> memberOpt = memberRepository.findByUserIdAndPhone(userId, phone);
+        if (memberOpt.isEmpty()) {
+            throw new IllegalArgumentException("일치하는 회원 정보를 찾을 수 없습니다.");
+        }
+
+        Member member = memberOpt.get();
+        String tempPassword = generateTempPassword();
+        member.setPassword(passwordEncoder.encode(tempPassword));
+        memberRepository.save(member);
+
+        // TODO: SMS 서비스 연동하여 임시 비밀번호 전송
+        log.info("임시 비밀번호가 전송되었습니다: " + phone + " / " + tempPassword);
+    }
+
+    @Override
+    public boolean isOwner(String userId) {
+        Optional<Member> member = memberRepository.findById(userId);
+        return member.map(m -> m.getRoleSet().contains(MemberRole.OWNER)).orElse(false);
+    }
+
+    @Override
+    public boolean isUser(String userId) {
+        Optional<Member> member = memberRepository.findById(userId);
+        return member.map(m -> m.getRoleSet().contains(MemberRole.USER)).orElse(false);
+    }
+
+    @Override
+    public String resetPassword(String userId, String phone) {
+        Optional<Member> memberOpt = memberRepository.findByUserIdAndPhone(userId, phone);
+        if (memberOpt.isEmpty()) {
+            throw new IllegalArgumentException("일치하는 회원 정보를 찾을 수 없습니다.");
+        }
+
+        Member member = memberOpt.get();
+        String tempPassword = generateTempPassword();
+        member.setPassword(passwordEncoder.encode(tempPassword));
+        memberRepository.save(member);
+
+        return tempPassword;
+    }
+
+    private String generateTempPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        StringBuilder sb = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < 8; i++) {
+            sb.append(chars.charAt(random.nextInt(chars.length())));
+        }
+        return sb.toString();
     }
 
     private Member dtoToEntity(MemberDTO memberDTO) {

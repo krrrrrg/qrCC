@@ -1,8 +1,12 @@
 package org.zerock.restqrpayment_2.config;
 
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.CacheControl;
+import org.springframework.http.MediaType;
+import org.springframework.web.servlet.config.annotation.ContentNegotiationConfigurer;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.servlet.resource.VersionResourceResolver;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -11,11 +15,15 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // CSS 파일 매핑
         registry.addResourceHandler("/css/**")
-                .addResourceLocations("classpath:/static/css/");
+                .addResourceLocations("classpath:/static/css/")
+                .setCacheControl(CacheControl.noCache());
 
         // JavaScript 파일 매핑
         registry.addResourceHandler("/js/**")
-                .addResourceLocations("classpath:/static/js/");
+                .addResourceLocations("classpath:/static/js/")
+                .setCacheControl(CacheControl.noCache())
+                .resourceChain(true)
+                .addResolver(new VersionResourceResolver().addContentVersionStrategy("/**"));
 
         // 이미지 파일 매핑 (필요한 경우)
         registry.addResourceHandler("/images/**")
@@ -27,5 +35,10 @@ public class WebConfig implements WebMvcConfigurer {
 
         registry.addResourceHandler("/menu-images/**")
                 .addResourceLocations("file:" + System.getProperty("user.home") + "/menu-images/");
+    }
+
+    @Override
+    public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
+        configurer.mediaType("js", new MediaType("application", "javascript"));
     }
 }

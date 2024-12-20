@@ -19,4 +19,12 @@ public interface MemberService {
     void verifyPassword(String userId, String password);
     
     boolean authenticate(String userId, String password);
+    
+    List<String> findIdsByNameAndPhone(String name, String phone);
+    
+    void resetPasswordAndSendToPhone(String userId, String phone);
+    
+    boolean isOwner(String userId);
+    boolean isUser(String userId);
+    String resetPassword(String userId, String phone);
 }

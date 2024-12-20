@@ -12,6 +12,8 @@ import org.zerock.restqrpayment_2.service.MemberService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.zerock.restqrpayment_2.domain.MemberRole;
 import org.springframework.ui.Model;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @Log4j2
@@ -51,6 +53,52 @@ public class CommonController {
     @GetMapping("/find/password")
     public String findPassword() {
         return "common/find-password";
+    }
+
+    @PostMapping("/find/id")
+    public String findIdPost(@RequestParam String name, 
+                           @RequestParam String phone,
+                           @RequestParam String userType,
+                           Model model) {
+        try {
+            List<String> foundIds = memberService.findIdsByNameAndPhone(name, phone);
+            // 회원 유형에 따라 필터링
+            List<String> filteredIds = foundIds.stream()
+                .filter(id -> userType.equals("owner") ? memberService.isOwner(id) : memberService.isUser(id))
+                .collect(Collectors.toList());
+            
+            if (filteredIds.isEmpty()) {
+                model.addAttribute("error", userType.equals("owner") ? 
+                    "일치하는 점주 회원 정보를 찾을 수 없습니다." : 
+                    "일치하는 일반 회원 정보를 찾을 수 없습니다.");
+            } else {
+                model.addAttribute("foundIds", filteredIds);
+            }
+            return "common/find-id";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", e.getMessage());
+            return "common/find-id";
+        }
+    }
+
+    @PostMapping("/find/password")
+    public String findPasswordPost(@RequestParam String userId,
+                                 @RequestParam String phone,
+                                 @RequestParam String userType,
+                                 Model model) {
+        try {
+            if (userType.equals("owner") && !memberService.isOwner(userId)) {
+                throw new IllegalArgumentException("일치하는 점주 회원 정보를 찾을 수 없습니다.");
+            } else if (userType.equals("user") && !memberService.isUser(userId)) {
+                throw new IllegalArgumentException("일치하는 일반 회원 정보를 찾을 수 없습니다.");
+            }
+            String tempPassword = memberService.resetPassword(userId, phone);
+            model.addAttribute("tempPassword", tempPassword);
+            return "common/find-password";
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", e.getMessage());
+            return "common/find-password";
+        }
     }
 
     @PostMapping("/login")
