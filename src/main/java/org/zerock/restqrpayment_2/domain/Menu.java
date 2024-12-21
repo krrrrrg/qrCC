@@ -41,10 +41,19 @@ public class Menu extends BaseEntity {
     @Builder.Default
     private Set<MenuImage> imageSet = new HashSet<>();
 
-    public void changeMenu(String name, Double price, String description) {
+    public void changeMenu(String name, Double price, String description, String menuCategory) {
         this.name = name;
         this.price = price;
         this.description = description;
+        this.menuCategory = menuCategory;
+    }
+
+    public String getMenuCategory() {
+        return menuCategory;
+    }
+
+    public void setMenuCategory(String menuCategory) {
+        this.menuCategory = menuCategory;
     }
 
     public void setRestaurant(Restaurant restaurant) {

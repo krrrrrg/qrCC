@@ -12,7 +12,8 @@
       name="_csrf_header"
       th:content="${_csrf != null ? _csrf.headerName : ''}"
     />
-    <title>점주 관리자</title>
+    <title>Owner Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/menu-management.css}">
     <link rel="stylesheet" th:href="@{/css/styles.css}" />
     <link rel="stylesheet" th:href="@{/css/admin-styles.css}" />
     <link
@@ -22,18 +23,7 @@
     <script
       th:src="@{https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js}"
     ></script>
-    <link
-      th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css}"
-      rel="stylesheet"
-    />
-    <script
-      th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js}"
-    ></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <link
-      rel="stylesheet"
-      th:href="@{https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css}"
-    />
     <style>
       .sidebar {
         min-height: 100vh;
@@ -43,10 +33,23 @@
       .nav-link {
         color: #333;
         margin: 5px 0;
+        transition: all 0.3s ease;
+        border-radius: 5px;
+        padding: 10px 15px;
+      }
+      .nav-link:hover {
+        background-color: #ffdfd1;
+        color: #b45f34;
       }
       .nav-link.active {
         background-color: #b45f34;
-        color: white;
+        color: white !important;
+      }
+      /* 선택된 메뉴의 호버 효과 수정 */
+      .nav-link.active:hover {
+        background-color: #d17042;
+        color: white !important;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
       }
       .order-card {
         margin-bottom: 15px;
@@ -96,63 +99,7 @@
         box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
       }
 
-      /* 모달 스타일 */
-      .modal {
-        display: none;
-        position: fixed;
-        z-index: 1000;
-        left: 0;
-        top: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.4);
-      }
-
-      .modal-content {
-        background-color: #fefefe;
-        margin: 15% auto;
-        padding: 20px;
-        border: 1px solid #888;
-        width: 80%;
-        max-width: 500px;
-        border-radius: 5px;
-        position: relative;
-      }
-
-      .close {
-        color: #aaa;
-        float: right;
-        font-size: 28px;
-        font-weight: bold;
-        cursor: pointer;
-      }
-
-      .close:hover,
-      .close:focus {
-        color: black;
-        text-decoration: none;
-        cursor: pointer;
-      }
-
-      /* 폼 스타일 */
-      .form-group {
-        margin-bottom: 15px;
-      }
-
-      .form-group label {
-        display: block;
-        margin-bottom: 5px;
-      }
-
-      .form-group input,
-      .form-group textarea {
-        width: 100%;
-        padding: 8px;
-        border: 1px solid #ddd;
-        border-radius: 4px;
-      }
-
-      /* 기존 스타일에 추가 */
+      /* 메뉴 관리 스타일 */
       .menu-items {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -160,56 +107,153 @@
         padding: 20px;
       }
 
-      .menu-item.card {
+      .menu-item {
         border: 1px solid #ddd;
         border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: transform 0.2s;
-      }
-
-      .menu-item.card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-      }
-
-      .menu-item .card-body {
         padding: 15px;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
       }
 
-      .menu-item .card-title {
-        font-size: 1.2rem;
-        font-weight: bold;
+      .menu-image {
+        width: 100%;
+        height: 200px;
+        overflow: hidden;
+        border-radius: 4px;
         margin-bottom: 10px;
       }
 
-      .menu-item .card-text {
-        margin-bottom: 8px;
+      .menu-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
       }
 
-      .menu-item .img-thumbnail {
+      .menu-info h4 {
+        margin: 0 0 10px 0;
+        color: #333;
+        font-size: 1.2em;
+      }
+
+      .menu-info .category {
+        color: #666;
+        font-size: 0.9em;
+        margin: 5px 0;
+      }
+
+      .menu-info .price {
+        color: #b45f34;
+        font-weight: bold;
+        margin: 5px 0;
+      }
+
+      .menu-info .description {
+        color: #777;
+        font-size: 0.9em;
+        margin: 10px 0;
+      }
+
+      .menu-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+
+      .menu-actions button {
+        padding: 8px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: all 0.3s ease;
+      }
+
+      .edit-btn {
+        background: #4CAF50;
+        color: white;
+      }
+
+      .delete-btn {
+        background: #f44336;
+        color: white;
+      }
+
+      .edit-btn:hover {
+        background: #45a049;
+      }
+
+      .delete-btn:hover {
+        background: #da190b;
+      }
+
+      /* 모달 스타일 */
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
         width: 100%;
-        height: 200px;
-        object-fit: cover;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+      }
+
+      .modal-content {
+        position: relative;
+        background: white;
+        width: 90%;
+        max-width: 500px;
+        margin: 50px auto;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      }
+
+      .close {
+        position: absolute;
+        right: 15px;
+        top: 10px;
+        font-size: 24px;
+        cursor: pointer;
+        color: #666;
+      }
+
+      .form-group {
         margin-bottom: 15px;
       }
 
-      .menu-item .btn-group {
-        display: flex;
-        gap: 10px;
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        color: #333;
       }
 
-      .menu-content {
-        background-color: #fff;
-        padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      .form-group input,
+      .form-group textarea,
+      .form-group select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
       }
 
-      .menu-filters {
-        background-color: #f8f9fa;
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 20px;
+      .form-group input:focus,
+      .form-group textarea:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #b45f34;
+      }
+
+      #imagePreviewContainer {
+        margin-top: 10px;
+        max-width: 200px;
+      }
+
+      #imagePreviewContainer img {
+        width: 100%;
+        height: auto;
+        border-radius: 4px;
       }
     </style>
   </head>
@@ -226,38 +270,38 @@
         </div>
         <div class="admin-menu-container">
           <ul class="admin-menu">
-            <li class="active">
-              <a href="#dashboard">
+            <li>
+              <a href="#" class="nav-link" data-section="dashboard">
                 <span class="icon">📊</span>
                 대시보드
               </a>
             </li>
             <li>
-              <a href="#menu-management">
+              <a href="#" class="nav-link" data-section="menu-management">
                 <span class="icon">🍽️</span>
                 메뉴 관리
               </a>
             </li>
             <li>
-              <a href="#store-management">
+              <a href="#" class="nav-link" data-section="store-management">
                 <span class="icon">🏪</span>
                 가게 관리
               </a>
             </li>
             <li>
-              <a href="#table-management">
+              <a href="#" class="nav-link" data-section="table-management">
                 <span class="icon">🪑</span>
                 테이블 관리
               </a>
             </li>
             <li>
-              <a href="#account-settings">
+              <a href="#" class="nav-link" data-section="account-settings">
                 <span class="icon">⚙️</span>
                 계정 설정
               </a>
             </li>
             <li>
-              <a href="#order-management">
+              <a href="#" class="nav-link" data-section="order-management">
                 <span class="icon">📦</span>
                 주문 관리
               </a>
@@ -291,61 +335,58 @@
         </div>
 
         <!-- 메뉴 관리 섹션 -->
-        <section id="menu-management" class="admin-section">
-          <div class="section-header">
-            <h2>메뉴 관리</h2>
-            <div class="form-group mb-3">
-              <label for="restaurantSelect">레스토랑 선택</label>
-              <select class="form-control" id="restaurantSelect">
-                <option value="">레스토랑을 선택하세요</option>
-                <option
-                  th:each="restaurant : ${restaurants}"
-                  th:if="${restaurant.ownerId == #authentication.principal.username}"
-                  th:value="${restaurant.id}"
-                  th:text="${restaurant.name}"
-                ></option>
-              </select>
-            </div>
-          </div>
-
-          <!-- 메뉴 관리 컨텐츠 -->
-          <div class="menu-content" style="display: none">
-            <!-- 메뉴 목록 -->
-            <div class="menu-list mt-4">
-              <div
-                class="d-flex justify-content-between align-items-center mb-3"
-              >
-                <h3>메뉴 목록</h3>
-                <button
-                  class="btn btn-primary"
-                  onclick="openAddMenuModal()"
-                  id="addMenuBtn"
-                  disabled
-                >
-                  새 메뉴 추가
-                </button>
-              </div>
-              <div class="menu-filters mb-3">
-                <div class="row">
-                  <div class="col-md-6">
-                    <select id="categoryFilter" class="form-control">
-                      <option value="all">전체 카테고리</option>
-                    </select>
+        <div id="menu-management" class="admin-section">
+          <div class="container-fluid">
+            <div class="row">
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header">
+                    <h5 class="card-title">메뉴 관리</h5>
                   </div>
-                  <div class="col-md-6">
-                    <input
-                      type="text"
-                      id="menuSearch"
-                      class="form-control"
-                      placeholder="메뉴 검색..."
-                    />
+                  <div class="card-body">
+                    <!-- 레스토랑 선택기 -->
+                    <div class="form-group mb-4">
+                      <label for="restaurantSelect">레스토랑 선택</label>
+                      <select class="form-control" id="restaurantSelect">
+                        <option value="">레스토랑을 선택하세요</option>
+                        <option
+                          th:each="restaurant : ${restaurants}"
+                          th:if="${restaurant.ownerId == #authentication.principal.username}"
+                          th:value="${restaurant.id}"
+                          th:text="${restaurant.name}"
+                        ></option>
+                      </select>
+                    </div>
+
+                    <!-- 메뉴 필터 및 검색 -->
+                    <div class="menu-filters mb-4">
+                      <div class="row">
+                        <div class="col-md-4">
+                          <input type="text" id="menuSearch" class="form-control" placeholder="메뉴 검색...">
+                        </div>
+                        <div class="col-md-4">
+                          <select id="categoryFilter" class="form-control">
+                            <option value="all">전체 카테고리</option>
+                          </select>
+                        </div>
+                        <div class="col-md-4 text-right">
+                          <button onclick="openAddMenuModal()" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> 새 메뉴 추가
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 메뉴 목록 -->
+                    <div id="menuList" class="menu-list">
+                      <!-- 메뉴 항목들이 여기에 동적으로 추가됩니다 -->
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="menu-items"></div>
             </div>
           </div>
-        </section>
+        </div>
 
         <div id="store-management" class="admin-section">
           <div class="container-fluid">
@@ -591,61 +632,40 @@
     <!-- 메뉴 추가/수정 모달 -->
     <div id="menuModal" class="modal">
       <div class="modal-content">
-        <span class="close">&times;</span>
-        <h2>메뉴 추가</h2>
-        <form id="menuForm" enctype="multipart/form-data">
-          <div class="form-group">
-            <label for="menuName">메뉴 이름</label>
-            <input
-              type="text"
-              id="menuName"
-              name="name"
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="menuPrice">가격</label>
-            <input
-              type="number"
-              id="menuPrice"
-              name="price"
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="menuCategory">카테고리</label>
-            <input
-              type="text"
-              id="menuCategory"
-              name="menuCategory"
-              class="form-control"
-              required
-            />
-          </div>
-          <div class="form-group">
-            <label for="menuDescription">설명</label>
-            <textarea
-              id="menuDescription"
-              name="description"
-              class="form-control"
-            ></textarea>
-          </div>
-          <div class="form-group">
-            <label for="menuImage">이미지</label>
-            <input
-              type="file"
-              id="menuImage"
-              name="image"
-              accept="image/*"
-              class="form-control"
-            />
-            <div id="currentImage"></div>
-          </div>
-          <input type="hidden" id="menuId" name="id" />
-          <button type="submit" class="btn btn-primary">저장</button>
-        </form>
+        <div class="modal-header">
+          <h2 class="modal-title">메뉴 추가</h2>
+          <span class="close">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="menuForm">
+            <input type="hidden" id="menuId">
+            <div class="form-group">
+              <label for="menuName">메뉴 이름</label>
+              <input type="text" id="menuName" required>
+            </div>
+            <div class="form-group">
+              <label for="menuCategory">카테고리</label>
+              <input type="text" id="menuCategory" value="기타">
+            </div>
+            <div class="form-group">
+              <label for="price">가격</label>
+              <input type="number" id="price" required>
+            </div>
+            <div class="form-group">
+              <label for="description">설명</label>
+              <textarea id="description"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="menuImage">이미지</label>
+              <input type="file" id="menuImage" accept="image/*">
+              <div id="previewContainer"></div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="submit-btn">저장</button>
+              <button type="button" class="cancel-btn close">취소</button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
 
@@ -821,7 +841,7 @@
         }
       });
 
-      // 레스토랑 선택기 이벤트 핸들러
+      // 레스토랑 선택기 이벤트 리스너
       document.getElementById('restaurantSelector').addEventListener('change', async function() {
         const selectedId = this.value;
         const form = document.getElementById('restaurantForm');
@@ -884,14 +904,52 @@
       /*]]>*/
     </script>
     <script>
+      // 사이드바 메뉴 활성화 처리
+      document.addEventListener('DOMContentLoaded', function() {
+        const sidebarLinks = document.querySelectorAll('.admin-sidebar .nav-link');
+        const sections = document.querySelectorAll('.admin-section');
+        
+        // 초기 상태 설정 (대시보드 활성화)
+        document.querySelector('[data-section="dashboard"]').classList.add('active');
+        showSection('dashboard');
+        
+        // 각 메뉴 항목에 클릭 이벤트 리스너 추가
+        sidebarLinks.forEach(link => {
+          link.addEventListener('click', function(e) {
+            e.preventDefault(); // 기본 링크 동작 방지
+            
+            // 모든 메뉴에서 active 클래스 제거
+            sidebarLinks.forEach(item => item.classList.remove('active'));
+            
+            // 클릭된 메뉴에 active 클래스 추가
+            this.classList.add('active');
+            
+            // 해당 섹션 표시
+            const sectionId = this.getAttribute('data-section');
+            showSection(sectionId);
+          });
+        });
+        
+        // 섹션 표시/숨김 처리 함수
+        function showSection(sectionId) {
+          sections.forEach(section => {
+            if (section.id === sectionId) {
+              section.style.display = 'block';
+            } else {
+              section.style.display = 'none';
+            }
+          });
+        }
+      });
+    </script>
+    <script>
       // 메뉴 추가/수정 폼 제출
       document
         .getElementById("menuForm")
         .addEventListener("submit", async function (e) {
           e.preventDefault();
 
-          const restaurantId =
-            document.getElementById("restaurantSelect").value;
+          const restaurantId = document.getElementById("restaurantSelect").value;
           if (!restaurantId) {
             alert("레스토랑을 선택해주세요.");
             return;
@@ -899,8 +957,9 @@
 
           // FormData 객체 생성 전에 필수 필드 검증
           const menuName = document.getElementById("menuName").value;
-          const menuPrice = document.getElementById("menuPrice").value;
+          const menuPrice = document.getElementById("price").value;
           const menuCategory = document.getElementById("menuCategory").value;
+          const menuId = document.getElementById("menuId").value;
 
           if (!menuName || !menuPrice || !menuCategory) {
             alert("메뉴 이름, 가격, 카테고리는 필수 입력사항입니다.");
@@ -908,235 +967,91 @@
           }
 
           const formData = new FormData(this);
-          formData.append("restaurantId", restaurantId); // 레스토랑 ID 추가
+          formData.append("restaurantId", restaurantId);
+
+          // 이미지 파일이 있는 경우에만 추가
+          const imageFile = document.getElementById("menuImage").files[0];
+          if (imageFile) {
+            formData.append("imageFile", imageFile);
+          }
 
           try {
             const token = document.querySelector("meta[name='_csrf']").content;
-            const header = document.querySelector(
-              "meta[name='_csrf_header']"
-            ).content;
+            const header = document.querySelector("meta[name='_csrf_header']").content;
 
-            const response = await fetch(
-              `/api/restaurants/${restaurantId}/menus`,
-              {
-                method: "POST",
-                body: formData,
-                headers: {
-                  [header]: token,
-                },
-              }
-            );
+            // 수정 모드인 경우 PUT 요청, 추가 모드인 경우 POST 요청
+            const method = menuId ? "PUT" : "POST";
+            const url = menuId 
+              ? `/api/restaurants/${restaurantId}/menus/${menuId}`
+              : `/api/restaurants/${restaurantId}/menus`;
+
+            const response = await fetch(url, {
+              method: method,
+              body: formData,
+              headers: {
+                [header]: token,
+              },
+            });
 
             if (!response.ok) {
-              const errorData = await response.text();
-              throw new Error(errorData || "메뉴 추가에 실패했습니다.");
+              throw new Error("메뉴 저장에 실패했습니다.");
             }
 
-            alert("메뉴가 성공적으로 추가되었습니다.");
-            await loadMenus(restaurantId);
+            alert(menuId ? "메뉴가 수정되었습니다." : "메뉴가 추가되었습니다.");
             closeMenuModal();
+            loadMenus(restaurantId); // 메뉴 목록 새로고침
           } catch (error) {
             console.error("Error:", error);
             alert(error.message);
           }
         });
 
-      // 메뉴 모달 초기화 함수
-      function initMenuModal() {
-        const menuForm = document.getElementById("menuForm");
-        menuForm.reset();
-        document.getElementById("menuId").value = "";
-        document.getElementById("currentImage").innerHTML = "";
-      }
-
-      // 메뉴 추가 모달 열기
-      function openAddMenuModal() {
-        const restaurantId = document.getElementById("restaurantSelect").value;
-        if (!restaurantId) {
-          alert("레스토랑을 먼저 선택해주세요.");
-          return;
-        }
-        initMenuModal();
-        menuModal.style.display = "block";
-      }
-
-      // 메뉴 모달 닫기
-      function closeMenuModal() {
-        initMenuModal();
-        menuModal.style.display = "none";
-      }
-
       // 메뉴 수정 모달 열기
       async function editMenu(menuId) {
         try {
-          const restaurantId =
-            document.getElementById("restaurantSelect").value;
-          const response = await fetch(
-            `/api/restaurants/${restaurantId}/menus/${menuId}`
-          );
-          if (!response.ok)
-            throw new Error("메뉴 정보를 불러오는데 실패했습니다.");
-
+          const restaurantId = document.getElementById("restaurantSelect").value;
+          const response = await fetch(`/api/restaurants/${restaurantId}/menus/${menuId}`);
           const menu = await response.json();
 
-          // 폼에 데이터 설정
+          // 모달 제목 변경
+          document.querySelector("#menuModal h2").textContent = "메뉴 수정";
+          
+          // 폼 필드에 데이터 설정
           document.getElementById("menuId").value = menu.id;
           document.getElementById("menuName").value = menu.name;
-          document.getElementById("menuPrice").value = menu.price;
-          document.getElementById("menuCategory").value = menu.menuCategory;
-          document.getElementById("menuDescription").value =
-            menu.description || "";
+          document.getElementById("price").value = menu.price;
+          document.getElementById("menuCategory").value = menu.category;
+          document.getElementById("description").value = menu.description || "";
 
           // 현재 이미지 표시
-          const currentImageDiv = document.getElementById("currentImage");
-          if (menu.fileNames && menu.fileNames.length > 0) {
-            currentImageDiv.innerHTML = `
-                      <img src="/menu-images/${menu.fileNames[0]}" 
-                           style="max-width: 200px; margin-top: 10px;" />
-                  `;
+          const currentImageDiv = document.getElementById("previewContainer");
+          if (menu.imageUrl) {
+            currentImageDiv.innerHTML = `<img src="${menu.imageUrl}" alt="현재 이미지" style="max-width: 200px;">`;
           } else {
             currentImageDiv.innerHTML = "";
           }
 
+          // 모달 표시
           menuModal.style.display = "block";
         } catch (error) {
           console.error("Error:", error);
-          alert(error.message);
+          alert("메뉴 정보를 불러오는데 실패했습니다.");
         }
       }
 
-      // 메뉴 삭제
-      async function deleteMenu(menuId) {
-        if (!confirm("정말로 이 메뉴를 삭제하시겠습니까?")) return;
-
-        try {
-          const restaurantId =
-            document.getElementById("restaurantSelect").value;
-          const token = document.querySelector("meta[name='_csrf']").content;
-          const header = document.querySelector(
-            "meta[name='_csrf_header']"
-          ).content;
-
-          const response = await fetch(
-            `/api/restaurants/${restaurantId}/menus/${menuId}`,
-            {
-              method: "DELETE",
-              headers: {
-                [header]: token,
-              },
-            }
-          );
-
-          if (!response.ok) throw new Error("메뉴 삭제에 실패했습니다.");
-
-          alert("메뉴가 성공적으로 삭제되었습니다.");
-          await loadMenus(restaurantId);
-        } catch (error) {
-          console.error("Error:", error);
-          alert(error.message);
-        }
+      // 메뉴 추가 모달 열기
+      function openAddMenuModal() {
+        // 모달 제목 설정
+        document.querySelector("#menuModal h2").textContent = "메뉴 추가";
+        
+        // 폼 초기화
+        document.getElementById("menuForm").reset();
+        document.getElementById("menuId").value = "";
+        document.getElementById("previewContainer").innerHTML = "";
+        
+        // 모달 표시
+        menuModal.style.display = "block";
       }
-
-      // 메뉴 목록 로드
-      async function loadMenus(restaurantId) {
-        try {
-          const response = await fetch(
-            `/api/restaurants/${restaurantId}/menus`
-          );
-          if (!response.ok) {
-            throw new Error("메뉴 목록을 불러오는데 실패했습니다.");
-          }
-
-          const menus = await response.json();
-          const menuContainer = document.querySelector(".menu-items");
-
-          if (!menuContainer) {
-            console.error("메뉴 컨테이너를 찾을 수 없습니다.");
-            return;
-          }
-
-          // 메뉴 목록이 비어있는 경우 처리
-          if (!menus || menus.length === 0) {
-            menuContainer.innerHTML =
-              '<p class="text-center">록된 메뉴가 없습니다.</p>';
-            return;
-          }
-
-          // 메뉴 목록 렌더링
-          menuContainer.innerHTML = menus
-            .map(
-              (menu) => `
-            <div class="menu-item card">
-              <div class="card-body">
-                ${
-                  menu.fileNames && menu.fileNames.length > 0
-                    ? `<img src="/menu-images/${menu.fileNames[0]}" 
-                         class="img-thumbnail" 
-                         alt="${menu.name}"
-                         onerror="this.onerror=null; this.src='/images/default-menu.png';">`
-                    : '<div class="no-image">이미지 없음</div>'
-                }
-                <h5 class="card-title">${menu.name}</h5>
-                <p class="card-text text-muted">
-                  <span class="badge bg-secondary">${
-                    menu.menuCategory || "카테고리 없음"
-                  }</span>
-                </p>
-                <p class="card-text">${menu.description || ""}</p>
-                <p class="card-text">
-                  <strong class="text-primary">${menu.price.toLocaleString()}원</strong>
-                </p>
-                <div class="btn-group mt-3">
-                  <button class="btn btn-sm btn-outline-primary" onclick="editMenu(${
-                    menu.id
-                  })">
-                    <i class="bi bi-pencil"></i> 수정
-                  </button>
-                  <button class="btn btn-sm btn-outline-danger" onclick="deleteMenu(${
-                    menu.id
-                  })">
-                    <i class="bi bi-trash"></i> 삭제
-                  </button>
-                </div>
-              </div>
-            </div>
-          `
-            )
-            .join("");
-        } catch (error) {
-          console.error("Error:", error);
-          alert("메뉴 목록을 불러오는데 실패했습니다.");
-        }
-      }
-
-      // 메뉴 모달 관련 코드
-      const menuModal = document.getElementById("menuModal");
-      const closeModalBtn = menuModal.querySelector(".close");
-
-      closeModalBtn.onclick = closeMenuModal;
-
-      window.onclick = function (event) {
-        if (event.target == menuModal) {
-          closeMenuModal();
-        }
-      };
-
-      // 레스토랑 선택 이벤트 리스너
-      document
-        .getElementById("restaurantSelect")
-        .addEventListener("change", async function () {
-          const restaurantId = this.value;
-          const addMenuBtn = document.getElementById("addMenuBtn");
-
-          if (restaurantId) {
-            addMenuBtn.disabled = false;
-            document.querySelector(".menu-content").style.display = "block";
-            await loadMenus(restaurantId);
-          } else {
-            addMenuBtn.disabled = true;
-            document.querySelector(".menu-content").style.display = "none";
-          }
-        });
     </script>
     <script th:inline="javascript">
       /*<![CDATA[*/

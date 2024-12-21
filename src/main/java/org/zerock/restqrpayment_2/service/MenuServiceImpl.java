@@ -7,6 +7,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.zerock.restqrpayment_2.domain.Menu;
+import org.zerock.restqrpayment_2.domain.MenuImage;
 import org.zerock.restqrpayment_2.domain.Restaurant;
 import org.zerock.restqrpayment_2.dto.MenuDTO;
 import org.zerock.restqrpayment_2.repository.MenuRepository;
@@ -43,9 +44,16 @@ public class MenuServiceImpl implements MenuService {
                 .restaurant(restaurant)
                 .build();
 
+        // 이미지 파일명이 있다면 추가
+        if (menuDTO.getFileNames() != null && !menuDTO.getFileNames().isEmpty()) {
+            String fileName = menuDTO.getFileNames().get(0);
+            menu.addMenuImage(fileName, fileName);
+        }
+
         Menu savedMenu = menuRepository.save(menu);
 
-        return MenuDTO.builder()
+        // DTO 변환 시 이미지 정보도 포함
+        MenuDTO resultDTO = MenuDTO.builder()
                 .id(savedMenu.getId())
                 .name(savedMenu.getName())
                 .price(savedMenu.getPrice())
@@ -53,6 +61,17 @@ public class MenuServiceImpl implements MenuService {
                 .menuCategory(savedMenu.getMenuCategory())
                 .restaurantId(savedMenu.getRestaurant().getId())
                 .build();
+
+        // 이미지가 있다면 DTO에도 추가
+        if (!savedMenu.getImageSet().isEmpty()) {
+            resultDTO.setFileNames(
+                savedMenu.getImageSet().stream()
+                    .map(MenuImage::getFileName)
+                    .collect(Collectors.toList())
+            );
+        }
+
+        return resultDTO;
     }
 
     @Override
@@ -64,10 +83,24 @@ public class MenuServiceImpl implements MenuService {
             throw new IllegalArgumentException("Not authorized");
         }
 
-        menu.changeMenu(menuDTO.getName(), menuDTO.getPrice(), menuDTO.getDescription());
+        menu.changeMenu(
+            menuDTO.getName(), 
+            menuDTO.getPrice(), 
+            menuDTO.getDescription(),
+            menuDTO.getMenuCategory()
+        );
+
+        // 이미지 업데이트
+        if (menuDTO.getFileNames() != null && !menuDTO.getFileNames().isEmpty()) {
+            menu.clearMenuImages(); // 기존 이미지 제거
+            String fileName = menuDTO.getFileNames().get(0);
+            menu.addMenuImage(fileName, fileName);
+        }
+
         Menu updatedMenu = menuRepository.save(menu);
 
-        return MenuDTO.builder()
+        // DTO 변환 시 이미지 정보도 포함
+        MenuDTO resultDTO = MenuDTO.builder()
                 .id(updatedMenu.getId())
                 .name(updatedMenu.getName())
                 .price(updatedMenu.getPrice())
@@ -75,6 +108,17 @@ public class MenuServiceImpl implements MenuService {
                 .menuCategory(updatedMenu.getMenuCategory())
                 .restaurantId(updatedMenu.getRestaurant().getId())
                 .build();
+
+        // 이미지가 있다면 DTO에도 추가
+        if (!updatedMenu.getImageSet().isEmpty()) {
+            resultDTO.setFileNames(
+                updatedMenu.getImageSet().stream()
+                    .map(MenuImage::getFileName)
+                    .collect(Collectors.toList())
+            );
+        }
+
+        return resultDTO;
     }
 
     @Override

@@ -27,12 +27,12 @@ public class MenuListAllDTO {
 
     private List<MenuImageDTO> menuImages;
 
-    public String getCategory() {
+    public String getMenuCategory() {
         return menuCategory;
     }
 
-    public void setCategory(String category) {
-        this.menuCategory = category;
+    public void setMenuCategory(String menuCategory) {
+        this.menuCategory = menuCategory;
     }
 
 }
