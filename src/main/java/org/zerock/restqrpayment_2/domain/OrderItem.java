@@ -4,13 +4,12 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "order_items")
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString(exclude = {"order", "menu"})
-public class OrderItem extends BaseEntity {
+public class OrderItem {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,13 +25,9 @@ public class OrderItem extends BaseEntity {
     
     private Integer quantity;
     
-    private Integer price; // 주문 시점의 가격 * 수량
-    
+    private Integer price;
+
     public void setOrder(Order order) {
         this.order = order;
-    }
-    
-    public void updatePrice() {
-        this.price = (int)(this.menu.getPrice() * this.quantity);
     }
 }

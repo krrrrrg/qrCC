@@ -1,9 +1,12 @@
 package org.zerock.restqrpayment_2.dto;
 
-import lombok.*;
-import org.zerock.restqrpayment_2.domain.OrderStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.zerock.restqrpayment_2.domain.Order;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
@@ -14,19 +17,11 @@ public class OrderDTO {
     private Long id;
     private Long restaurantId;
     private Long tableId;
-    private int totalAmount;
-    private OrderStatus orderStatus;
-    
-    @Builder.Default
-    private List<OrderItemDTO> items = new ArrayList<>();
-    
-    @Data
-    @Builder
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class OrderItemDTO {
-        private Long menuId;
-        private int quantity;
-        private int price;
-    }
+    private String restaurantName;
+    private Integer tableNumber;
+    private List<OrderItemDTO> orderItems;
+    private Order.OrderStatus status;
+    private Integer totalAmount;
+    private LocalDateTime regDate;
+    private LocalDateTime modDate;
 }

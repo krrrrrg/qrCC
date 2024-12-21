@@ -68,12 +68,22 @@ public class UserController {
     }
 
     @GetMapping("/order/history")
-    public String orderHistory() {
+    public String orderHistory(@RequestParam Long restaurantId, 
+                             @RequestParam Long tableId, 
+                             Model model) {
+        model.addAttribute("restaurantId", restaurantId);
+        model.addAttribute("tableId", tableId);
         return "user/order-history";
     }
 
     @GetMapping("/order/status")
-    public String orderStatus() {
+    public String orderStatus(@RequestParam Long orderId,
+                            @RequestParam Long restaurantId,
+                            @RequestParam Long tableId,
+                            Model model) {
+        model.addAttribute("orderId", orderId);
+        model.addAttribute("restaurantId", restaurantId);
+        model.addAttribute("tableId", tableId);
         return "user/order-status";
     }
 

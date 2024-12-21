@@ -16,10 +16,10 @@ import java.util.List;
 public class Order extends BaseEntity {
     
     public enum OrderStatus {
-        PENDING,    // 주문 대기
-        ACCEPTED,   // 주문 접수
-        COMPLETED,  // 완료
-        CANCELLED   // 취소
+        PENDING,     // 주문 대기
+        ACCEPTED,    // 주문 접수
+        COMPLETED,   // 완료
+        CANCELLED    // 취소됨
     }
     
     @Id
@@ -39,6 +39,7 @@ public class Order extends BaseEntity {
     private List<OrderItem> orderItems = new ArrayList<>();
     
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private OrderStatus status;
     
     private Integer totalAmount;
@@ -52,5 +53,31 @@ public class Order extends BaseEntity {
         this.totalAmount = orderItems.stream()
                 .mapToInt(item -> (int)(item.getMenu().getPrice() * item.getQuantity()))
                 .sum();
+    }
+
+    public void updateStatus(OrderStatus newStatus) {
+        validateStatusTransition(this.status, newStatus);
+        this.status = newStatus;
+    }
+
+    private void validateStatusTransition(OrderStatus currentStatus, OrderStatus newStatus) {
+        if (currentStatus == OrderStatus.CANCELLED) {
+            throw new IllegalStateException("취소된 주문은 상태를 변경할 수 없습니다.");
+        }
+        
+        if (currentStatus == OrderStatus.COMPLETED) {
+            throw new IllegalStateException("완료된 주문은 상태를 변경할 수 없습니다.");
+        }
+
+        // PENDING -> ACCEPTED -> COMPLETED 순서로만 진행 가능
+        if (currentStatus == OrderStatus.PENDING && newStatus != OrderStatus.ACCEPTED 
+            && newStatus != OrderStatus.CANCELLED) {
+            throw new IllegalStateException("대기 중인 주문은 접수 또는 취소만 가능합니다.");
+        }
+
+        if (currentStatus == OrderStatus.ACCEPTED && newStatus != OrderStatus.COMPLETED 
+            && newStatus != OrderStatus.CANCELLED) {
+            throw new IllegalStateException("접수된 주문은 완료 또는 취소만 가능합니다.");
+        }
     }
 }

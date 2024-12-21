@@ -105,52 +105,50 @@ function updateCart() {
 }
 
 // 주문하기
-async function placeOrder() {
-    try {
-        const cart = JSON.parse(localStorage.getItem('cart')) || [];
-        if (cart.length === 0) {
-            alert('장바구니가 비어있습니다.');
-            return;
-        }
+function placeOrder() {
+    const cartKey = getCartKey();
+    const cartItems = CartService.getCartItems(tableId, restaurantId);
+    
+    if (!cartItems || cartItems.length === 0) {
+        alert('장바구니가 비어있습니다.');
+        return;
+    }
 
-        // 주문 데이터 준비
-        const orderData = {
-            restaurantId: cart[0].restaurantId,
-            tableId: cart[0].tableId,
-            items: cart.map(item => ({
-                menuId: item.menuId,
-                quantity: item.quantity
-            }))
-        };
+    const orderData = {
+        restaurantId: restaurantId,
+        tableId: tableId,
+        orderItems: cartItems.map(item => ({
+            menuId: item.id,
+            quantity: item.quantity
+        }))
+    };
 
-        // 주문 API 호출
-        const response = await fetch('/api/orders', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(orderData)
-        });
-
+    fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(orderData)
+    })
+    .then(response => {
         if (!response.ok) {
-            throw new Error('주문 처리 중 오류가 발생했습니다.');
+            return response.text().then(text => {
+                throw new Error(text);
+            });
         }
-
-        // 주문 성공
-        localStorage.removeItem('cart');
-        alert('주문이 완료되었습니다.');
-        
-        // URL에서 restaurantId와 tableId 가져오기
-        const urlParams = new URLSearchParams(window.location.search);
-        const restaurantId = urlParams.get('restaurantId');
-        const tableId = urlParams.get('tableId');
-        
+        return response.json();
+    })
+    .then(data => {
+        alert('주문이 성공적으로 완료되었습니다.');
+        // 장바구니 비우기
+        CartService.clearCart(tableId, restaurantId);
         // 메인 페이지로 리다이렉트
         window.location.href = `/?restaurantId=${restaurantId}&tableId=${tableId}`;
-    } catch (error) {
-        console.error('주문 실패:', error);
-        alert('주문에 실패했습니다.');
-    }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('주문 처리 중 오류가 발생했습니다: ' + error.message);
+    });
 }
 
 // 전역 함수로 등록

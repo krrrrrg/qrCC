@@ -7,6 +7,7 @@ function initializeEventListeners() {
     const orderHistoryBtn = document.getElementById('orderHistoryBtn');
     const loginBtn = document.getElementById('loginBtn');
     const cartButton = document.getElementById('view-cart');
+    const orderButton = document.getElementById('place-order');
 
     console.log('menuButton:', menuButton);
     console.log('dropdownMenu:', dropdownMenu);
@@ -91,15 +92,78 @@ function initializeEventListeners() {
     // 장바구니 버튼
     if (cartButton) {
         cartButton.addEventListener('click', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const tableId = urlParams.get('tableId');
-            const restaurantId = urlParams.get('restaurantId');
+            const { tableId, restaurantId } = getTableInfo();
             
             if (!tableId || !restaurantId) {
                 alert('테이블 정보가 없습니다.');
                 return;
             }
+            
             window.location.href = `/cart?restaurantId=${restaurantId}&tableId=${tableId}`;
+        });
+    }
+
+    // 주문하기 버튼
+    if (orderButton) {
+        orderButton.addEventListener('click', async () => {
+            try {
+                const { tableId, restaurantId } = getTableInfo();
+                if (!tableId || !restaurantId) {
+                    alert('테이블 정보가 없습니다.');
+                    return;
+                }
+
+                const cartItems = CartService.getCartItems(tableId, restaurantId);
+                if (!cartItems || cartItems.length === 0) {
+                    alert('장바구니가 비어있습니다.');
+                    return;
+                }
+
+                console.log('Cart items before order:', cartItems);
+
+                // 주문 데이터 생성
+                const orderData = {
+                    restaurantId: parseInt(restaurantId),
+                    tableId: parseInt(tableId),
+                    orderItems: cartItems.map(item => ({
+                        menuId: parseInt(item.id),
+                        quantity: parseInt(item.quantity)
+                    })),
+                    totalAmount: CartService.getTotalAmount(tableId, restaurantId)
+                };
+
+                console.log('Sending order data:', JSON.stringify(orderData));
+
+                // 주문 API 호출
+                const response = await fetch('/api/orders', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.message || `주문 처리 중 오류가 발생했습니다. (${response.status})`);
+                }
+
+                const order = await response.json();
+                console.log('Order created:', order);
+
+                // 장바구니 비우기
+                CartService.clearCart(tableId, restaurantId);
+
+                // 주문 완료 메시지
+                alert('주문이 완료되었습니다.');
+
+                // 주문 상태 페이지로 이동
+                window.location.href = `/order-status?orderId=${order.id}&restaurantId=${restaurantId}&tableId=${tableId}`;
+
+            } catch (error) {
+                console.error('Error placing order:', error);
+                alert(error.message || '주문 처리 중 오류가 발생했습니다.');
+            }
         });
     }
 }
@@ -208,7 +272,7 @@ function updateCartCount() {
         return;
     }
 
-    const cartItems = CartService.getCartItems(tableId);
+    const cartItems = CartService.getCartItems(tableId, getTableInfo().restaurantId);
     const totalItems = cartItems.reduce((sum, item) => sum + (item.quantity || 0), 0);
     
     const cartCount = document.querySelector('.cart-count');

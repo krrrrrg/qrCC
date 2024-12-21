@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>주문 상태</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         .order-status-card {
             background: white;
@@ -142,61 +142,224 @@
             font-weight: bold;
             font-size: 1.2em;
         }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .back-button {
+            background-color: #4CAF50;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .back-button:hover {
+            background-color: #3e8e41;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .order-status-container {
+            background-color: #fff;
+            padding: 20px;
+            border: 1px solid #ddd;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .restaurant-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .restaurant-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .table-number {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .order-info {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .order-number {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .order-date {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .status-timeline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .status-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0 20px;
+        }
+
+        .status-step i {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .status-step span {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .order-details {
+            margin-top: 20px;
+        }
+
+        .order-items {
+            margin-bottom: 20px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .order-item:last-child {
+            border-bottom: none;
+        }
+
+        .order-item span {
+            font-size: 16px;
+        }
+
+        .order-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        .order-total span {
+            font-size: 16px;
+        }
+
+        .total-amount {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .status-step.cancelled {
+            color: #dc3545;
+        }
+        .status-step.cancelled i {
+            color: #dc3545;
+        }
     </style>
 </head>
 <body>
-    <header class="detail-header">
-        <div class="header-title">
-            <button class="back-button" onclick="goToMenu()">
-                <i class="fas fa-arrow-left"></i>
-            </button>
-            <span class="store-name">투스 카페2</span>
-            <span class="table-indicator">테이블 <span id="tableNumber"></span>번</span>
-        </div>
-    </header>
+    <div class="container">
+        <header class="header">
+            <h1>주문 상태</h1>
+            <a th:href="@{/(restaurantId=${restaurantId},tableId=${tableId})}" class="back-button">
+                <i class="fas fa-arrow-left"></i> 뒤로가기
+            </a>
+        </header>
 
-    <main class="center-container">
-        <div class="order-status-card">
-            <div class="order-number">
-                주문번호: <span id="orderNumber"></span>
-            </div>
-            
-            <div class="progress-container">
-                <div class="progress-bar">
-                    <div class="progress-fill" id="progressBar"></div>
-                </div>
-                <div class="status-steps">
-                    <div class="status-step" data-status="pending">
-                        <div class="step-icon">📝</div>
-                        <div class="step-label">주문접수</div>
+        <main class="main-content">
+            <div class="order-status-container">
+                <div class="status-header">
+                    <div class="restaurant-info">
+                        <h2 class="restaurant-name" id="storeName"></h2>
+                        <p class="table-number" id="tableNumber"></p>
                     </div>
-                    <div class="status-step" data-status="preparing">
-                        <div class="step-icon">👨‍🍳</div>
-                        <div class="step-label">조리중</div>
-                    </div>
-                    <div class="status-step" data-status="completed">
-                        <div class="step-icon">✨</div>
-                        <div class="step-label">완료</div>
+                    <div class="order-info">
+                        <p class="order-number" id="orderNumber"></p>
+                        <p class="order-date" id="orderDate"></p>
                     </div>
                 </div>
-            </div>
 
-            <div class="estimated-time">
-                예상 대기 시간: <span id="estimatedTime">15</span>분
-            </div>
-        </div>
+                <div class="status-timeline">
+                    <div class="status-step" data-status="PENDING">
+                        <i class="fas fa-clock"></i>
+                        <span>주문 대기</span>
+                    </div>
+                    <div class="status-step" data-status="ACCEPTED">
+                        <i class="fas fa-check"></i>
+                        <span>주문 접수</span>
+                    </div>
+                    <div class="status-step" data-status="COMPLETED">
+                        <i class="fas fa-utensils"></i>
+                        <span>완료</span>
+                    </div>
+                    <div class="status-step" data-status="CANCELLED">
+                        <i class="fas fa-times"></i>
+                        <span>취소됨</span>
+                    </div>
+                </div>
 
-        <div class="order-details">
-            <h3>주문 내역</h3>
-            <div id="orderItems" class="order-items">
-                <!-- 주문 아이템들이 여기에 동적으로 추가됨 -->
+                <div class="order-details">
+                    <h3>주문 내역</h3>
+                    <div class="order-items" id="orderItems">
+                        <!-- 주문 항목들이 여기에 동적으로 추가됩니다 -->
+                    </div>
+                    <div class="order-total">
+                        <span>총 금액:</span>
+                        <span class="total-amount" id="totalAmount"></span>
+                    </div>
+                </div>
             </div>
-            <div class="total-amount">
-                총 결제금액: <span id="totalAmount">0</span>원
-            </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
+    <script th:inline="javascript">
+        // Thymeleaf 변수를 JavaScript 변수로 전달
+        const orderId = [[${orderId}]];
+        const restaurantId = [[${restaurantId}]];
+        const tableId = [[${tableId}]];
+    </script>
     <script type="module">
         import { OrderService } from '/js/store/order-service.js';
 
@@ -263,12 +426,13 @@
             
             let progress = 0;
             const statusIndex = {
-                'pending': 0,
-                'preparing': 1,
-                'completed': 2
+                'PENDING': 0,
+                'ACCEPTED': 1,
+                'COMPLETED': 2,
+                'CANCELLED': 3
             }[status] || 0;
 
-            progress = statusIndex * 50;
+            progress = statusIndex * 25;
             progressBar.style.width = `${progress}%`;
             
             steps.forEach((step, index) => {
@@ -316,7 +480,6 @@
             }
         });
     </script>
-    <script type="module" th:src="@{/js/order-status.js}"></script>
-    <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css}">
+    <script th:src="@{/js/order-status.js}"></script>
 </body>
 </html>
