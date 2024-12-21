@@ -27,18 +27,18 @@
           <p id="menuCategory" class="menu-category"></p>
           <p id="menuPrice" class="menu-price"></p>
           <p id="menuDescription" class="menu-description"></p>
-        </div>
-        
-        <div class="quantity-control">
-          <button class="quantity-btn" onclick="decreaseQuantity()">-</button>
-          <span id="quantity">1</span>
-          <button class="quantity-btn" onclick="increaseQuantity()">+</button>
+          
+          <div class="quantity-control">
+            <button type="button" class="quantity-btn decrease" onclick="decreaseQuantity()">-</button>
+            <input type="number" id="quantity" value="1" min="1" class="quantity-input" readonly>
+            <button type="button" class="quantity-btn increase" onclick="increaseQuantity()">+</button>
+          </div>
         </div>
       </div>
     </main>
 
     <footer class="cart-footer">
-      <button id="addToCartButton" class="cart-button">
+      <button id="addToCartBtn" class="cart-button">
         장바구니에 담기
         <span class="cart-count">1</span>
       </button>
