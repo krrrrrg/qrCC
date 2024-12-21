@@ -9,4 +9,5 @@ public interface MenuService {
     void deleteMenu(Long menuId, String ownerId);
     List<MenuDTO> getMenusByRestaurant(Long restaurantId);
     List<MenuDTO> getMenusByRestaurantAndOwner(Long restaurantId, String ownerId);
+    void addImages(Long menuId, List<String> fileNames);
 }

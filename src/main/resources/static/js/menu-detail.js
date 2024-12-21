@@ -51,7 +51,7 @@ async function loadMenuDetail() {
             // 가격 설정
             const menuPrice = document.getElementById('menuPrice');
             if (menuPrice) {
-                menuPrice.textContent = `${currentMenu.price}원`;
+                menuPrice.textContent = `${currentMenu.price.toLocaleString()}원`;
             }
 
             // 설명 설정
@@ -59,9 +59,15 @@ async function loadMenuDetail() {
             if (menuDescription) {
                 menuDescription.textContent = currentMenu.description || '';
             }
+
+            // 카테고리 설정
+            const menuCategory = document.getElementById('menuCategory');
+            if (menuCategory) {
+                menuCategory.textContent = currentMenu.menuCategory || '';
+            }
         }
     } catch (error) {
-        console.error('메뉴 데이터 로드 중 오류:', error);
+        console.error('메뉴 데이터 로드 중 오류 발생:', error);
     }
 }
 

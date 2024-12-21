@@ -323,8 +323,7 @@ function renderMenuItems(category) {
 
     // 해당 카테고리의 메뉴 가져오기
     let menus = category === 'all' ? menuData.menus :
-                category === 'recommended' ? menuData.menus.filter(item => item.isPopular) :
-                menuData.menus.filter(item => item.category === category);
+                menuData.menus.filter(item => item.menuCategory === category);
 
     menus.forEach(item => {
         if (item.isSoldOut) return; // 품절 메뉴는 표시하지 않음
@@ -332,18 +331,20 @@ function renderMenuItems(category) {
         const menuItem = document.createElement('div');
         menuItem.className = 'menu-item';
         menuItem.innerHTML = `
-            <img src="${item.image || 'placeholder.jpg'}" alt="${item.name}">
+            <img src="${item.imageSet && item.imageSet[0] ? 
+                `/api/restaurants/${getTableInfo().restaurantId}/menus/display?fileName=${item.imageSet[0].uuid}_${item.imageSet[0].fileName}` : 
+                '/images/default-menu.jpg'}" 
+                alt="${item.name}" 
+                onerror="this.src='/images/default-menu.jpg'">
             <div class="menu-info">
-                ${category === 'recommended' || category === 'all' ? 
-                    `<span class="category-tag">${getCategoryName(item.category, menuData.categories)}</span>` : ''}
+                <span class="category-tag">${item.menuCategory || '기타'}</span>
                 <h3 class="menu-name">${item.name}</h3>
                 <p class="menu-price">${item.price.toLocaleString()}원</p>
-                <p class="menu-description">${item.description}</p>
+                <p class="menu-description">${item.description || ''}</p>
             </div>
         `;
 
         menuItem.addEventListener("click", () => handleMenuClick(item));
-
         menuList.appendChild(menuItem);
     });
 }

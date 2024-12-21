@@ -12,8 +12,7 @@
       name="_csrf_header"
       th:content="${_csrf != null ? _csrf.headerName : ''}"
     />
-    <title>Owner Dashboard</title>
-    <link rel="stylesheet" th:href="@{/css/menu-management.css}">
+    <title>점주 관리자</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}" />
     <link rel="stylesheet" th:href="@{/css/admin-styles.css}" />
     <link
@@ -23,7 +22,18 @@
     <script
       th:src="@{https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js}"
     ></script>
+    <link
+      th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css}"
+      rel="stylesheet"
+    />
+    <script
+      th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js}"
+    ></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link
+      rel="stylesheet"
+      th:href="@{https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css}"
+    />
     <style>
       .sidebar {
         min-height: 100vh;
@@ -99,125 +109,45 @@
         box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
       }
 
-      /* 메뉴 관리 스타일 */
-      .menu-items {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 20px;
-        padding: 20px;
-      }
-
-      .menu-item {
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        padding: 15px;
-        background: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      }
-
-      .menu-image {
-        width: 100%;
-        height: 200px;
-        overflow: hidden;
-        border-radius: 4px;
-        margin-bottom: 10px;
-      }
-
-      .menu-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-
-      .menu-info h4 {
-        margin: 0 0 10px 0;
-        color: #333;
-        font-size: 1.2em;
-      }
-
-      .menu-info .category {
-        color: #666;
-        font-size: 0.9em;
-        margin: 5px 0;
-      }
-
-      .menu-info .price {
-        color: #b45f34;
-        font-weight: bold;
-        margin: 5px 0;
-      }
-
-      .menu-info .description {
-        color: #777;
-        font-size: 0.9em;
-        margin: 10px 0;
-      }
-
-      .menu-actions {
-        display: flex;
-        gap: 10px;
-        margin-top: 15px;
-      }
-
-      .menu-actions button {
-        padding: 8px 15px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.9em;
-        transition: all 0.3s ease;
-      }
-
-      .edit-btn {
-        background: #4CAF50;
-        color: white;
-      }
-
-      .delete-btn {
-        background: #f44336;
-        color: white;
-      }
-
-      .edit-btn:hover {
-        background: #45a049;
-      }
-
-      .delete-btn:hover {
-        background: #da190b;
-      }
-
       /* 모달 스타일 */
       .modal {
         display: none;
         position: fixed;
-        top: 0;
+        z-index: 1000;
         left: 0;
+        top: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0,0,0,0.5);
-        z-index: 1000;
+        background-color: rgba(0, 0, 0, 0.4);
       }
 
       .modal-content {
-        position: relative;
-        background: white;
-        width: 90%;
-        max-width: 500px;
-        margin: 50px auto;
+        background-color: #fefefe;
+        margin: 15% auto;
         padding: 20px;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        border-radius: 5px;
+        position: relative;
       }
 
       .close {
-        position: absolute;
-        right: 15px;
-        top: 10px;
-        font-size: 24px;
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
         cursor: pointer;
-        color: #666;
       }
 
+      .close:hover,
+      .close:focus {
+        color: black;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      /* 폼 스타일 */
       .form-group {
         margin-bottom: 15px;
       }
@@ -225,35 +155,254 @@
       .form-group label {
         display: block;
         margin-bottom: 5px;
-        color: #333;
       }
 
       .form-group input,
-      .form-group textarea,
-      .form-group select {
+      .form-group textarea {
         width: 100%;
         padding: 8px;
         border: 1px solid #ddd;
         border-radius: 4px;
-        font-size: 14px;
       }
 
-      .form-group input:focus,
-      .form-group textarea:focus,
-      .form-group select:focus {
-        outline: none;
-        border-color: #b45f34;
+      /* 기존 스타일에 추가 */
+      .menu-items {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 20px;
+        padding: 20px;
       }
 
-      #imagePreviewContainer {
-        margin-top: 10px;
-        max-width: 200px;
+      .menu-item.card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
       }
 
-      #imagePreviewContainer img {
+      .menu-item.card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+
+      .menu-item .card-body {
+        padding: 15px;
+      }
+
+      .menu-item .card-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .menu-item .card-text {
+        margin-bottom: 8px;
+      }
+
+      .menu-item .img-thumbnail {
         width: 100%;
-        height: auto;
-        border-radius: 4px;
+        height: 200px;
+        object-fit: cover;
+        margin-bottom: 15px;
+      }
+
+      .menu-item .btn-group {
+        display: flex;
+        gap: 10px;
+      }
+
+      .menu-content {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .menu-filters {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+      }
+
+      /* 메뉴 관리 스타일 */
+      .menu-category {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        padding: 20px;
+        margin-bottom: 25px;
+      }
+      
+      .category-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #f0f0f0;
+      }
+      
+      .category-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0;
+      }
+      
+      .menu-count {
+        background: #f8f9fa;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        color: #6c757d;
+      }
+      
+      .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+      }
+      
+      .menu-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        overflow: hidden;
+      }
+      
+      .menu-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      }
+      
+      .menu-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+      }
+      
+      .menu-content {
+        padding: 16px;
+      }
+      
+      .menu-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 8px;
+      }
+      
+      .menu-category-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        background: #e9ecef;
+        color: #495057;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+      }
+      
+      .menu-description {
+        color: #6c757d;
+        font-size: 0.9rem;
+        margin-bottom: 12px;
+        line-height: 1.5;
+      }
+      
+      .menu-price {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 1.1rem;
+        margin-bottom: 16px;
+      }
+      
+      .menu-actions {
+        display: flex;
+        gap: 8px;
+      }
+      
+      .menu-btn {
+        flex: 1;
+        padding: 8px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+      }
+      
+      .edit-btn {
+        background: #007bff;
+        color: white;
+      }
+      
+      .edit-btn:hover {
+        background: #0056b3;
+      }
+      
+      .delete-btn {
+        background: #dc3545;
+        color: white;
+      }
+      
+      .delete-btn:hover {
+        background: #c82333;
+      }
+      
+      /* 검색 및 필터 스타일 */
+      .menu-controls {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 25px;
+      }
+      
+      .search-box {
+        flex: 1;
+        position: relative;
+      }
+      
+      .search-input {
+        width: 100%;
+        padding: 12px 20px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        transition: border-color 0.2s ease;
+      }
+      
+      .search-input:focus {
+        border-color: #007bff;
+        outline: none;
+      }
+      
+      .category-filter {
+        min-width: 200px;
+      }
+      
+      .filter-select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        background-color: white;
+      }
+      
+      /* 반응형 디자인 */
+      @media (max-width: 768px) {
+        .menu-grid {
+          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        }
+        
+        .menu-controls {
+          flex-direction: column;
+        }
+        
+        .category-filter {
+          width: 100%;
+        }
       }
     </style>
   </head>
@@ -335,58 +484,61 @@
         </div>
 
         <!-- 메뉴 관리 섹션 -->
-        <div id="menu-management" class="admin-section">
-          <div class="container-fluid">
-            <div class="row">
-              <div class="col-12">
-                <div class="card">
-                  <div class="card-header">
-                    <h5 class="card-title">메뉴 관리</h5>
+        <section id="menu-management" class="admin-section">
+          <div class="section-header">
+            <h2>메뉴 관리</h2>
+            <div class="form-group mb-3">
+              <label for="restaurantSelect">레스토랑 선택</label>
+              <select class="form-control" id="restaurantSelect">
+                <option value="">레스토랑을 선택하세요</option>
+                <option
+                  th:each="restaurant : ${restaurants}"
+                  th:if="${restaurant.ownerId == #authentication.principal.username}"
+                  th:value="${restaurant.id}"
+                  th:text="${restaurant.name}"
+                ></option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 메뉴 관리 컨텐츠 -->
+          <div class="menu-content" style="display: none">
+            <!-- 메뉴 목록 -->
+            <div class="menu-list mt-4">
+              <div
+                class="d-flex justify-content-between align-items-center mb-3"
+              >
+                <h3>메뉴 목록</h3>
+                <button
+                  class="btn btn-primary"
+                  onclick="openAddMenuModal()"
+                  id="addMenuBtn"
+                  disabled
+                >
+                  새 메뉴 추가
+                </button>
+              </div>
+              <div class="menu-filters mb-3">
+                <div class="row">
+                  <div class="col-md-6">
+                    <select id="categoryFilter" class="form-control">
+                      <option value="all">전체 카테고리</option>
+                    </select>
                   </div>
-                  <div class="card-body">
-                    <!-- 레스토랑 선택기 -->
-                    <div class="form-group mb-4">
-                      <label for="restaurantSelect">레스토랑 선택</label>
-                      <select class="form-control" id="restaurantSelect">
-                        <option value="">레스토랑을 선택하세요</option>
-                        <option
-                          th:each="restaurant : ${restaurants}"
-                          th:if="${restaurant.ownerId == #authentication.principal.username}"
-                          th:value="${restaurant.id}"
-                          th:text="${restaurant.name}"
-                        ></option>
-                      </select>
-                    </div>
-
-                    <!-- 메뉴 필터 및 검색 -->
-                    <div class="menu-filters mb-4">
-                      <div class="row">
-                        <div class="col-md-4">
-                          <input type="text" id="menuSearch" class="form-control" placeholder="메뉴 검색...">
-                        </div>
-                        <div class="col-md-4">
-                          <select id="categoryFilter" class="form-control">
-                            <option value="all">전체 카테고리</option>
-                          </select>
-                        </div>
-                        <div class="col-md-4 text-right">
-                          <button onclick="openAddMenuModal()" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> 새 메뉴 추가
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- 메뉴 목록 -->
-                    <div id="menuList" class="menu-list">
-                      <!-- 메뉴 항목들이 여기에 동적으로 추가됩니다 -->
-                    </div>
+                  <div class="col-md-6">
+                    <input
+                      type="text"
+                      id="menuSearch"
+                      class="form-control"
+                      placeholder="메뉴 검색..."
+                    />
                   </div>
                 </div>
               </div>
+              <div id="menuContainer"></div>
             </div>
           </div>
-        </div>
+        </section>
 
         <div id="store-management" class="admin-section">
           <div class="container-fluid">
@@ -632,40 +784,33 @@
     <!-- 메뉴 추가/수정 모달 -->
     <div id="menuModal" class="modal">
       <div class="modal-content">
-        <div class="modal-header">
-          <h2 class="modal-title">메뉴 추가</h2>
-          <span class="close">&times;</span>
-        </div>
-        <div class="modal-body">
-          <form id="menuForm">
-            <input type="hidden" id="menuId">
-            <div class="form-group">
-              <label for="menuName">메뉴 이름</label>
-              <input type="text" id="menuName" required>
-            </div>
-            <div class="form-group">
-              <label for="menuCategory">카테고리</label>
-              <input type="text" id="menuCategory" value="기타">
-            </div>
-            <div class="form-group">
-              <label for="price">가격</label>
-              <input type="number" id="price" required>
-            </div>
-            <div class="form-group">
-              <label for="description">설명</label>
-              <textarea id="description"></textarea>
-            </div>
-            <div class="form-group">
-              <label for="menuImage">이미지</label>
-              <input type="file" id="menuImage" accept="image/*">
-              <div id="previewContainer"></div>
-            </div>
-            <div class="modal-footer">
-              <button type="submit" class="submit-btn">저장</button>
-              <button type="button" class="cancel-btn close">취소</button>
-            </div>
-          </form>
-        </div>
+        <span class="close" onclick="closeMenuModal()">&times;</span>
+        <h2>메뉴 추가</h2>
+        <form id="menuForm" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="menuName">메뉴 이름</label>
+            <input type="text" id="menuName" name="name" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label for="menuPrice">가격</label>
+            <input type="number" id="menuPrice" name="price" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label for="menuCategory">카테고리</label>
+            <input type="text" id="menuCategory" name="menuCategory" class="form-control" required />
+          </div>
+          <div class="form-group">
+            <label for="menuDescription">설명</label>
+            <textarea id="menuDescription" name="description" class="form-control"></textarea>
+          </div>
+          <div class="form-group">
+            <label for="menuImage">이미지</label>
+            <input type="file" id="menuImage" name="image" accept="image/*" class="form-control" />
+            <div id="currentImage"></div>
+          </div>
+          <input type="hidden" id="menuId" name="id" />
+          <button type="submit" class="btn btn-primary">저장</button>
+        </form>
       </div>
     </div>
 
@@ -955,51 +1100,67 @@
             return;
           }
 
-          // FormData 객체 생성 전에 필수 필드 검증
-          const menuName = document.getElementById("menuName").value;
-          const menuPrice = document.getElementById("price").value;
-          const menuCategory = document.getElementById("menuCategory").value;
           const menuId = document.getElementById("menuId").value;
+          const formData = new FormData();
+        
+          // 메뉴 데이터를 JSON으로 만들기
+          const menuData = {
+            name: document.getElementById("menuName").value,
+            price: parseFloat(document.getElementById("menuPrice").value),
+            menuCategory: document.getElementById("menuCategory").value,
+            description: document.getElementById("menuDescription").value
+          };
 
-          if (!menuName || !menuPrice || !menuCategory) {
-            alert("메뉴 이름, 가격, 카테고리는 필수 입력사항입니다.");
-            return;
+          if (menuId) {
+            menuData.id = menuId;
           }
-
-          const formData = new FormData(this);
-          formData.append("restaurantId", restaurantId);
+        
+          // PUT 요청의 경우 menuData를 JSON으로 추가
+          if (menuId) {
+            formData.append("menuData", new Blob([JSON.stringify(menuData)], {
+              type: "application/json"
+            }));
+          }
 
           // 이미지 파일이 있는 경우에만 추가
           const imageFile = document.getElementById("menuImage").files[0];
           if (imageFile) {
-            formData.append("imageFile", imageFile);
+            formData.append(menuId ? "file" : "image", imageFile);
           }
 
           try {
             const token = document.querySelector("meta[name='_csrf']").content;
             const header = document.querySelector("meta[name='_csrf_header']").content;
 
-            // 수정 모드인 경우 PUT 요청, 추가 모드인 경우 POST 요청
             const method = menuId ? "PUT" : "POST";
             const url = menuId 
               ? `/api/restaurants/${restaurantId}/menus/${menuId}`
               : `/api/restaurants/${restaurantId}/menus`;
 
+            // POST 요청의 경우 formData에 직접 필드 추가
+            if (!menuId) {
+              Object.keys(menuData).forEach(key => {
+                formData.append(key, menuData[key]);
+              });
+            }
+
             const response = await fetch(url, {
               method: method,
               body: formData,
               headers: {
-                [header]: token,
+                [header]: token
               },
             });
 
             if (!response.ok) {
-              throw new Error("메뉴 저장에 실패했습니다.");
+              const errorData = await response.text();
+              throw new Error(errorData || "메뉴 저장에 실패했습니다.");
             }
 
-            alert(menuId ? "메뉴가 수정되었습니다." : "메뉴가 추가되었습니다.");
+            // 성공적으로 저장된 경우
             closeMenuModal();
-            loadMenus(restaurantId); // 메뉴 목록 새로고침
+            await loadMenus(restaurantId);  // 메뉴 목록 새로고침
+            alert(menuId ? "메뉴가 수정되었습니다." : "메뉴가 추가되었습니다.");
           } catch (error) {
             console.error("Error:", error);
             alert(error.message);
@@ -1011,31 +1172,45 @@
         try {
           const restaurantId = document.getElementById("restaurantSelect").value;
           const response = await fetch(`/api/restaurants/${restaurantId}/menus/${menuId}`);
-          const menu = await response.json();
-
-          // 모달 제목 변경
-          document.querySelector("#menuModal h2").textContent = "메뉴 수정";
           
-          // 폼 필드에 데이터 설정
-          document.getElementById("menuId").value = menu.id;
-          document.getElementById("menuName").value = menu.name;
-          document.getElementById("price").value = menu.price;
-          document.getElementById("menuCategory").value = menu.category;
-          document.getElementById("description").value = menu.description || "";
-
-          // 현재 이미지 표시
-          const currentImageDiv = document.getElementById("previewContainer");
-          if (menu.imageUrl) {
-            currentImageDiv.innerHTML = `<img src="${menu.imageUrl}" alt="현재 이미지" style="max-width: 200px;">`;
-          } else {
-            currentImageDiv.innerHTML = "";
+          if (!response.ok) {
+            throw new Error("메뉴 정보를 불러오는데 실패했습니다.");
           }
 
-          // 모달 표시
-          menuModal.style.display = "block";
+          const menu = await response.json();
+
+          document.querySelector("#menuModal h2").textContent = "메뉴 수정";
+          
+          document.getElementById("menuId").value = menu.id;
+          document.getElementById("menuName").value = menu.name;
+          document.getElementById("menuPrice").value = menu.price;
+          document.getElementById("menuCategory").value = menu.menuCategory || '';
+          document.getElementById("menuDescription").value = menu.description || "";
+
+          // 현재 이미지 표시
+          const currentImageDiv = document.getElementById("currentImage");
+          if (menu.imageSet && menu.imageSet.length > 0) {
+            const imageUrl = `/api/restaurants/${restaurantId}/menus/display?fileName=${menu.imageSet[0].uuid}_${menu.imageSet[0].fileName}`;
+            currentImageDiv.innerHTML = `
+              <div class="current-image-container">
+                <img src="${imageUrl}" 
+                     alt="현재 이미지" 
+                     style="max-width: 200px; margin-top: 10px;"
+                     onerror="this.src='/images/default-menu.jpg'">
+              </div>`;
+          } else {
+            currentImageDiv.innerHTML = `
+              <div class="current-image-container">
+                <img src="/images/default-menu.jpg" 
+                     alt="기본 이미지" 
+                     style="max-width: 200px; margin-top: 10px;">
+              </div>`;
+          }
+
+          document.getElementById("menuModal").style.display = "block";
         } catch (error) {
           console.error("Error:", error);
-          alert("메뉴 정보를 불러오는데 실패했습니다.");
+          alert(error.message);
         }
       }
 
@@ -1047,10 +1222,174 @@
         // 폼 초기화
         document.getElementById("menuForm").reset();
         document.getElementById("menuId").value = "";
-        document.getElementById("previewContainer").innerHTML = "";
+        document.getElementById("currentImage").innerHTML = "";
         
         // 모달 표시
-        menuModal.style.display = "block";
+        document.getElementById("menuModal").style.display = "block";
+      }
+
+      // 메뉴 모달 닫기
+      function closeMenuModal() {
+        const menuModal = document.getElementById("menuModal");
+        document.getElementById("menuForm").reset();
+        document.getElementById("menuId").value = "";
+        document.getElementById("currentImage").innerHTML = "";
+        menuModal.style.display = "none";
+      }
+
+      // 메뉴 목록 로드
+      async function loadMenus(restaurantId) {
+        if (!restaurantId) return;
+
+        try {
+          const response = await fetch(`/api/restaurants/${restaurantId}/menus`);
+          if (!response.ok) {
+            throw new Error('메뉴 목록을 불러오는데 실패했습니다.');
+          }
+
+          const menus = await response.json();
+          const menuContainer = document.getElementById('menuContainer');
+          
+          // 검색 및 필터 컨트롤 추가
+          menuContainer.innerHTML = `
+            <div class="menu-controls">
+              <div class="search-box">
+                <input type="text" class="search-input" placeholder="메뉴 검색..." id="menuSearch">
+              </div>
+              <div class="category-filter">
+                <select class="filter-select" id="categoryFilter">
+                  <option value="">전체 카테고리</option>
+                </select>
+              </div>
+            </div>
+          `;
+
+          if (!menus || menus.length === 0) {
+            menuContainer.innerHTML += '<p class="text-center mt-4">등록된 메뉴가 없습니다.</p>';
+            return;
+          }
+
+          // 메뉴 카테고리별로 그룹화
+          const menusByCategory = menus.reduce((acc, menu) => {
+            const category = menu.menuCategory || '기타';
+            if (!acc[category]) {
+              acc[category] = [];
+            }
+            acc[category].push(menu);
+            return acc;
+          }, {});
+
+          // 카테고리 필터 옵션 추가
+          const categoryFilter = document.getElementById('categoryFilter');
+          Object.keys(menusByCategory).forEach(category => {
+            categoryFilter.innerHTML += `<option value="${category}">${category}</option>`;
+          });
+
+          // 카테고리별로 메뉴 표시
+          Object.entries(menusByCategory).forEach(([category, categoryMenus]) => {
+            const categorySection = document.createElement('div');
+            categorySection.className = 'menu-category';
+            categorySection.setAttribute('data-category', category);
+            
+            categorySection.innerHTML = `
+              <div class="category-header">
+                <h3 class="category-title">${category}</h3>
+                <span class="menu-count">${categoryMenus.length}개</span>
+              </div>
+              <div class="menu-grid">
+                ${categoryMenus.map(menu => `
+                  <div class="menu-card">
+                    <img class="menu-image" 
+                         src="/api/restaurants/${restaurantId}/menus/display?fileName=${menu.imageSet && menu.imageSet[0] ? menu.imageSet[0].uuid + '_' + menu.imageSet[0].fileName : ''}"
+                         alt="${menu.name}"
+                         onerror="this.src='/images/default-menu.jpg'">
+                    <div class="menu-content">
+                      <h4 class="menu-name">${menu.name}</h4>
+                      <span class="menu-category-badge">${menu.menuCategory || '기타'}</span>
+                      <p class="menu-description">${menu.description || ''}</p>
+                      <p class="menu-price">${menu.price.toLocaleString()}원</p>
+                      <div class="menu-actions">
+                        <button class="menu-btn edit-btn" onclick="editMenu(${menu.id})">수정</button>
+                        <button class="menu-btn delete-btn" onclick="deleteMenu(${menu.id})">삭제</button>
+                      </div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `;
+            
+            menuContainer.appendChild(categorySection);
+          });
+
+          // 검색 기능 구현
+          const searchInput = document.getElementById('menuSearch');
+          searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const menuCards = document.querySelectorAll('.menu-card');
+            
+            menuCards.forEach(card => {
+              const menuName = card.querySelector('.menu-name').textContent.toLowerCase();
+              const menuDesc = card.querySelector('.menu-description').textContent.toLowerCase();
+              const isVisible = menuName.includes(searchTerm) || menuDesc.includes(searchTerm);
+              card.style.display = isVisible ? '' : 'none';
+            });
+          });
+
+          // 카테고리 필터 기능 구현
+          categoryFilter.addEventListener('change', function(e) {
+            const selectedCategory = e.target.value;
+            const categoryDivs = document.querySelectorAll('.menu-category');
+            
+            categoryDivs.forEach(div => {
+              if (!selectedCategory || div.getAttribute('data-category') === selectedCategory) {
+                div.style.display = '';
+              } else {
+                div.style.display = 'none';
+              }
+            });
+          });
+
+        } catch (error) {
+          console.error('Error:', error);
+          const menuContainer = document.getElementById('menuContainer');
+          menuContainer.innerHTML = `
+            <div class="alert alert-danger mt-4" role="alert">
+              메뉴 목록을 불러오는데 실패했습니다: ${error.message}
+            </div>
+          `;
+        }
+      }
+
+      // 메뉴 삭제
+      async function deleteMenu(menuId) {
+        if (!confirm('정말로 이 메뉴를 삭제하시겠습니까?')) {
+          return;
+        }
+
+        const restaurantId = document.getElementById("restaurantSelect").value;
+        if (!restaurantId) return;
+
+        try {
+          const token = document.querySelector("meta[name='_csrf']").content;
+          const header = document.querySelector("meta[name='_csrf_header']").content;
+
+          const response = await fetch(`/api/restaurants/${restaurantId}/menus/${menuId}`, {
+            method: 'DELETE',
+            headers: {
+              [header]: token
+            }
+          });
+
+          if (!response.ok) {
+            throw new Error('메뉴 삭제에 실패했습니다.');
+          }
+
+          alert('메뉴가 성공적으로 삭제되었습니다.');
+          loadMenus(restaurantId);
+        } catch (error) {
+          console.error('Error:', error);
+          alert(error.message);
+        }
       }
     </script>
     <script th:inline="javascript">

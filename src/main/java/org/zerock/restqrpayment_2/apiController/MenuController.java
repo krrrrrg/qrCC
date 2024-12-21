@@ -12,12 +12,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.zerock.restqrpayment_2.dto.MenuDTO;
 import org.zerock.restqrpayment_2.dto.RestaurantDTO;
-import org.zerock.restqrpayment_2.service.FileService;
 import org.zerock.restqrpayment_2.service.MenuService;
 import org.zerock.restqrpayment_2.service.RestaurantService;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,7 +35,6 @@ public class MenuController {
 
     private final MenuService menuService;
     private final RestaurantService restaurantService;
-    private final FileService fileService;
 
     // getList와 getMenusByRestaurant를 통합
     @GetMapping
@@ -45,26 +47,16 @@ public class MenuController {
                 RestaurantDTO restaurantDTO = restaurantService.readOne(restaurantId);
                 if (restaurantDTO.getOwnerId().equals(userDetails.getUsername())) {
                     List<MenuDTO> menus = menuService.getMenusByRestaurantAndOwner(restaurantId, userDetails.getUsername());
-                    menus.forEach(menu -> {
-                        if (menu.getMenuCategory() == null || menu.getMenuCategory().trim().isEmpty()) {
-                            menu.setMenuCategory("기타");
-                        }
-                    });
                     return ResponseEntity.ok(menus);
                 }
             }
             // 일반 사용자나 비인증 사용자의 경우
             List<MenuDTO> menus = menuService.getMenusByRestaurant(restaurantId);
-            menus.forEach(menu -> {
-                if (menu.getMenuCategory() == null || menu.getMenuCategory().trim().isEmpty()) {
-                    menu.setMenuCategory("기타");
-                }
-            });
             return ResponseEntity.ok(menus);
         } catch (Exception e) {
             log.error("메뉴 목록 조회 중 오류 발생: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Collections.singletonMap("message", "메뉴 목록을 불러오는데 실패했습니다."));
+                .body("메뉴 목록을 불러오는데 실패했습니다.");
         }
     }
 
@@ -78,12 +70,6 @@ public class MenuController {
                 menuService.getMenusByRestaurantAndOwner(restaurantId, userDetails.getUsername()) :
                 menuService.getMenusByRestaurant(restaurantId);
             
-            menus.forEach(menu -> {
-                if (menu.getMenuCategory() == null || menu.getMenuCategory().trim().isEmpty()) {
-                    menu.setMenuCategory("기타");
-                }
-            });
-            
             MenuDTO menuDTO = menus.stream()
                 .filter(m -> m.getId().equals(id))
                 .findFirst()
@@ -92,13 +78,12 @@ public class MenuController {
             if (menuDTO != null) {
                 return ResponseEntity.ok(menuDTO);
             } else {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Collections.singletonMap("message", "메뉴를 찾을 수 없습니다."));
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("메뉴를 찾을 수 없습니다.");
             }
         } catch (Exception e) {
             log.error("메뉴 조회 중 오류 발생: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Collections.singletonMap("message", "메뉴를 불러오는데 실패했습니다."));
+                .body("메뉴를 불러오는데 실패했습니다.");
         }
     }
 
@@ -112,12 +97,6 @@ public class MenuController {
                 menuService.getMenusByRestaurantAndOwner(restaurantId, userDetails.getUsername()) :
                 menuService.getMenusByRestaurant(restaurantId);
             
-            menus.forEach(menu -> {
-                if (menu.getMenuCategory() == null || menu.getMenuCategory().trim().isEmpty()) {
-                    menu.setMenuCategory("기타");
-                }
-            });
-            
             Set<String> categories = menus.stream()
                 .map(MenuDTO::getMenuCategory)
                 .filter(Objects::nonNull)
@@ -127,52 +106,40 @@ public class MenuController {
         } catch (Exception e) {
             log.error("카테고리 목록 조회 중 오류 발생: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Collections.singletonMap("message", "카테고리 목록을 불러오는데 실패했습니다."));
+                .body("카테고리 목록을 불러오는데 실패했습니다.");
         }
     }
 
     // 3. Create - 메뉴 등록 (Owner는 자기 식당 메뉴만, Admin은 모든 식당 메뉴 등록 가능)
     @PostMapping
-    public ResponseEntity<?> createMenu(
+    public ResponseEntity<?> registerMenu(
             @PathVariable Long restaurantId,
-            @RequestParam("name") String name,
-            @RequestParam("menuCategory") String menuCategory,
-            @RequestParam("price") Double price,
-            @RequestParam(value = "description", required = false) String description,
-            @RequestParam(value = "file", required = false) MultipartFile file,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
-        try {
-            // 카테고리가 비어있으면 "기타"로 설정
-            String finalCategory = (menuCategory == null || menuCategory.trim().isEmpty()) ? "기타" : menuCategory.trim();
-            
-            MenuDTO menuDTO = MenuDTO.builder()
-                    .name(name)
-                    .menuCategory(finalCategory)
-                    .price(price)
-                    .description(description)
-                    .restaurantId(restaurantId)
-                    .build();
+            @ModelAttribute @Valid MenuDTO menuDTO,
+            @RequestPart(value = "image", required = false) MultipartFile file,
+            @AuthenticationPrincipal UserDetails userDetails,
+            BindingResult bindingResult) {
 
-            // 이미지 파일 처리
+        try {
+            if (bindingResult.hasErrors()) {
+                String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+                return ResponseEntity.badRequest().body(errorMessage);
+            }
+
+            menuDTO.setRestaurantId(restaurantId);
+            
             if (file != null && !file.isEmpty()) {
-                try {
-                    String fileName = fileService.uploadFile(file);
-                    if (fileName != null) {
-                        menuDTO.setFileNames(Collections.singletonList(fileName));
-                        log.info("파일 업로드 성공: {}", fileName);
-                    }
-                } catch (Exception e) {
-                    log.error("파일 업로드 실패: ", e);
-                }
+                String fileName = saveFile(file);
+                menuDTO.setFileNames(Collections.singletonList(fileName));
             }
 
             MenuDTO savedMenu = menuService.createMenu(menuDTO, userDetails.getUsername());
             return ResponseEntity.ok(savedMenu);
         } catch (Exception e) {
-            log.error("메뉴 생성 중 오류 발생: ", e);
+            log.error("메뉴 등록 중 오류 발생: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap("message", e.getMessage()));
+                .body("메뉴 등록에 실패했습니다: " + e.getMessage());
         }
     }
 
@@ -181,36 +148,25 @@ public class MenuController {
     public ResponseEntity<?> updateMenu(
             @PathVariable Long restaurantId,
             @PathVariable Long id,
-            @RequestParam("name") String name,
-            @RequestParam("menuCategory") String menuCategory,
-            @RequestParam("price") Double price,
-            @RequestParam(value = "description", required = false) String description,
-            @RequestParam(value = "file", required = false) MultipartFile file,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        
-        try {
-            String finalCategory = (menuCategory == null || menuCategory.trim().isEmpty()) ? "기타" : menuCategory.trim();
-            
-            MenuDTO menuDTO = MenuDTO.builder()
-                    .id(id)
-                    .name(name)
-                    .menuCategory(finalCategory)
-                    .price(price)
-                    .description(description)
-                    .restaurantId(restaurantId)
-                    .build();
+            @RequestPart("menuData") @Valid MenuDTO menuDTO,
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @AuthenticationPrincipal UserDetails userDetails,
+            BindingResult bindingResult) {
 
-            // 이미지 파일 처리
+        try {
+            if (bindingResult.hasErrors()) {
+                String errorMessage = bindingResult.getAllErrors().stream()
+                    .map(error -> error.getDefaultMessage())
+                    .collect(Collectors.joining(", "));
+                return ResponseEntity.badRequest().body(errorMessage);
+            }
+
+            menuDTO.setId(id);
+            menuDTO.setRestaurantId(restaurantId);
+
             if (file != null && !file.isEmpty()) {
-                try {
-                    String fileName = fileService.uploadFile(file);
-                    if (fileName != null) {
-                        menuDTO.setFileNames(Collections.singletonList(fileName));
-                        log.info("파일 업로드 성공: {}", fileName);
-                    }
-                } catch (Exception e) {
-                    log.error("파일 업로드 실패: ", e);
-                }
+                String fileName = saveFile(file);
+                menuDTO.setFileNames(Collections.singletonList(fileName));
             }
 
             MenuDTO updatedMenu = menuService.updateMenu(id, menuDTO, userDetails.getUsername());
@@ -218,7 +174,7 @@ public class MenuController {
         } catch (Exception e) {
             log.error("메뉴 수정 중 오류 발생: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonMap("message", e.getMessage()));
+                .body("메뉴 수정에 실패했습니다: " + e.getMessage());
         }
     }
 
@@ -230,11 +186,134 @@ public class MenuController {
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
             menuService.deleteMenu(id, userDetails.getUsername());
-            return ResponseEntity.ok(Collections.singletonMap("message", "메뉴가 성공적으로 삭제되었습니다."));
+            return ResponseEntity.ok().body("메뉴가 성공적으로 삭제되었습니다.");
         } catch (Exception e) {
             log.error("메뉴 삭제 중 오류 발생: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Collections.singletonMap("message", "메뉴 삭제에 실패했습니다: " + e.getMessage()));
+                .body("메뉴 삭제에 실패했습니다: " + e.getMessage());
         }
+    }
+
+    @GetMapping("/display")
+    @ResponseBody
+    public ResponseEntity<byte[]> getFile(@RequestParam("fileName") String fileName) {
+        try {
+            String uploadPath = new File(System.getProperty("user.dir"), "uploads").getAbsolutePath();
+            File file = new File(uploadPath, fileName);
+            
+            // Security check to prevent directory traversal
+            if (!file.getCanonicalPath().startsWith(new File(uploadPath).getCanonicalPath())) {
+                return new ResponseEntity<>(HttpStatus.FORBIDDEN);
+            }
+            
+            if (!file.exists()) {
+                log.error("File not found: " + fileName);
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+            
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.add("Content-Type", Files.probeContentType(file.toPath()));
+            headers.add("Cache-Control", "max-age=3600");
+            
+            return new ResponseEntity<>(org.springframework.util.FileCopyUtils.copyToByteArray(file), 
+                                     headers, 
+                                     HttpStatus.OK);
+        } catch (IOException e) {
+            log.error("Error serving file: " + fileName, e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/{menuId}/images")
+    public ResponseEntity<?> uploadImages(
+            @PathVariable Long restaurantId,
+            @PathVariable Long menuId,
+            @RequestParam("files") List<MultipartFile> files,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        try {
+            RestaurantDTO restaurantDTO = restaurantService.readOne(restaurantId);
+            if (!restaurantDTO.getOwnerId().equals(userDetails.getUsername())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            List<String> uploadedFiles = new ArrayList<>();
+            String uploadDir = System.getProperty("user.dir") + "/uploads/menus/" + menuId;
+            Files.createDirectories(Paths.get(uploadDir));
+
+            for (MultipartFile file : files) {
+                String originalFilename = file.getOriginalFilename();
+                String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+                String newFilename = UUID.randomUUID().toString() + fileExtension;
+                Path targetPath = Paths.get(uploadDir, newFilename);
+                
+                Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+                uploadedFiles.add(newFilename);
+            }
+
+            menuService.addImages(menuId, uploadedFiles);
+            return ResponseEntity.ok(uploadedFiles);
+
+        } catch (Exception e) {
+            log.error("Error uploading images", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error uploading images: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{menuId}/images/{filename}")
+    public ResponseEntity<?> getImage(
+            @PathVariable Long menuId,
+            @PathVariable String filename) {
+        try {
+            Path imagePath = Paths.get(System.getProperty("user.dir"), "uploads", "menus", 
+                    menuId.toString(), filename);
+            
+            if (!Files.exists(imagePath)) {
+                return ResponseEntity.notFound().build();
+            }
+
+            byte[] imageBytes = Files.readAllBytes(imagePath);
+            String contentType = Files.probeContentType(imagePath);
+            
+            return ResponseEntity.ok()
+                    .header("Cache-Control", "max-age=3600")
+                    .contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                    .body(imageBytes);
+        } catch (IOException e) {
+            log.error("Error retrieving image", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error retrieving image: " + e.getMessage());
+        }
+    }
+
+    private String saveFile(MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("File cannot be empty");
+        }
+
+        String originalName = file.getOriginalFilename();
+        if (originalName == null) {
+            throw new IllegalArgumentException("Original filename cannot be null");
+        }
+
+        String cleanFileName = originalName.replaceAll("[^a-zA-Z0-9.-]", "_");
+        String uuid = UUID.randomUUID().toString();
+        String fileName = uuid + "_" + cleanFileName;
+        
+        Path uploadPath = Paths.get(System.getProperty("user.dir"), "uploads");
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        
+        Path filePath = uploadPath.resolve(fileName);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        
+        log.info("File saved successfully: " + fileName);
+        return fileName;
     }
 }

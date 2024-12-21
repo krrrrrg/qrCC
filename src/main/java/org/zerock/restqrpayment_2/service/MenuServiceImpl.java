@@ -16,6 +16,7 @@ import org.zerock.restqrpayment_2.repository.RestaurantRepository;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,34 +45,21 @@ public class MenuServiceImpl implements MenuService {
                 .restaurant(restaurant)
                 .build();
 
-        // 이미지 파일명이 있다면 추가
         if (menuDTO.getFileNames() != null && !menuDTO.getFileNames().isEmpty()) {
-            String fileName = menuDTO.getFileNames().get(0);
-            menu.addMenuImage(fileName, fileName);
+            menu.setFileNames(menuDTO.getFileNames());
         }
 
         Menu savedMenu = menuRepository.save(menu);
 
-        // DTO 변환 시 이미지 정보도 포함
-        MenuDTO resultDTO = MenuDTO.builder()
+        return MenuDTO.builder()
                 .id(savedMenu.getId())
                 .name(savedMenu.getName())
                 .price(savedMenu.getPrice())
                 .description(savedMenu.getDescription())
                 .menuCategory(savedMenu.getMenuCategory())
                 .restaurantId(savedMenu.getRestaurant().getId())
+                .fileNames(savedMenu.getFileNames())
                 .build();
-
-        // 이미지가 있다면 DTO에도 추가
-        if (!savedMenu.getImageSet().isEmpty()) {
-            resultDTO.setFileNames(
-                savedMenu.getImageSet().stream()
-                    .map(MenuImage::getFileName)
-                    .collect(Collectors.toList())
-            );
-        }
-
-        return resultDTO;
     }
 
     @Override
@@ -83,42 +71,24 @@ public class MenuServiceImpl implements MenuService {
             throw new IllegalArgumentException("Not authorized");
         }
 
-        menu.changeMenu(
-            menuDTO.getName(), 
-            menuDTO.getPrice(), 
-            menuDTO.getDescription(),
-            menuDTO.getMenuCategory()
-        );
-
-        // 이미지 업데이트
+        menu.changeMenu(menuDTO.getName(), menuDTO.getPrice(), menuDTO.getDescription());
+        menu.setMenuCategory(menuDTO.getMenuCategory());
+        
         if (menuDTO.getFileNames() != null && !menuDTO.getFileNames().isEmpty()) {
-            menu.clearMenuImages(); // 기존 이미지 제거
-            String fileName = menuDTO.getFileNames().get(0);
-            menu.addMenuImage(fileName, fileName);
+            menu.setFileNames(menuDTO.getFileNames());
         }
 
         Menu updatedMenu = menuRepository.save(menu);
 
-        // DTO 변환 시 이미지 정보도 포함
-        MenuDTO resultDTO = MenuDTO.builder()
+        return MenuDTO.builder()
                 .id(updatedMenu.getId())
                 .name(updatedMenu.getName())
                 .price(updatedMenu.getPrice())
                 .description(updatedMenu.getDescription())
                 .menuCategory(updatedMenu.getMenuCategory())
                 .restaurantId(updatedMenu.getRestaurant().getId())
+                .fileNames(updatedMenu.getFileNames())
                 .build();
-
-        // 이미지가 있다면 DTO에도 추가
-        if (!updatedMenu.getImageSet().isEmpty()) {
-            resultDTO.setFileNames(
-                updatedMenu.getImageSet().stream()
-                    .map(MenuImage::getFileName)
-                    .collect(Collectors.toList())
-            );
-        }
-
-        return resultDTO;
     }
 
     @Override
@@ -135,6 +105,7 @@ public class MenuServiceImpl implements MenuService {
                 .menuCategory(menu.getMenuCategory())
                 .description(menu.getDescription())
                 .restaurantId(menu.getRestaurant().getId())
+                .fileNames(menu.getFileNames())
                 .build())
             .collect(Collectors.toList());
     }
@@ -153,6 +124,7 @@ public class MenuServiceImpl implements MenuService {
                 .menuCategory(menu.getMenuCategory())
                 .description(menu.getDescription())
                 .restaurantId(menu.getRestaurant().getId())
+                .fileNames(menu.getFileNames())
                 .build())
             .collect(Collectors.toList());
     }
@@ -167,5 +139,30 @@ public class MenuServiceImpl implements MenuService {
         }
 
         menuRepository.delete(menu);
+    }
+
+    @Override
+    @Transactional
+    public void addImages(Long menuId, List<String> fileNames) {
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new IllegalArgumentException("Menu not found"));
+
+        // Add new file names to the existing list
+        List<String> existingFiles = menu.getFileNames();
+        existingFiles.addAll(fileNames);
+        
+        // Create MenuImage entities
+        int startOrd = menu.getImageSet().size();
+        fileNames.forEach(fileName -> {
+            MenuImage image = MenuImage.builder()
+                    .uuid(UUID.randomUUID().toString())
+                    .fileName(fileName)
+                    .ord(startOrd + fileNames.indexOf(fileName))
+                    .menu(menu)
+                    .build();
+            menu.getImageSet().add(image);
+        });
+
+        menuRepository.save(menu);
     }
 }

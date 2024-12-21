@@ -7,6 +7,7 @@ import org.springframework.web.servlet.config.annotation.ContentNegotiationConfi
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.VersionResourceResolver;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -32,6 +33,11 @@ public class WebConfig implements WebMvcConfigurer {
         // 기타 정적 리소스 매핑
         registry.addResourceHandler("/static/**")
                 .addResourceLocations("classpath:/static/");
+
+        // 업로드 이미지 매핑
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations("file:" + System.getProperty("user.dir") + "/uploads/")
+                .setCacheControl(CacheControl.maxAge(1, TimeUnit.HOURS));
 
         registry.addResourceHandler("/menu-images/**")
                 .addResourceLocations("file:" + System.getProperty("user.home") + "/menu-images/");
