@@ -10,4 +10,6 @@ public interface MenuService {
     List<MenuDTO> getMenusByRestaurant(Long restaurantId);
     List<MenuDTO> getMenusByRestaurantAndOwner(Long restaurantId, String ownerId);
     void addImages(Long menuId, List<String> fileNames);
+    // 단일 메뉴 조회
+    MenuDTO getMenu(Long menuId);
 }

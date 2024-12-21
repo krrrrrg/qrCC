@@ -2,6 +2,7 @@ package org.zerock.restqrpayment_2.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
+import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class MenuServiceImpl implements MenuService {
 
     private final MenuRepository menuRepository;
     private final RestaurantRepository restaurantRepository;
+    private final ModelMapper modelMapper;
 
     @Override
     public MenuDTO createMenu(MenuDTO menuDTO, String ownerId) {
@@ -164,5 +166,13 @@ public class MenuServiceImpl implements MenuService {
         });
 
         menuRepository.save(menu);
+    }
+
+    @Override
+    public MenuDTO getMenu(Long menuId) {
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new IllegalArgumentException("Menu not found with id: " + menuId));
+        
+        return modelMapper.map(menu, MenuDTO.class);
     }
 }

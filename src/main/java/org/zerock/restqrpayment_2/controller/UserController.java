@@ -3,11 +3,16 @@ package org.zerock.restqrpayment_2.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.zerock.restqrpayment_2.domain.MemberRole;
 import org.zerock.restqrpayment_2.dto.MemberDTO;
+import org.zerock.restqrpayment_2.dto.MenuDTO;
+import org.zerock.restqrpayment_2.dto.RestaurantDTO;
 import org.zerock.restqrpayment_2.service.MemberService;
+import org.zerock.restqrpayment_2.service.MenuService;
+import org.zerock.restqrpayment_2.service.RestaurantService;
 
 import java.util.HashSet;
 
@@ -17,6 +22,8 @@ import java.util.HashSet;
 public class UserController {
 
     private final MemberService memberService;
+    private final MenuService menuService;
+    private final RestaurantService restaurantService;
 
     // 뷰 반환 메서드들
     @GetMapping("/signup")
@@ -29,9 +36,35 @@ public class UserController {
         return "user/cart";
     }
 
-    @GetMapping("/menu/detail")
-    public String menuDetail() {
-        return "user/menu-detail";
+    @GetMapping("/menu-detail")
+    public String menuDetail(@RequestParam Long restaurantId,
+                             @RequestParam Long tableId,
+                             @RequestParam Long menuId,
+                             Model model) {
+        log.info("Menu detail for restaurant: {}, table: {}, menu: {}", restaurantId, tableId, menuId);
+        
+        try {
+            // 메뉴 정보 가져오기
+            MenuDTO menuDTO = menuService.getMenu(menuId);
+            if (menuDTO == null) {
+                return "redirect:/error";
+            }
+            
+            // 레스토랑 정보 가져오기
+            RestaurantDTO restaurantDTO = restaurantService.getRestaurant(restaurantId);
+            if (restaurantDTO == null) {
+                return "redirect:/error";
+            }
+            
+            model.addAttribute("menu", menuDTO);
+            model.addAttribute("restaurant", restaurantDTO);
+            model.addAttribute("tableId", tableId);
+            
+            return "user/menu-detail";
+        } catch (Exception e) {
+            log.error("Error getting menu detail", e);
+            return "redirect:/error";
+        }
     }
 
     @GetMapping("/order/history")

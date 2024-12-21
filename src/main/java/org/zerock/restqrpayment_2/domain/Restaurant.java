@@ -106,4 +106,20 @@ public class Restaurant extends BaseEntity {
     public void changeRefLink(String refLink) {
         this.refLink = refLink;
     }
+
+    public void changeName(String name) {
+        this.name = name;
+    }
+
+    public void changeAddress(String address) {
+        this.address = address;
+    }
+
+    public void changePhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public void changeDescription(String description) {
+        this.description = description;
+    }
 }

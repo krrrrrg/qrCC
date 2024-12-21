@@ -20,4 +20,6 @@ public interface RestaurantService {
     List<RestaurantDTO> getRestaurantsByOwnerId(String ownerId);
     RestaurantDTO entityToDTO(Restaurant restaurant);
     Restaurant dtoToEntity(RestaurantDTO restaurantDTO);
+    // 단일 레스토랑 조회
+    RestaurantDTO getRestaurant(Long restaurantId);
 }
