@@ -27,7 +27,7 @@ public class TableViewController {
             }
 
             // index.html로 리다이렉트하면서 필요한 파라미터 전달
-            return "redirect:/?restaurantId=" + restaurantId + "&tableId=" + tableId;
+            return "redirect:/qr?restaurantId=" + restaurantId + "&tableId=" + tableId;
         } catch (Exception e) {
             return "redirect:/error";
         }

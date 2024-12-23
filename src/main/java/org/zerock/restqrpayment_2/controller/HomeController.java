@@ -22,6 +22,17 @@ public class HomeController {
     private final MenuService menuService;
     private final RestaurantService restaurantService;
 
+    @GetMapping("/qr")
+    public String index(@RequestParam(required = false) Long restaurantId,
+                       @RequestParam(required = false) Long tableId) {
+        // 파라미터가 있으면 메뉴 페이지로 리다이렉트
+        if (restaurantId != null && tableId != null) {
+            return "redirect:/menu?restaurantId=" + restaurantId + "&tableId=" + tableId;
+        }
+        // 파라미터가 없으면 에러 페이지로
+        return "redirect:/error";
+    }
+
     @GetMapping("/menu")
     public String home(@RequestParam Long restaurantId, 
                       @RequestParam Long tableId, 
