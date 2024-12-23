@@ -2,11 +2,26 @@
 let cartItems = [];
 let totalPrice = 0;
 
+// 장바구니 키 생성
+function getCartKey(restaurantId, tableId) {
+    return `cart_${restaurantId}_${tableId}`;
+}
+
 // 페이지 로드 시 장바구니 정보 로드
 async function loadCartItems() {
     try {
-        // 로컬 스토리지에서 장바구니 데이터 가져오기
-        const cart = JSON.parse(localStorage.getItem('cart')) || [];
+        // URL에서 레스토랑ID와 테이블ID 가져오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentRestaurantId = urlParams.get('restaurantId');
+        const currentTableId = urlParams.get('tableId');
+        
+        if (!currentRestaurantId || !currentTableId) {
+            throw new Error('레스토랑 또는 테이블 정보가 없습니다.');
+        }
+
+        // 현재 레스토랑과 테이블에 해당하는 장바구니 데이터 가져오기
+        const cartKey = getCartKey(currentRestaurantId, currentTableId);
+        const cart = JSON.parse(sessionStorage.getItem(cartKey)) || [];
         
         // 메뉴 정보 가져오기
         const menuPromises = cart.map(async item => {
@@ -92,63 +107,83 @@ function updateTotalItemCount() {
 
 // 장바구니 업데이트
 function updateCart() {
-    // 로컬 스토리지 업데이트
-    localStorage.setItem('cart', JSON.stringify(cartItems.map(item => ({
-        restaurantId: item.restaurantId,
-        tableId: item.tableId,
-        menuId: item.menuId,
-        quantity: item.quantity
-    }))));
-    
-    renderCartItems();
-    updateTotalPrice();
+    try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentRestaurantId = urlParams.get('restaurantId');
+        const currentTableId = urlParams.get('tableId');
+        
+        if (!currentRestaurantId || !currentTableId) {
+            throw new Error('레스토랑 또는 테이블 정보가 없습니다.');
+        }
+
+        const cartKey = getCartKey(currentRestaurantId, currentTableId);
+        const cartData = cartItems.map(item => ({
+            menuId: item.menuId,
+            restaurantId: item.restaurantId,
+            quantity: item.quantity
+        }));
+        
+        sessionStorage.setItem(cartKey, JSON.stringify(cartData));
+        updateTotalPrice();
+        updateTotalItemCount();
+    } catch (error) {
+        console.error('장바구니 업데이트 실패:', error);
+        alert('장바구니 업데이트에 실패했습니다.');
+    }
 }
 
 // 주문하기
-function placeOrder() {
-    const cartKey = getCartKey();
-    const cartItems = CartService.getCartItems(tableId, restaurantId);
+async function placeOrder() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentRestaurantId = urlParams.get('restaurantId');
+    const currentTableId = urlParams.get('tableId');
     
+    if (!currentRestaurantId || !currentTableId) {
+        alert('레스토랑 또는 테이블 정보가 없습니다.');
+        return;
+    }
+
+    const cartKey = getCartKey(currentRestaurantId, currentTableId);
+    const cartItems = JSON.parse(sessionStorage.getItem(cartKey));
+
     if (!cartItems || cartItems.length === 0) {
         alert('장바구니가 비어있습니다.');
         return;
     }
 
     const orderData = {
-        restaurantId: restaurantId,
-        tableId: tableId,
+        restaurantId: currentRestaurantId,
+        tableId: currentTableId,
         orderItems: cartItems.map(item => ({
-            menuId: item.id,
+            menuId: item.menuId,
             quantity: item.quantity
         }))
     };
 
-    fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(orderData)
-    })
-    .then(response => {
+    try {
+        const response = await fetch('/api/orders', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(orderData)
+        });
+
         if (!response.ok) {
-            return response.text().then(text => {
-                throw new Error(text);
-            });
+            throw new Error('주문 처리 중 오류가 발생했습니다.');
         }
-        return response.json();
-    })
-    .then(data => {
-        alert('주문이 성공적으로 완료되었습니다.');
+
+        const data = await response.json();
+        
         // 장바구니 비우기
-        CartService.clearCart(tableId, restaurantId);
-        // 메인 페이지로 리다이렉트
-        window.location.href = `/?restaurantId=${restaurantId}&tableId=${tableId}`;
-    })
-    .catch(error => {
+        sessionStorage.removeItem(cartKey);
+        
+        // 주문 상태 페이지로 리다이렉트
+        window.location.href = `/order-status?restaurantId=${currentRestaurantId}&tableId=${currentTableId}&orderId=${data.orderId}`;
+    } catch (error) {
         console.error('Error:', error);
-        alert('주문 처리 중 오류가 발생했습니다: ' + error.message);
-    });
+        alert('주문 처리 중 오류가 발생했습니다.');
+    }
 }
 
 // 전역 함수로 등록
