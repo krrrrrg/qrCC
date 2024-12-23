@@ -34,8 +34,8 @@
   <body>
     <header class="store-header">
       <div class="header-title">
-        <span class="store-name">공공</span>
-        <span class="table-indicator" style="display: none;">테이블 <span id="tableNumber"></span>번</span>
+        <span class="store-name" th:text="${restaurant.name}">레스토랑 이름</span>
+        <span class="table-indicator">테이블 <span id="tableNumber"></span>번</span>
       </div>
       <button class="menu-button">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -73,9 +73,9 @@
     </nav>
 
     <main>
-      <div class="promotion-banner" th:if="${restaurant != null}">
+      <div class="promotion-banner" th:if="${restaurant != null and restaurant.description != null and !restaurant.description.isEmpty()}">
         <span class="promotion-icon">📢</span>
-        <span th:text="${restaurant.description}"></span>
+        <span th:text="${restaurant.description}">프로모션 메시지</span>
       </div>
 
       <section id="menu-list">
@@ -99,19 +99,30 @@
       // localStorage에 메뉴 데이터 저장
       localStorage.setItem('menuData', JSON.stringify(menuData));
 
-      // URL에서 테이블 번호와 식당 ID 가져오기
+      // 레스토랑 정보
+      const restaurant = /*[[${restaurant}]]*/ null;
+      
+      // URL에서 테이블 번호와 레스토랑 ID 가져오기
       function getTableNumber() {
         const urlParams = new URLSearchParams(window.location.search);
-        const tableId = urlParams.get('tableId') || '1';
+        const tableId = urlParams.get('tableId');
         const restaurantId = urlParams.get('restaurantId');
         
-        // 테이블 번호 표시
-        document.getElementById('tableNumber').textContent = tableId;
-        document.querySelector('.table-indicator').style.display = 'inline-block';
-
-        // 메뉴 페이지로 리다이렉트 (현재 /menu가 아닌 경우)
-        if (!window.location.pathname.includes('/menu') && restaurantId) {
-          window.location.href = `/menu?restaurantId=${restaurantId}&tableId=${tableId}`;
+        if (tableId) {
+          document.getElementById('tableNumber').textContent = tableId;
+          document.querySelector('.table-indicator').style.display = 'inline-block';
+        }
+        
+        // 레스토랑 이름이 없는 경우 API에서 가져오기
+        if (!restaurant || !restaurant.name) {
+          fetch(`/api/owner/restaurants/${restaurantId}`)
+            .then(response => response.json())
+            .then(data => {
+              document.querySelector('.store-name').textContent = data.name;
+            })
+            .catch(error => {
+              console.error('레스토랑 정보 로드 실패:', error);
+            });
         }
       }
       getTableNumber();
