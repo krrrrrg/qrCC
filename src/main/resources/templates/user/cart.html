@@ -10,11 +10,11 @@
 <body>
     <div class="container">
         <header>
-            <button th:onclick="|location.href='@{/}'|" class="back-button">
+            <a th:href="@{/menu(restaurantId=${param.restaurantId},tableId=${param.tableId})}" class="back-button">
                 <svg width="24" height="24" viewBox="0 0 24 24">
                     <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
                 </svg>
-            </button>
+            </a>
             <h1>장바구니</h1>
         </header>
         
@@ -32,9 +32,23 @@
     </div>
     
     <script th:inline="javascript">
-        // Thymeleaf 변수
-        const restaurantId = [[${param.restaurantId}]];
-        const tableId = [[${param.tableId}]];
+        /*<![CDATA[*/
+        // Thymeleaf 변수를 JavaScript 변수로 안전하게 가져오기
+        const restaurantId = /*[[${param.restaurantId[0]}]]*/ '';
+        const tableId = /*[[${param.tableId[0]}]]*/ '';
+
+        function goBack() {
+            if (restaurantId && tableId) {
+                window.location.href = `/menu?restaurantId=${restaurantId}&tableId=${tableId}`;
+            } else {
+                // URL에서 직접 파라미터 가져오기 (fallback)
+                const urlParams = new URLSearchParams(window.location.search);
+                const rid = urlParams.get('restaurantId');
+                const tid = urlParams.get('tableId');
+                window.location.href = `/menu?restaurantId=${rid}&tableId=${tid}`;
+            }
+        }
+        /*]]>*/
     </script>
     <script type="module" th:src="@{/js/cart.js}"></script>
 </body>
