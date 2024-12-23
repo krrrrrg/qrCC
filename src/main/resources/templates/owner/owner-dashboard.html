@@ -22,13 +22,6 @@
     <script
       th:src="@{https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js}"
     ></script>
-    <link
-      th:href="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css}"
-      rel="stylesheet"
-    />
-    <script
-      th:src="@{https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js}"
-    ></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <link
       rel="stylesheet"
@@ -262,6 +255,7 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
         gap: 20px;
+        padding: 20px;
       }
       
       .menu-card {
@@ -269,7 +263,8 @@
         border-radius: 12px;
         box-shadow: 0 2px 12px rgba(0,0,0,0.08);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
-        overflow: hidden;
+        overflow: visible;
+        position: relative;
       }
       
       .menu-card:hover {
@@ -281,6 +276,9 @@
         width: 100%;
         height: 200px;
         object-fit: cover;
+        display: block;
+        position: relative;
+        z-index: 1;
       }
       
       .menu-content {
@@ -403,6 +401,119 @@
         .category-filter {
           width: 100%;
         }
+      }
+      
+      .menu-image-container {
+        width: 100%;
+        height: 282px;
+        overflow: visible;
+        position: relative;
+        border: 1px solid #ddd;
+      }
+
+      .menu-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        position: relative;
+        z-index: 1;
+      }
+
+      .menu-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        overflow: visible;
+        margin-bottom: 20px;
+        border: 1px solid #eee;
+        position: relative;
+      }
+
+      .menu-content {
+        padding: 15px;
+      }
+
+      /* 메뉴 카드 스타일 */
+      .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        padding: 20px;
+      }
+
+      .menu-card {
+        width: 100%;
+        background: white;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        position: relative;
+      }
+
+      .menu-image-container {
+        width: 100%;
+        height: 282px;
+        position: relative;
+      }
+
+      .menu-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px 8px 0 0;
+      }
+
+      .menu-content {
+        padding: 16px;
+      }
+
+      .menu-content h4 {
+        margin: 0;
+        font-size: 18px;
+        color: #333;
+      }
+
+      .menu-content .price {
+        font-size: 16px;
+        color: #e44d26;
+        font-weight: bold;
+        margin: 8px 0;
+      }
+
+      .menu-content .description {
+        font-size: 14px;
+        color: #666;
+        margin: 8px 0;
+      }
+
+      .menu-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .menu-actions button {
+        flex: 1;
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s;
+      }
+
+      .menu-actions button:first-child {
+        background-color: #4a90e2;
+        color: white;
+      }
+
+      .menu-actions button:last-child {
+        background-color: #e74c3c;
+        color: white;
+      }
+
+      .menu-actions button:hover {
+        opacity: 0.9;
       }
     </style>
   </head>
@@ -1311,8 +1422,8 @@
 
           // 현재 이미지 표시
           const currentImageDiv = document.getElementById("currentImage");
-          if (menu.imageSet && menu.imageSet.length > 0) {
-            const imageUrl = `/api/restaurants/${restaurantId}/menus/display?fileName=${menu.imageSet[0].uuid}_${menu.imageSet[0].fileName}`;
+          if (menu.fileNames && menu.fileNames.length > 0) {
+            const imageUrl = `/api/owner/menus/display?fileName=${encodeURIComponent(menu.fileNames[0])}`;
             currentImageDiv.innerHTML = `
               <div class="current-image-container">
                 <img src="${imageUrl}" 
@@ -1364,12 +1475,15 @@
         if (!restaurantId) return;
 
         try {
-          const response = await fetch(`/api/restaurants/${restaurantId}/menus`);
+          // 메뉴 데이터 요청 URL 수정
+          const response = await fetch(`/api/owner/menus/restaurant/${restaurantId}`);
           if (!response.ok) {
             throw new Error('메뉴 목록을 불러오는데 실패했습니다.');
           }
 
           const menus = await response.json();
+          console.log('서버에서 받은 메뉴 데이터:', menus); // 전체 메뉴 데이터 로그
+          
           const menuContainer = document.getElementById('menuContainer');
           
           // 검색 및 필터 컨트롤 추가
@@ -1401,76 +1515,48 @@
             return acc;
           }, {});
 
-          // 카테고리 필터 옵션 추가
-          const categoryFilter = document.getElementById('categoryFilter');
-          Object.keys(menusByCategory).forEach(category => {
-            categoryFilter.innerHTML += `<option value="${category}">${category}</option>`;
-          });
+          console.log('카테고리별 메뉴:', menusByCategory); // 카테고리별 그룹화 결과 로그
 
-          // 카테고리별로 메뉴 표시
-          Object.entries(menusByCategory).forEach(([category, categoryMenus]) => {
-            const categorySection = document.createElement('div');
-            categorySection.className = 'menu-category';
-            categorySection.setAttribute('data-category', category);
-            
-            categorySection.innerHTML = `
-              <div class="category-header">
+          // 카테고리별 메뉴 표시
+          let menuHtml = '<div class="menu-categories">';
+          for (const [category, categoryMenus] of Object.entries(menusByCategory)) {
+            console.log(`카테고리 ${category}의 메뉴:`, categoryMenus);
+            menuHtml += `
+              <div class="category-section">
                 <h3 class="category-title">${category}</h3>
-                <span class="menu-count">${categoryMenus.length}개</span>
-              </div>
-              <div class="menu-grid">
-                ${categoryMenus.map(menu => `
-                  <div class="menu-card">
-                    <img class="menu-image" 
-                         src="/api/restaurants/${restaurantId}/menus/display?fileName=${menu.imageSet && menu.imageSet[0] ? menu.imageSet[0].uuid + '_' + menu.imageSet[0].fileName : ''}"
-                         alt="${menu.name}"
-                         onerror="this.src='/images/default-menu.jpg'">
-                    <div class="menu-content">
-                      <h4 class="menu-name">${menu.name}</h4>
-                      <span class="menu-category-badge">${menu.menuCategory || '기타'}</span>
-                      <p class="menu-description">${menu.description || ''}</p>
-                      <p class="menu-price">${menu.price.toLocaleString()}원</p>
-                      <div class="menu-actions">
-                        <button class="menu-btn edit-btn" onclick="editMenu(${menu.id})">수정</button>
-                        <button class="menu-btn delete-btn" onclick="deleteMenu(${menu.id})">삭제</button>
+                <div class="menu-grid">
+                ${categoryMenus.map(menu => {
+                  let imageUrl = menu.fileNames && menu.fileNames.length > 0 
+                    ? `/api/owner/menus/display?fileName=${encodeURIComponent(menu.fileNames[0])}` 
+                    : '/images/default-menu.jpg';
+                  console.log(`메뉴 ${menu.name}의 이미지 URL:`, imageUrl); // URL 로깅
+                  return `
+                    <div class="menu-card">
+                      <div class="menu-image-container">
+                        <img class="menu-image" 
+                             src="${imageUrl}"
+                             alt="${menu.name}"
+                             onerror="this.src='/images/default-menu.jpg';"
+                             style="z-index: 1;">
+                      </div>
+                      <div class="menu-content">
+                        <h4>${menu.name}</h4>
+                        <p class="price">${menu.price.toLocaleString()}원</p>
+                        <p class="description">${menu.description || ''}</p>
+                        <div class="menu-actions">
+                          <button class="btn btn-sm btn-primary" onclick="editMenu(${menu.id})">수정</button>
+                          <button class="btn btn-sm btn-danger" onclick="deleteMenu(${menu.id})">삭제</button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                `).join('')}
-              </div>
-            `;
-            
-            menuContainer.appendChild(categorySection);
-          });
-
-          // 검색 기능 구현
-          const searchInput = document.getElementById('menuSearch');
-          searchInput.addEventListener('input', function(e) {
-            const searchTerm = e.target.value.toLowerCase();
-            const menuCards = document.querySelectorAll('.menu-card');
-            
-            menuCards.forEach(card => {
-              const menuName = card.querySelector('.menu-name').textContent.toLowerCase();
-              const menuDesc = card.querySelector('.menu-description').textContent.toLowerCase();
-              const isVisible = menuName.includes(searchTerm) || menuDesc.includes(searchTerm);
-              card.style.display = isVisible ? '' : 'none';
-            });
-          });
-
-          // 카테고리 필터 기능 구현
-          categoryFilter.addEventListener('change', function(e) {
-            const selectedCategory = e.target.value;
-            const categoryDivs = document.querySelectorAll('.menu-category');
-            
-            categoryDivs.forEach(div => {
-              if (!selectedCategory || div.getAttribute('data-category') === selectedCategory) {
-                div.style.display = '';
-              } else {
-                div.style.display = 'none';
-              }
-            });
-          });
-
+                  `;
+                }).join('')}
+                </div>
+              </div>`;
+          }
+          menuHtml += '</div>';
+          
+          menuContainer.innerHTML += menuHtml;
         } catch (error) {
           console.error('Error:', error);
           const menuContainer = document.getElementById('menuContainer');

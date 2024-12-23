@@ -14,6 +14,7 @@ import org.zerock.restqrpayment_2.dto.MenuDTO;
 import org.zerock.restqrpayment_2.repository.MenuRepository;
 import org.zerock.restqrpayment_2.repository.RestaurantRepository;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -48,20 +49,18 @@ public class MenuServiceImpl implements MenuService {
                 .build();
 
         if (menuDTO.getFileNames() != null && !menuDTO.getFileNames().isEmpty()) {
-            menu.setFileNames(menuDTO.getFileNames());
+            menu.setFileNames(new ArrayList<>(menuDTO.getFileNames()));
+            
+            // 이미지 처리
+            for (String fileName : menuDTO.getFileNames()) {
+                String uuid = extractUUID(fileName);
+                String originalFileName = extractFileName(fileName);
+                menu.addMenuImage(uuid, originalFileName);
+            }
         }
 
         Menu savedMenu = menuRepository.save(menu);
-
-        return MenuDTO.builder()
-                .id(savedMenu.getId())
-                .name(savedMenu.getName())
-                .price(savedMenu.getPrice())
-                .description(savedMenu.getDescription())
-                .menuCategory(savedMenu.getMenuCategory())
-                .restaurantId(savedMenu.getRestaurant().getId())
-                .fileNames(savedMenu.getFileNames())
-                .build();
+        return modelMapper.map(savedMenu, MenuDTO.class);
     }
 
     @Override
@@ -77,58 +76,59 @@ public class MenuServiceImpl implements MenuService {
         menu.setMenuCategory(menuDTO.getMenuCategory());
         
         if (menuDTO.getFileNames() != null && !menuDTO.getFileNames().isEmpty()) {
-            menu.setFileNames(menuDTO.getFileNames());
+            // 기존 이미지 초기화
+            menu.getImageSet().clear();
+            menu.setFileNames(new ArrayList<>(menuDTO.getFileNames()));
+            
+            // 새 이미지 추가
+            for (String fileName : menuDTO.getFileNames()) {
+                String uuid = extractUUID(fileName);
+                String originalFileName = extractFileName(fileName);
+                menu.addMenuImage(uuid, originalFileName);
+            }
         }
 
         Menu updatedMenu = menuRepository.save(menu);
+        return modelMapper.map(updatedMenu, MenuDTO.class);
+    }
 
-        return MenuDTO.builder()
-                .id(updatedMenu.getId())
-                .name(updatedMenu.getName())
-                .price(updatedMenu.getPrice())
-                .description(updatedMenu.getDescription())
-                .menuCategory(updatedMenu.getMenuCategory())
-                .restaurantId(updatedMenu.getRestaurant().getId())
-                .fileNames(updatedMenu.getFileNames())
-                .build();
+    private String extractUUID(String fileName) {
+        int underscoreIndex = fileName.indexOf("_");
+        if (underscoreIndex > 0) {
+            return fileName.substring(0, underscoreIndex);
+        }
+        return UUID.randomUUID().toString();
+    }
+
+    private String extractFileName(String fileName) {
+        int underscoreIndex = fileName.indexOf("_");
+        if (underscoreIndex > 0 && underscoreIndex < fileName.length() - 1) {
+            return fileName.substring(underscoreIndex + 1);
+        }
+        return fileName;
     }
 
     @Override
     public List<MenuDTO> getMenusByRestaurant(Long restaurantId) {
         List<Menu> menus = menuRepository.findByRestaurantId(restaurantId);
-        
         return menus.stream()
-            .sorted(Comparator.comparing(Menu::getMenuCategory, 
-                Comparator.nullsLast(Comparator.naturalOrder())))
-            .map(menu -> MenuDTO.builder()
-                .id(menu.getId())
-                .name(menu.getName())
-                .price(menu.getPrice())
-                .menuCategory(menu.getMenuCategory())
-                .description(menu.getDescription())
-                .restaurantId(menu.getRestaurant().getId())
-                .fileNames(menu.getFileNames())
-                .build())
-            .collect(Collectors.toList());
+                .map(menu -> modelMapper.map(menu, MenuDTO.class))
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<MenuDTO> getMenusByRestaurantAndOwner(Long restaurantId, String ownerId) {
-        List<Menu> menus = menuRepository.findByRestaurantIdAndOwnerId(restaurantId, ownerId);
-        
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new IllegalArgumentException("Restaurant not found"));
+
+        if (!restaurant.getOwnerId().equals(ownerId)) {
+            throw new IllegalArgumentException("Not authorized");
+        }
+
+        List<Menu> menus = menuRepository.findByRestaurantId(restaurantId);
         return menus.stream()
-            .sorted(Comparator.comparing(Menu::getMenuCategory, 
-                Comparator.nullsLast(Comparator.naturalOrder())))
-            .map(menu -> MenuDTO.builder()
-                .id(menu.getId())
-                .name(menu.getName())
-                .price(menu.getPrice())
-                .menuCategory(menu.getMenuCategory())
-                .description(menu.getDescription())
-                .restaurantId(menu.getRestaurant().getId())
-                .fileNames(menu.getFileNames())
-                .build())
-            .collect(Collectors.toList());
+                .map(menu -> modelMapper.map(menu, MenuDTO.class))
+                .collect(Collectors.toList());
     }
 
     @Override
