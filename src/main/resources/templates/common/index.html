@@ -32,69 +32,57 @@
 
         /* 메뉴 아이템 스타일 */
         #menu-list {
-            padding: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 90%;
+            margin: 0 auto;
         }
 
         .menu-item {
+            display: flex;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            overflow: hidden;
-            transition: transform 0.2s;
-        }
-
-        .menu-item:hover {
-            transform: translateY(-5px);
+            padding: 16px;
+            gap: 16px;
+            width: 100%;
+            box-sizing: border-box;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .menu-image, .menu-image-placeholder {
-            width: 100%;
-            height: 200px;
+            width: 120px;
+            height: 120px;
             object-fit: cover;
-            background: #f5f5f5;
+            border-radius: 8px;
+            flex-shrink: 0;
         }
 
         .menu-details {
-            padding: 15px;
+            flex: 1;
+            min-width: 0;
         }
 
         .menu-name {
-            font-size: 1.2em;
-            font-weight: bold;
-            margin: 0 0 8px 0;
+            font-size: 18px;
+            font-weight: 500;
+            margin: 0;
+            color: #333;
         }
 
         .menu-description {
+            font-size: 14px;
             color: #666;
-            font-size: 0.9em;
-            margin: 0 0 12px 0;
+            margin: 8px 0;
             line-height: 1.4;
         }
 
         .menu-price {
-            font-size: 1.1em;
-            font-weight: bold;
-            color: #e67e22;
-            margin: 0 0 15px 0;
-        }
-
-        .add-to-cart-btn {
-            width: 100%;
-            padding: 10px;
-            background: #e67e22;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .add-to-cart-btn:hover {
-            background: #d35400;
+            font-size: 16px;
+            font-weight: 500;
+            color: #000;
+            margin: 4px 0;
         }
 
         /* 카테고리 네비게이션 스타일 */
@@ -276,28 +264,12 @@
                 <h3 class="menu-name">${menu.name}</h3>
                 <p class="menu-description">${menu.description || ''}</p>
                 <p class="menu-price">${menu.price.toLocaleString()}원</p>
-                <button class="add-to-cart-btn" data-menu-id="${menu.id}">
-                  장바구니 담기
-                </button>
               </div>
             </div>
           `;
         });
         
         menuList.innerHTML = html;
-        
-        // 장바구니 버튼 이벤트 리스너 추가
-        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
-          button.addEventListener('click', function() {
-            const menuId = this.dataset.menuId;
-            const menu = menus.find(m => m.id === parseInt(menuId));
-            if (menu) {
-              // 장바구니에 추가하는 로직
-              console.log('장바구니에 추가:', menu);
-              // CartService.addToCart(menu); // 장바구니 서비스가 있다면 사용
-            }
-          });
-        });
       }
       
       // 페이지 로드 시 전체 메뉴 표시

@@ -6,6 +6,101 @@
     <title>메뉴 상세</title>
     <link rel="stylesheet" th:href="@{/css/styles.css}" />
     <link rel="stylesheet" th:href="@{https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css}" />
+    <style>
+        /* 메뉴 아이템 스타일 */
+        #menu-list {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #f5f5f5;
+        }
+
+        .menu-item {
+            display: flex;
+            background: white;
+            padding: 16px;
+            gap: 16px;
+            width: 100%;
+            border: none;
+            box-shadow: none;
+        }
+
+        .menu-image {
+            width: 120px;
+            height: 120px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+
+        .menu-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .menu-name {
+            font-size: 18px;
+            font-weight: 500;
+            margin: 0;
+            color: #333;
+        }
+
+        .menu-description {
+            font-size: 14px;
+            color: #666;
+            margin: 8px 0;
+            line-height: 1.4;
+        }
+
+        .menu-price {
+            font-size: 16px;
+            font-weight: 500;
+            color: #000;
+            margin: 0;
+        }
+
+        .add-to-cart-btn {
+            width: auto;
+            padding: 10px 20px;
+            margin-top: 12px;
+            background: #C06B1D;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .add-to-cart-btn:hover {
+            background: #A85D19;
+        }
+
+        @media (max-width: 480px) {
+            #menu-list {
+                padding: 12px;
+            }
+
+            .menu-item {
+                padding: 12px;
+            }
+
+            .menu-image {
+                width: 100px;
+                height: 100px;
+            }
+
+            .menu-name {
+                font-size: 16px;
+            }
+
+            .menu-description {
+                font-size: 13px;
+            }
+        }
+    </style>
   </head>
   <body>
     <header class="detail-header">
