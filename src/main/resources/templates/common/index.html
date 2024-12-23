@@ -29,6 +29,115 @@
             font-weight: bold;
             font-size: 1.2em;
         }
+
+        /* 메뉴 아이템 스타일 */
+        #menu-list {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .menu-item {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.2s;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .menu-image, .menu-image-placeholder {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f5f5f5;
+        }
+
+        .menu-details {
+            padding: 15px;
+        }
+
+        .menu-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 0 0 8px 0;
+        }
+
+        .menu-description {
+            color: #666;
+            font-size: 0.9em;
+            margin: 0 0 12px 0;
+            line-height: 1.4;
+        }
+
+        .menu-price {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #e67e22;
+            margin: 0 0 15px 0;
+        }
+
+        .add-to-cart-btn {
+            width: 100%;
+            padding: 10px;
+            background: #e67e22;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .add-to-cart-btn:hover {
+            background: #d35400;
+        }
+
+        /* 카테고리 네비게이션 스타일 */
+        .category-nav {
+            background: white;
+            padding: 10px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #eee;
+        }
+
+        .category-nav ul {
+            display: flex;
+            overflow-x: auto;
+            padding: 0 20px;
+            margin: 0;
+            list-style: none;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .category-nav li {
+            flex: 0 0 auto;
+        }
+
+        .category-link {
+            display: block;
+            padding: 8px 16px;
+            color: #666;
+            text-decoration: none;
+            border-radius: 20px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .category-link.active {
+            background: #e67e22;
+            color: white;
+        }
+
+        .category-link:hover:not(.active) {
+            background: #f5f5f5;
+        }
     </style>
   </head>
   <body>
@@ -65,9 +174,9 @@
 
     <nav class="category-nav">
       <ul>
-        <li><a href="#all" th:text="전체">전체</a></li>
+        <li><a href="#" class="category-link active" data-category="all">전체</a></li>
         <li th:each="category : ${categories}">
-            <a th:href="'#' + ${category}" th:text="${category}"></a>
+          <a href="#" class="category-link" th:text="${category}" th:data-category="${category}">카테고리</a>
         </li>
       </ul>
     </nav>
@@ -126,6 +235,73 @@
         }
       }
       getTableNumber();
+      
+      // 카테고리 필터링 기능
+      document.querySelectorAll('.category-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          
+          // 활성 클래스 제거
+          document.querySelectorAll('.category-link').forEach(el => el.classList.remove('active'));
+          // 클릭한 링크에 활성 클래스 추가
+          e.target.classList.add('active');
+          
+          const category = e.target.dataset.category;
+          const menuList = document.getElementById('menu-list');
+          menuList.innerHTML = ''; // 기존 메뉴 초기화
+          
+          // 메뉴 필터링 및 표시
+          const filteredMenus = category === 'all' 
+            ? menuData.menus 
+            : menuData.menus.filter(menu => menu.menuCategory === category);
+            
+          // 메뉴 표시
+          displayMenus(filteredMenus);
+        });
+      });
+      
+      // 메뉴 표시 함수
+      function displayMenus(menus) {
+        const menuList = document.getElementById('menu-list');
+        let html = '';
+        
+        menus.forEach(menu => {
+          html += `
+            <div class="menu-item">
+              ${menu.fileNames && menu.fileNames.length > 0 ? 
+                `<img src="/api/owner/menus/display?fileName=${menu.fileNames[0]}" alt="${menu.name}" class="menu-image">` : 
+                '<div class="menu-image-placeholder"></div>'
+              }
+              <div class="menu-details">
+                <h3 class="menu-name">${menu.name}</h3>
+                <p class="menu-description">${menu.description || ''}</p>
+                <p class="menu-price">${menu.price.toLocaleString()}원</p>
+                <button class="add-to-cart-btn" data-menu-id="${menu.id}">
+                  장바구니 담기
+                </button>
+              </div>
+            </div>
+          `;
+        });
+        
+        menuList.innerHTML = html;
+        
+        // 장바구니 버튼 이벤트 리스너 추가
+        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+          button.addEventListener('click', function() {
+            const menuId = this.dataset.menuId;
+            const menu = menus.find(m => m.id === parseInt(menuId));
+            if (menu) {
+              // 장바구니에 추가하는 로직
+              console.log('장바구니에 추가:', menu);
+              // CartService.addToCart(menu); // 장바구니 서비스가 있다면 사용
+            }
+          });
+        });
+      }
+      
+      // 페이지 로드 시 전체 메뉴 표시
+      document.querySelector('[data-category="all"]').click();
     </script>
     <script type="module" th:src="@{/js/cart-service.js}"></script>
     <script type="module" th:src="@{/js/script.js}"></script>

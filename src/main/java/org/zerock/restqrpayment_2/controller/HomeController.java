@@ -12,6 +12,7 @@ import org.zerock.restqrpayment_2.service.MenuService;
 import org.zerock.restqrpayment_2.service.RestaurantService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Controller
 @Log4j2
@@ -35,7 +36,17 @@ public class HomeController {
             
             // 메뉴 목록 조회
             List<MenuDTO> menus = menuService.getMenusByRestaurant(restaurantId);
+            
+            // 메뉴 카테고리 목록 추출
+            List<String> categories = menus.stream()
+                .map(MenuDTO::getMenuCategory)
+                .filter(category -> category != null && !category.trim().isEmpty())
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+                
             model.addAttribute("menus", menus);
+            model.addAttribute("categories", categories);
             model.addAttribute("tableId", tableId);
             
             return "common/index";
