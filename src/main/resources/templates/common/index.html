@@ -49,6 +49,13 @@
             box-sizing: border-box;
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         .menu-image, .menu-image-placeholder {
@@ -126,10 +133,80 @@
         .category-link:hover:not(.active) {
             background: #f5f5f5;
         }
+
+        /* 헤더와 햄버거 메뉴 스타일 */
+        .header {
+            position: relative;
+            padding: 16px;
+            background: white;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .menu-button {
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            min-width: 200px;
+            display: none;
+            z-index: 1000;
+            margin-top: 4px;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .menu-list {
+            padding: 8px 0;
+        }
+
+        .menu-item-link {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .menu-item-link:hover {
+            background: #f5f5f5;
+        }
+
+        .menu-item-link i {
+            margin-right: 12px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .divider {
+            height: 1px;
+            background: #eee;
+            margin: 8px 0;
+        }
     </style>
   </head>
   <body>
-    <header class="store-header">
+    <header class="header">
       <div class="header-title">
         <span class="store-name" th:text="${restaurant.name}">레스토랑 이름</span>
         <span class="table-indicator">테이블 <span id="tableNumber"></span>번</span>
@@ -142,17 +219,12 @@
       <!-- 드롭다운 메뉴 -->
       <div class="dropdown-menu">
         <div class="menu-list">
-            <button id="orderHistoryBtn">
-                <i class="fas fa-history"></i>
-                주문내역
-            </button>
+            <a th:href="@{/user/order/history(restaurantId=${param.restaurantId},tableId=${param.tableId})}">
+                <i class="fas fa-receipt"></i>
+                주문 내역
+            </a>
             <div class="divider"></div>
-            <button id="loginBtn">
-                <i class="fas fa-user"></i>
-                로그인
-            </button>
-            <div class="divider"></div>
-            <a href="#" class="sns-link" target="_blank">
+            <a th:href="${restaurant.refLink}" class="menu-item-link" target="_blank">
                 <i class="fab fa-instagram"></i>
                 Instagram
             </a>
@@ -251,11 +323,14 @@
       // 메뉴 표시 함수
       function displayMenus(menus) {
         const menuList = document.getElementById('menu-list');
+        const urlParams = new URLSearchParams(window.location.search);
+        const restaurantId = urlParams.get('restaurantId');
+        const tableId = urlParams.get('tableId');
         let html = '';
         
         menus.forEach(menu => {
           html += `
-            <div class="menu-item">
+            <div class="menu-item" onclick="location.href='/menu-detail?restaurantId=${restaurantId}&tableId=${tableId}&menuId=${menu.id}'">
               ${menu.fileNames && menu.fileNames.length > 0 ? 
                 `<img src="/api/owner/menus/display?fileName=${menu.fileNames[0]}" alt="${menu.name}" class="menu-image">` : 
                 '<div class="menu-image-placeholder"></div>'
@@ -274,6 +349,25 @@
       
       // 페이지 로드 시 전체 메뉴 표시
       document.querySelector('[data-category="all"]').click();
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuButton = document.querySelector('.menu-button');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+            
+            // 햄버거 메뉴 토글
+            menuButton.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdownMenu.classList.toggle('show');
+            });
+            
+            // 다른 곳 클릭시 메뉴 닫기
+            document.addEventListener('click', function(e) {
+                if (!dropdownMenu.contains(e.target) && !menuButton.contains(e.target)) {
+                    dropdownMenu.classList.remove('show');
+                }
+            });
+        });
     </script>
     <script type="module" th:src="@{/js/cart-service.js}"></script>
     <script type="module" th:src="@{/js/script.js}"></script>

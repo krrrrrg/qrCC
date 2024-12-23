@@ -1652,3 +1652,101 @@ body {
     border-radius: 4px;
     display: inline-block;
 }
+
+/* 주문 내역 페이지 스타일 */
+.order-list {
+    padding: 16px;
+    max-width: 768px;
+    margin: 0 auto;
+}
+
+.order-item {
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-date {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+}
+
+.order-status {
+    font-weight: 500;
+    color: var(--accent-color);
+}
+
+.restaurant-info {
+    margin-bottom: 12px;
+}
+
+.restaurant-name {
+    font-weight: 500;
+    margin-right: 8px;
+}
+
+.table-number {
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+}
+
+.order-items {
+    margin-bottom: 12px;
+}
+
+.order-item-detail {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+.item-name {
+    flex: 1;
+}
+
+.item-quantity {
+    color: var(--secondary-color);
+    margin: 0 12px;
+}
+
+.item-price {
+    font-weight: 500;
+}
+
+.order-total {
+    text-align: right;
+    font-weight: 500;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.no-orders {
+    text-align: center;
+    padding: 32px;
+    color: var(--secondary-color);
+}
+
+.back-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    text-decoration: none;
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.back-button i {
+    font-size: 1.2rem;
+}
