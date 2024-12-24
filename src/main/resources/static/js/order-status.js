@@ -1,9 +1,14 @@
+let orderId;
+
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
-    const orderId = urlParams.get('orderId');
+    orderId = urlParams.get('orderId');
     
-    // 초기 로드만 실행
+    // 초기 로드
     loadOrderStatus();
+
+    // 5초마다 주문 상태 확인
+    setInterval(loadOrderStatus, 5000);
 });
 
 async function loadOrderStatus() {
@@ -41,46 +46,60 @@ function updateOrderStatus(order) {
         const itemElement = document.createElement('div');
         itemElement.className = 'order-item';
         itemElement.innerHTML = `
-            <span class="item-name">${item.menu.name}</span>
-            <span class="item-quantity">x${item.quantity}</span>
-            <span class="item-price">${formatPrice(item.price)}원</span>
+            <div class="item-info">
+                <span class="item-name">${item.menuName}</span>
+                <span class="item-quantity">x${item.quantity}</span>
+            </div>
+            <span class="item-price">${formatPrice(item.price * item.quantity)}원</span>
         `;
         orderItemsContainer.appendChild(itemElement);
     });
 
     // 총 금액 업데이트
-    document.querySelector('.total-amount').textContent = 
-        formatPrice(order.totalAmount) + '원';
+    document.querySelector('.total-value').textContent = formatPrice(order.totalAmount) + '원';
 }
 
 function updateStatusTimeline(currentStatus) {
     const steps = document.querySelectorAll('.status-step');
-    const statusOrder = ['PENDING', 'ACCEPTED', 'COMPLETED', 'CANCELLED'];
-    const currentIndex = statusOrder.indexOf(currentStatus);
+    const progressFill = document.querySelector('.progress-fill');
+    
+    // 진행 상태에 따른 프로그레스 바 너비 설정
+    let progressWidth = '0%';
+    if (currentStatus === 'PENDING') progressWidth = '0%';
+    else if (currentStatus === 'ACCEPTED') progressWidth = '50%';
+    else if (currentStatus === 'COMPLETED') progressWidth = '100%';
+    else if (currentStatus === 'CANCELLED') progressWidth = '100%';
+    
+    progressFill.style.width = progressWidth;
 
-    steps.forEach((step, index) => {
+    steps.forEach(step => {
+        const stepStatus = step.getAttribute('data-status');
+        step.classList.remove('active');
+        
         if (currentStatus === 'CANCELLED') {
-            step.classList.remove('active', 'current');
-            if (step.getAttribute('data-status') === 'CANCELLED') {
-                step.classList.add('active', 'current', 'cancelled');
-            }
-            return;
-        }
-
-        const status = step.getAttribute('data-status');
-        if (index <= currentIndex) {
-            step.classList.add('active');
-            if (index === currentIndex) {
-                step.classList.add('current');
-            } else {
-                step.classList.remove('current');
+            if (stepStatus === 'CANCELLED') {
+                step.classList.add('active');
             }
         } else {
-            step.classList.remove('active', 'current');
+            const statusOrder = ['PENDING', 'ACCEPTED', 'COMPLETED'];
+            const currentIndex = statusOrder.indexOf(currentStatus);
+            const stepIndex = statusOrder.indexOf(stepStatus);
+            
+            if (stepIndex <= currentIndex) {
+                step.classList.add('active');
+            }
         }
     });
 }
 
 function formatPrice(price) {
     return price.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function goBack() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const restaurantId = urlParams.get('restaurantId');
+    const tableId = urlParams.get('tableId');
+    
+    window.location.href = `/order/history?restaurantId=${restaurantId}&tableId=${tableId}`;
 }

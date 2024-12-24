@@ -112,9 +112,8 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found"));
         
         order.updateStatus(newStatus);
-        orderRepository.save(order);
-        
-        return entityToDto(order);
+        Order savedOrder = orderRepository.save(order);
+        return entityToDto(savedOrder);
     }
 
     @Transactional
@@ -154,6 +153,13 @@ public class OrderService {
 
         List<Order> orders = orderRepository.findByRestaurantAndTableOrderByRegDateDesc(restaurant, table);
         return orders.stream()
+                .map(this::entityToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public List<OrderDTO> getAllOrders() {
+        return orderRepository.findAll().stream()
                 .map(this::entityToDto)
                 .collect(Collectors.toList());
     }

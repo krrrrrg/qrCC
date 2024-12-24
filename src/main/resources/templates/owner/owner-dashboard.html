@@ -1647,8 +1647,8 @@
         if (!restaurantId) return;
 
         try {
-          const token = document.querySelector("meta[name='_csrf']").content;
-          const header = document.querySelector("meta[name='_csrf_header']").content;
+          const token = document.querySelector("meta[name='_csrf']").getAttribute("content");
+          const header = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
 
           const response = await fetch(`/api/restaurants/${restaurantId}/menus/${menuId}`, {
             method: 'DELETE',
@@ -1691,7 +1691,7 @@
       function createOrderCard(order) {
         const tableInfo = order.tableId ? `테이블 ${order.tableId}번` : '포장주문';
         return `
-          <div class="order-card">
+          <div class="order-card" data-order-id="${order.id}">
             <div class="order-header">
               <span class="order-time">${formatDate(order.regDate)}</span>
               <div class="status-selector">
@@ -1719,61 +1719,43 @@
         `;
       }
 
-      function updateOrderStatus(orderId, newStatus) {
-        const currentStatus = currentOrders.find(order => order.id === orderId).status;
-        if (!isValidStatusTransition(currentStatus, newStatus)) {
-          alert('유효하지 않은 상태 변경입니다.');
-          return;
-        }
+      async function updateOrderStatus(orderId, newStatus) {
+        try {
+          const token = document.querySelector("meta[name='_csrf']").getAttribute("content");
+          const header = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
 
-        const token = document.querySelector("meta[name='_csrf']").getAttribute("content");
-        const header = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+          const response = await fetch(`/api/orders/${orderId}/status`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              [header]: token
+            },
+            body: JSON.stringify({ status: newStatus })
+          });
 
-        fetch(`/api/orders/${orderId}/status`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            [header]: token
-          },
-          body: JSON.stringify({ status: newStatus })
-        })
-        .then(response => {
-          if (!response.ok) throw new Error('상태 업데이트 실패');
-          return response.json();
-        })
-        .then(() => {
-          // 상태 변경 후 해당 주문 카드만 업데이트
-          fetch(`/api/orders/${orderId}`)
-            .then(response => response.json())
-            .then(updatedOrder => {
-              const orderCard = document.querySelector(`[data-order-id="${orderId}"]`);
-              if (orderCard) {
-                const newOrderHtml = createOrderCard(updatedOrder);
-                orderCard.innerHTML = newOrderHtml;
-              }
-            });
-        })
-        .catch(error => {
+          if (!response.ok) {
+            throw new Error('상태 업데이트 실패');
+          }
+
+          const updatedOrder = await response.json();
+          const orderCard = document.querySelector(`[data-order-id="${orderId}"]`);
+          if (orderCard) {
+            orderCard.outerHTML = createOrderCard(updatedOrder);
+          }
+
+          // 주문 목록 새로고침
+          refreshOrders();
+        } catch (error) {
           console.error('Error:', error);
           alert('주문 상태 업데이트에 실패했습니다.');
-        });
-      }
-
-      function isValidStatusTransition(currentStatus, newStatus) {
-        if (currentStatus === 'PENDING') {
-          return ['ACCEPTED', 'CANCELLED'].includes(newStatus);
-        } else if (currentStatus === 'ACCEPTED') {
-          return ['COMPLETED', 'CANCELLED'].includes(newStatus);
+          // 실패 시 주문 목록 새로고침하여 원래 상태로 복원
+          refreshOrders();
         }
-        return false; // COMPLETED나 CANCELLED 상태에서는 변경 불가
       }
 
       function refreshOrders(isManualRefresh = false) {
         const orderList = document.getElementById('orderList');
         if (!orderList) return;
-
-        // 기존 주문 목록 임시 저장
-        const tempOrderList = orderList.cloneNode(true);
 
         const token = document.querySelector("meta[name='_csrf']").getAttribute("content");
         const header = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
@@ -1785,12 +1767,14 @@
         })
         .then(response => response.json())
         .then(orders => {
+          currentOrders = orders;
+          
           if (!orders || orders.length === 0) {
             orderList.innerHTML = '<div class="no-orders">주문 내역이 없습니다.</div>';
             return;
           }
 
-          // 주문 정렬
+          // 주문 정렬: PENDING -> ACCEPTED -> 나머지
           const sortedOrders = orders.sort((a, b) => {
             if (a.status === 'PENDING' && b.status !== 'PENDING') return -1;
             if (a.status !== 'PENDING' && b.status === 'PENDING') return 1;
@@ -1799,56 +1783,19 @@
             return new Date(b.regDate) - new Date(a.regDate);
           });
 
-          // 새로운 컨테이너 생성
-          const newOrderList = document.createElement('div');
-          newOrderList.id = 'orderList';
-
-          // 주문 카드 생성 및 추가
-          sortedOrders.forEach(order => {
-            const orderCard = document.createElement('div');
-            orderCard.setAttribute('data-order-id', order.id);
-            orderCard.innerHTML = createOrderCard(order);
-            newOrderList.appendChild(orderCard);
-          });
-
-          // 기존 목록과 비교하여 변경사항이 있을 때만 업데이트
-          if (orderList.innerHTML !== newOrderList.innerHTML) {
-            orderList.parentNode.replaceChild(newOrderList, orderList);
-          }
+          orderList.innerHTML = sortedOrders.map(order => createOrderCard(order)).join('');
         })
         .catch(error => {
           console.error('Error:', error);
-          // 에러 발생 시 이전 상태로 복원
-          orderList.parentNode.replaceChild(tempOrderList, orderList);
+          orderList.innerHTML = '<div class="error">주문 목록을 불러오는데 실패했습니다.</div>';
         });
       }
 
-      // 페이지 로드 시 한 번만 실행
+      // 페이지 로드 시 주문 목록 로드 및 자동 새로고침 설정
       document.addEventListener('DOMContentLoaded', () => {
-        const orderList = document.getElementById('orderList');
-        if (!orderList) return;
-
-        // 초기 로드
-        refreshOrders(true);
-
-        // 새로고침 버튼 클릭 이벤트
-        const refreshButton = document.querySelector('.refresh-button');
-        if (refreshButton) {
-          refreshButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            refreshOrders(true);
-          });
-        }
-
-        // 주문 관리 탭 클릭 시 실행
-        document.querySelectorAll('.nav-link').forEach(link => {
-          link.addEventListener('click', () => {
-            if (link.dataset.section === 'order-management') {
-              refreshOrders(true);
-            }
-          });
-        });
+        refreshOrders();
+        // 30초마다 주문 목록 새로고침
+        setInterval(refreshOrders, 30000);
       });
     </script>
   </body>

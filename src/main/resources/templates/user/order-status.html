@@ -60,38 +60,43 @@
         .progress-container {
             margin: 25px 0;
             position: relative;
+            padding: 0 20px;
         }
 
         .progress-bar {
-            height: 2px;
+            height: 4px;
             background: #eee;
-            margin: 20px 0;
             position: relative;
+            margin: 30px 0;
+            z-index: 1;
         }
 
         .progress-fill {
             position: absolute;
+            top: 0;
+            left: 0;
             height: 100%;
             background: #4CAF50;
             transition: width 0.5s ease;
+            width: 0%;
         }
 
         .status-steps {
             display: flex;
             justify-content: space-between;
             position: relative;
-            margin-top: -10px;
+            margin-top: -45px;
         }
 
         .status-step {
             text-align: center;
             position: relative;
-            flex: 1;
+            z-index: 2;
         }
 
         .step-icon {
-            width: 36px;
-            height: 36px;
+            width: 30px;
+            height: 30px;
             background: white;
             border: 2px solid #ddd;
             border-radius: 50%;
@@ -99,15 +104,21 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto 8px;
-            font-size: 16px;
             position: relative;
-            z-index: 1;
             transition: all 0.3s ease;
         }
 
         .step-icon i {
-            font-size: 16px;
+            font-size: 14px;
             color: #999;
+            transition: all 0.3s ease;
+        }
+
+        .step-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+            transition: all 0.3s ease;
         }
 
         .status-step.active .step-icon {
@@ -119,13 +130,22 @@
             color: white;
         }
 
-        .step-label {
-            font-size: 13px;
-            color: #666;
-        }
-
         .status-step.active .step-label {
             color: #4CAF50;
+            font-weight: 500;
+        }
+
+        .status-step.cancelled .step-icon {
+            border-color: #dc3545;
+            background: #dc3545;
+        }
+
+        .status-step.cancelled .step-icon i {
+            color: white;
+        }
+
+        .status-step.cancelled .step-label {
+            color: #dc3545;
             font-weight: 500;
         }
 
@@ -231,35 +251,39 @@
 
     <main class="center-container">
         <div class="order-status-card">
-            <div class="order-number" th:text="'주문번호: ' + ${orderId}"></div>
-            
             <div class="progress-container">
                 <div class="progress-bar">
                     <div class="progress-fill" id="progressBar"></div>
                 </div>
                 <div class="status-steps">
-                    <div class="status-step" th:classappend="${order.status == 'PENDING' ? 'active' : ''}" data-status="pending">
+                    <div class="status-step" th:classappend="${order.status == 'PENDING' ? 'active' : ''}" data-status="PENDING">
                         <div class="step-icon">
                             <i class="fas fa-receipt"></i>
                         </div>
                         <div class="step-label">주문접수</div>
                     </div>
-                    <div class="status-step" th:classappend="${order.status == 'ACCEPTED' ? 'active' : ''}" data-status="preparing">
+                    <div class="status-step" th:classappend="${order.status == 'ACCEPTED' ? 'active' : ''}" data-status="ACCEPTED">
                         <div class="step-icon">
-                            <i class="fas fa-utensils"></i>
+                            <i class="fas fa-fire"></i>
                         </div>
                         <div class="step-label">조리중</div>
                     </div>
-                    <div class="status-step" th:classappend="${order.status == 'COMPLETED' ? 'active' : ''}" data-status="completed">
+                    <div class="status-step" th:classappend="${order.status == 'COMPLETED' ? 'active' : ''}" data-status="COMPLETED">
                         <div class="step-icon">
                             <i class="fas fa-check"></i>
                         </div>
                         <div class="step-label">완료</div>
                     </div>
+                    <div class="status-step" th:classappend="${order.status == 'CANCELLED' ? 'active' : ''}" data-status="CANCELLED" style="display: none;">
+                        <div class="step-icon">
+                            <i class="fas fa-times"></i>
+                        </div>
+                        <div class="step-label">취소됨</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="estimated-time">예상 대기 시간: 15분</div>
+            <div id="statusText"></div>
         </div>
 
         <div class="order-details">
@@ -279,45 +303,83 @@
     </main>
 
     <script th:inline="javascript">
-        // 주문 상태에 따른 UI 업데이트
-        function updateStatusUI(status) {
-            const steps = document.querySelectorAll('.status-step');
-            const progressBar = document.getElementById('progressBar');
-            
-            const statusIndex = {
-                'PENDING': 0,
-                'ACCEPTED': 1,
-                'COMPLETED': 2,
-                'CANCELLED': 3
-            }[status] || 0;
-
-            const progress = (statusIndex / (steps.length - 1)) * 100;
-            progressBar.style.width = `${progress}%`;
-            
-            steps.forEach((step, index) => {
-                if (index <= statusIndex) {
-                    step.classList.add('active');
-                } else {
-                    step.classList.remove('active');
-                }
-            });
-        }
-
-        // 초기 상태 설정
         document.addEventListener('DOMContentLoaded', function() {
             const orderStatus = [[${order.status}]];
             updateStatusUI(orderStatus);
             
-            // 수동 새로고침 버튼 추가
-            const header = document.querySelector('.header');
-            const refreshButton = document.createElement('button');
-            refreshButton.className = 'refresh-button';
-            refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i>';
-            refreshButton.onclick = function() {
-                location.reload();
-            };
-            header.appendChild(refreshButton);
+            // 주문 상태 자동 업데이트
+            setInterval(checkOrderStatus, 5000); // 5초마다 상태 확인
         });
+
+        function checkOrderStatus() {
+            const orderId = [[${order.id}]];
+            const token = document.querySelector("meta[name='_csrf']").getAttribute("content");
+            const header = document.querySelector("meta[name='_csrf_header']").getAttribute("content");
+
+            fetch(`/api/orders/${orderId}`, {
+                headers: {
+                    [header]: token
+                }
+            })
+            .then(response => response.json())
+            .then(order => {
+                updateStatusUI(order.status);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        function updateStatusUI(status) {
+            const steps = document.querySelectorAll('.status-step');
+            const statusText = document.getElementById('statusText');
+            const progressBar = document.getElementById('progressBar');
+            
+            // 상태 텍스트 업데이트
+            let statusMessage = '';
+            switch(status) {
+                case 'PENDING':
+                    statusMessage = '주문이 접수되었습니다.';
+                    break;
+                case 'ACCEPTED':
+                    statusMessage = '주문이 확인되었습니다. 조리 중입니다.';
+                    break;
+                case 'COMPLETED':
+                    statusMessage = '주문이 완료되었습니다.';
+                    break;
+                case 'CANCELLED':
+                    statusMessage = '주문이 취소되었습니다.';
+                    break;
+            }
+            if (statusText) {
+                statusText.textContent = statusMessage;
+            }
+            
+            // 진행 단계 업데이트
+            steps.forEach(step => {
+                const stepStatus = step.getAttribute('data-status');
+                if (status === 'CANCELLED') {
+                    step.classList.remove('active');
+                    if (stepStatus === 'CANCELLED') {
+                        step.classList.add('active');
+                    }
+                } else {
+                    const statusOrder = ['PENDING', 'ACCEPTED', 'COMPLETED'];
+                    const currentIndex = statusOrder.indexOf(status);
+                    const stepIndex = statusOrder.indexOf(stepStatus);
+                    
+                    if (stepIndex <= currentIndex) {
+                        step.classList.add('active');
+                    } else {
+                        step.classList.remove('active');
+                    }
+                }
+            });
+            
+            // 프로그레스 바 업데이트
+            const statusOrder = ['PENDING', 'ACCEPTED', 'COMPLETED'];
+            const currentIndex = statusOrder.indexOf(status);
+            const progressWidth = (currentIndex + 1) / statusOrder.length * 100;
+            progressBar.style.width = `${progressWidth}%`;
+        }
     </script>
     <script>
         function goBack(element) {
