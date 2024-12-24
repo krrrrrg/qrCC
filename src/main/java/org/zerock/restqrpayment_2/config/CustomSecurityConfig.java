@@ -79,11 +79,11 @@ public class CustomSecurityConfig {
         http
             .securityMatcher("/**")
             .csrf(csrf -> csrf
-                .ignoringRequestMatchers("/find/id", "/find/password")
+                .ignoringRequestMatchers("/find/id", "/find/password", "/api/orders/**")
                 .disable()
             )
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/signup", "/login", "/find/id", "/find/password", "/css/**", "/js/**", "/images/**", "/").permitAll()
+                .requestMatchers("/signup", "/login", "/find/id", "/find/password", "/css/**", "/js/**", "/images/**", "/", "/order-status/**", "/order-status", "/api/orders/**").permitAll()
                 .requestMatchers("/api/users/**").hasAnyAuthority("ROLE_USER", "ROLE_OWNER")
                 .anyRequest().authenticated()
             )

@@ -2,9 +2,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     const orderId = urlParams.get('orderId');
     
+    // 초기 로드만 실행
     loadOrderStatus();
-    // 5초마다 주문 상태 업데이트
-    setInterval(loadOrderStatus, 5000);
 });
 
 async function loadOrderStatus() {

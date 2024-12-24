@@ -198,11 +198,20 @@
             font-weight: 600;
             color: #4CAF50;
         }
+
+        .refresh-button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
     <header class="header">
-        <button class="back-button" th:onclick="|location.href='@{/menu(restaurantId=${restaurantId},tableId=${tableId})}'|">
+        <button class="back-button" th:data-restaurant-id="${restaurantId}" th:data-table-id="${tableId}" onclick="goBack(this)">
             <i class="fas fa-arrow-left"></i>
         </button>
         <h1 class="title">주문 상태</h1>
@@ -286,7 +295,24 @@
         document.addEventListener('DOMContentLoaded', function() {
             const orderStatus = [[${order.status}]];
             updateStatusUI(orderStatus);
+            
+            // 수동 새로고침 버튼 추가
+            const header = document.querySelector('.header');
+            const refreshButton = document.createElement('button');
+            refreshButton.className = 'refresh-button';
+            refreshButton.innerHTML = '<i class="fas fa-sync-alt"></i>';
+            refreshButton.onclick = function() {
+                location.reload();
+            };
+            header.appendChild(refreshButton);
         });
+    </script>
+    <script>
+        function goBack(element) {
+            const restaurantId = element.getAttribute('data-restaurant-id');
+            const tableId = element.getAttribute('data-table-id');
+            window.location.href = `/menu?restaurantId=${restaurantId}&tableId=${tableId}`;
+        }
     </script>
     <script th:src="@{/js/order-status.js}"></script>
 </body>

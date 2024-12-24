@@ -87,29 +87,29 @@
         }
 
         .order-status {
-            font-size: 13px;
-            padding: 4px 12px;
-            border-radius: 12px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
             font-weight: 500;
         }
 
         .order-status.PENDING {
-            background-color: #FFF3E0;
-            color: #E65100;
+            background-color: #FFE082;
+            color: #FF6F00;
         }
 
         .order-status.ACCEPTED {
-            background-color: #E8F5E9;
-            color: #2E7D32;
+            background-color: #81D4FA;
+            color: #0277BD;
         }
 
         .order-status.COMPLETED {
-            background-color: #E3F2FD;
-            color: #1565C0;
+            background-color: #A5D6A7;
+            color: #2E7D32;
         }
 
         .order-status.CANCELLED {
-            background-color: #FFEBEE;
+            background-color: #EF9A9A;
             color: #C62828;
         }
 
@@ -156,10 +156,18 @@
 
     <main class="order-history-container">
         <div id="order-list">
-            <div th:each="order : ${orders}" class="order-card" th:onclick="'location.href=\'' + @{/user/order/status(orderId=${order.id},restaurantId=${restaurantId},tableId=${tableId})} + '\''">
+            <div th:each="order : ${orders}" class="order-card"
+                th:data-order-id="${order.id}"
+                th:data-restaurant-id="${restaurantId}"
+                th:data-table-id="${tableId}"
+                onclick="goToOrderStatus(this)">
                 <div class="order-header">
                     <span class="order-time" th:text="${#temporals.format(order.regDate, 'yyyy-MM-dd HH:mm')}"></span>
-                    <span class="order-status" th:classappend="${order.status}" th:text="${order.status == 'PENDING' ? '주문접수' : (order.status == 'ACCEPTED' ? '조리중' : (order.status == 'COMPLETED' ? '완료' : '취소'))}"></span>
+                    <span class="order-status" th:classappend="${order.status.name()}" 
+                          th:text="${order.status.name() == 'PENDING' ? '주문접수' : 
+                                  (order.status.name() == 'ACCEPTED' ? '조리중' : 
+                                  (order.status.name() == 'COMPLETED' ? '완료' : '취소'))}">
+                    </span>
                 </div>
                 <div class="order-items">
                     <div th:each="item : ${order.orderItems}" class="order-item">
@@ -177,10 +185,13 @@
         </div>
     </main>
 
-    <script th:inline="javascript">
-        // Thymeleaf 변수
-        const restaurantId = [[${restaurantId}]];
-        const tableId = [[${tableId}]];
+    <script>
+        function goToOrderStatus(element) {
+            const orderId = element.getAttribute('data-order-id');
+            const restaurantId = element.getAttribute('data-restaurant-id');
+            const tableId = element.getAttribute('data-table-id');
+            window.location.href = `/order-status?restaurantId=${restaurantId}&tableId=${tableId}&orderId=${orderId}`;
+        }
     </script>
 </body>
 </html>
