@@ -7,34 +7,57 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.zerock.restqrpayment_2.dto.OrderDTO;
+import org.zerock.restqrpayment_2.service.OrderService;
+import org.zerock.restqrpayment_2.service.RestaurantService;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/user/order")
-@RequiredArgsConstructor
 @Log4j2
+@RequiredArgsConstructor
 public class OrderViewController {
 
-    @GetMapping("/history")
-    public String orderHistory(
-            @RequestParam Long restaurantId,
-            @RequestParam Long tableId,
-            Model model) {
-        log.info("Order history for restaurant: {}, table: {}", restaurantId, tableId);
-        model.addAttribute("restaurantId", restaurantId);
-        model.addAttribute("tableId", tableId);
-        return "user/order-history";
-    }
+    private final OrderService orderService;
+    private final RestaurantService restaurantService;
 
     @GetMapping("/status")
     public String orderStatus(
-            @RequestParam Long orderId,
-            @RequestParam Long restaurantId,
-            @RequestParam Long tableId,
+            @RequestParam("restaurantId") Long restaurantId,
+            @RequestParam("tableId") Long tableId,
+            @RequestParam("orderId") Long orderId,
             Model model) {
-        log.info("Order status for order: {}, restaurant: {}, table: {}", orderId, restaurantId, tableId);
-        model.addAttribute("orderId", orderId);
-        model.addAttribute("restaurantId", restaurantId);
-        model.addAttribute("tableId", tableId);
-        return "user/order-status";
+
+        try {
+            OrderDTO orderDTO = orderService.getOrder(orderId);
+            if (orderDTO == null) {
+                return "redirect:/menu?restaurantId=" + restaurantId + "&tableId=" + tableId;
+            }
+            model.addAttribute("order", orderDTO);
+            model.addAttribute("restaurantId", restaurantId);
+            model.addAttribute("tableId", tableId);
+            return "user/order-status";
+        } catch (Exception e) {
+            log.error("주문 상태 조회 실패: {}", e.getMessage(), e);
+            return "redirect:/menu?restaurantId=" + restaurantId + "&tableId=" + tableId;
+        }
+    }
+
+    @GetMapping("/history")
+    public String orderHistory(@RequestParam("restaurantId") Long restaurantId,
+                             @RequestParam("tableId") Long tableId,
+                             Model model) {
+        try {
+            List<OrderDTO> orders = orderService.getOrderHistory(restaurantId, tableId);
+            model.addAttribute("orders", orders);
+            model.addAttribute("restaurant", restaurantService.getRestaurant(restaurantId));
+            model.addAttribute("restaurantId", restaurantId);
+            model.addAttribute("tableId", tableId);
+            return "user/order-history";
+        } catch (Exception e) {
+            log.error("주문 내역 조회 실패: {}", e.getMessage(), e);
+            return "redirect:/menu?restaurantId=" + restaurantId + "&tableId=" + tableId;
+        }
     }
 }

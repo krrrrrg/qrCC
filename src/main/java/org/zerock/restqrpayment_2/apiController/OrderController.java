@@ -21,39 +21,64 @@ public class OrderController {
 
     @PostMapping
     public ResponseEntity<OrderDTO> createOrder(@RequestBody OrderDTO orderDTO) {
-        log.info("Creating order: {}", orderDTO);
-        OrderDTO createdOrder = orderService.createOrder(orderDTO);
-        return ResponseEntity.ok(createdOrder);
+        try {
+            log.info("Creating order: {}", orderDTO);
+            OrderDTO createdOrder = orderService.createOrder(orderDTO);
+            return ResponseEntity.ok(createdOrder);
+        } catch (Exception e) {
+            log.error("주문 생성 실패: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/{orderId}")
     public ResponseEntity<OrderDTO> getOrder(@PathVariable Long orderId) {
-        OrderDTO order = orderService.getOrder(orderId);
-        return ResponseEntity.ok(order);
+        try {
+            OrderDTO order = orderService.getOrder(orderId);
+            return ResponseEntity.ok(order);
+        } catch (Exception e) {
+            log.error("주문 조회 실패: {}", e.getMessage(), e);
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @GetMapping("/history")
     public ResponseEntity<List<OrderDTO>> getOrderHistory(
             @RequestParam Long restaurantId,
             @RequestParam Long tableId) {
-        List<OrderDTO> orders = orderService.getOrderHistory(restaurantId, tableId);
-        return ResponseEntity.ok(orders);
+        try {
+            List<OrderDTO> orders = orderService.getOrderHistory(restaurantId, tableId);
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            log.error("주문 내역 조회 실패: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{orderId}/status")
     public ResponseEntity<OrderDTO> updateOrderStatus(
             @PathVariable Long orderId,
             @RequestBody Map<String, String> request) {
-        String newStatus = request.get("status");
-        OrderDTO updatedOrder = orderService.updateOrderStatus(orderId, Order.OrderStatus.valueOf(newStatus));
-        return ResponseEntity.ok(updatedOrder);
+        try {
+            String newStatus = request.get("status");
+            OrderDTO updatedOrder = orderService.updateOrderStatus(orderId, Order.OrderStatus.valueOf(newStatus));
+            return ResponseEntity.ok(updatedOrder);
+        } catch (Exception e) {
+            log.error("주문 상태 업데이트 실패: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping
     public ResponseEntity<List<OrderDTO>> getOrders(
             @RequestParam(required = false) Long tableId,
             @RequestParam(required = false) String status) {
-        List<OrderDTO> orders = orderService.getOrders(tableId, status);
-        return ResponseEntity.ok(orders);
+        try {
+            List<OrderDTO> orders = orderService.getOrders(tableId, status);
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            log.error("주문 목록 조회 실패: {}", e.getMessage(), e);
+            return ResponseEntity.badRequest().build();
+        }
     }
 }

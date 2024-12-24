@@ -178,6 +178,8 @@ public class OrderService {
     private OrderItemDTO orderItemToDto(OrderItem orderItem) {
         return OrderItemDTO.builder()
                 .menuId(orderItem.getMenu().getId())
+                .menuName(orderItem.getMenu().getName())
+                .price(orderItem.getPrice())
                 .quantity(orderItem.getQuantity())
                 .build();
     }

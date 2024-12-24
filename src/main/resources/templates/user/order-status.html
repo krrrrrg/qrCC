@@ -1,34 +1,70 @@
 <!DOCTYPE html>
-<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>주문 상태</title>
-    <link rel="stylesheet" th:href="@{/css/styles.css}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        .order-status-card {
-            background: white;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
         }
 
-        .order-number {
-            font-size: 1.2em;
-            margin-bottom: 20px;
+        .header {
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+
+        .back-button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            margin-right: 10px;
+        }
+
+        .title {
+            font-size: 16px;
+            font-weight: 500;
             color: #333;
         }
 
+        .center-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .order-status-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .order-number {
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
         .progress-container {
-            margin: 30px 0;
+            margin: 25px 0;
+            position: relative;
         }
 
         .progress-bar {
-            height: 4px;
+            height: 2px;
             background: #eee;
-            border-radius: 2px;
             margin: 20px 0;
             position: relative;
         }
@@ -36,17 +72,15 @@
         .progress-fill {
             position: absolute;
             height: 100%;
-            background: #b7472a;
-            border-radius: 2px;
+            background: #4CAF50;
             transition: width 0.5s ease;
-            width: 0;
         }
 
         .status-steps {
             display: flex;
             justify-content: space-between;
             position: relative;
-            margin-top: -12px;
+            margin-top: -10px;
         }
 
         .status-step {
@@ -56,8 +90,8 @@
         }
 
         .step-icon {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             background: white;
             border: 2px solid #ddd;
             border-radius: 50%;
@@ -65,41 +99,56 @@
             align-items: center;
             justify-content: center;
             margin: 0 auto 8px;
-            font-size: 20px;
+            font-size: 16px;
             position: relative;
             z-index: 1;
             transition: all 0.3s ease;
         }
 
+        .step-icon i {
+            font-size: 16px;
+            color: #999;
+        }
+
         .status-step.active .step-icon {
-            border-color: #b7472a;
-            background: #b7472a;
+            border-color: #4CAF50;
+            background: #4CAF50;
+        }
+
+        .status-step.active .step-icon i {
             color: white;
         }
 
         .step-label {
-            font-size: 0.9em;
+            font-size: 13px;
             color: #666;
-            margin-top: 5px;
         }
 
         .status-step.active .step-label {
-            color: #b7472a;
-            font-weight: bold;
+            color: #4CAF50;
+            font-weight: 500;
+        }
+
+        .estimated-time {
+            text-align: center;
+            color: #666;
+            background-color: #f8f9fa;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
         }
 
         .order-details {
             background: white;
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 20px;
-            margin: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
 
         .order-item {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
+            padding: 12px 0;
             border-bottom: 1px solid #eee;
         }
 
@@ -107,326 +156,113 @@
             border-bottom: none;
         }
 
-        .total-amount {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 2px solid #eee;
-            text-align: right;
-            font-weight: bold;
-            font-size: 1.1em;
+        .item-info {
+            display: flex;
+            align-items: center;
         }
 
-        .estimated-time {
-            text-align: center;
-            margin-top: 20px;
-            color: #666;
-        }
-
-        .table-indicator {
-            display: inline-block;
-            background-color: #FFF8E7;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9em;
+        .item-name {
+            font-size: 14px;
             color: #333;
-            margin-left: 10px;
+            margin-right: 8px;
         }
 
-        .header-title {
-            display: flex;
-            align-items: center;
-            padding: 10px 20px;
-        }
-
-        .store-name {
-            font-weight: bold;
-            font-size: 1.2em;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 20px;
-            background-color: #f9f9f9;
-            border: 1px solid #ddd;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .back-button {
-            background-color: #4CAF50;
-            color: #fff;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-
-        .back-button:hover {
-            background-color: #3e8e41;
-        }
-
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .order-status-container {
-            background-color: #fff;
-            padding: 20px;
-            border: 1px solid #ddd;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .status-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .restaurant-info {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-        }
-
-        .restaurant-name {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .table-number {
-            font-size: 16px;
+        .item-quantity {
             color: #666;
+            font-size: 14px;
         }
 
-        .order-info {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-        }
-
-        .order-number {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .order-date {
-            font-size: 16px;
-            color: #666;
-        }
-
-        .status-timeline {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .status-step {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 0 20px;
-        }
-
-        .status-step i {
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        .status-step span {
-            font-size: 16px;
-            color: #666;
-        }
-
-        .order-details {
-            margin-top: 20px;
-        }
-
-        .order-items {
-            margin-bottom: 20px;
-        }
-
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .order-item:last-child {
-            border-bottom: none;
-        }
-
-        .order-item span {
-            font-size: 16px;
-        }
-
-        .order-total {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-top: 1px solid #ddd;
-        }
-
-        .order-total span {
-            font-size: 16px;
+        .item-price {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
         }
 
         .total-amount {
-            font-size: 18px;
-            font-weight: bold;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        .status-step.cancelled {
-            color: #dc3545;
+        .total-label {
+            font-size: 15px;
+            font-weight: 500;
+            color: #333;
         }
-        .status-step.cancelled i {
-            color: #dc3545;
+
+        .total-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: #4CAF50;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header class="header">
-            <h1>주문 상태</h1>
-            <a th:href="@{/menu(restaurantId=${restaurant.id},tableId=${tableId})}" class="back-button">
-                <svg width="24" height="24" viewBox="0 0 24 24">
-                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
-                </svg>
-            </a>
-        </header>
+    <header class="header">
+        <button class="back-button" th:onclick="|location.href='@{/menu(restaurantId=${restaurantId},tableId=${tableId})}'|">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+        <h1 class="title">주문 상태</h1>
+    </header>
 
-        <main class="main-content">
-            <div class="order-status-container">
-                <div class="status-header">
-                    <div class="restaurant-info">
-                        <h2 class="restaurant-name" id="storeName"></h2>
-                        <p class="table-number" id="tableNumber"></p>
-                    </div>
-                    <div class="order-info">
-                        <p class="order-number" id="orderNumber"></p>
-                        <p class="order-date" id="orderDate"></p>
-                    </div>
+    <main class="center-container">
+        <div class="order-status-card">
+            <div class="order-number" th:text="'주문번호: ' + ${orderId}"></div>
+            
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
                 </div>
-
-                <div class="status-timeline">
-                    <div class="status-step" data-status="PENDING">
-                        <i class="fas fa-clock"></i>
-                        <span>주문 대기</span>
+                <div class="status-steps">
+                    <div class="status-step" th:classappend="${order.status == 'PENDING' ? 'active' : ''}" data-status="pending">
+                        <div class="step-icon">
+                            <i class="fas fa-receipt"></i>
+                        </div>
+                        <div class="step-label">주문접수</div>
                     </div>
-                    <div class="status-step" data-status="ACCEPTED">
-                        <i class="fas fa-check"></i>
-                        <span>주문 접수</span>
+                    <div class="status-step" th:classappend="${order.status == 'ACCEPTED' ? 'active' : ''}" data-status="preparing">
+                        <div class="step-icon">
+                            <i class="fas fa-utensils"></i>
+                        </div>
+                        <div class="step-label">조리중</div>
                     </div>
-                    <div class="status-step" data-status="COMPLETED">
-                        <i class="fas fa-utensils"></i>
-                        <span>완료</span>
-                    </div>
-                    <div class="status-step" data-status="CANCELLED">
-                        <i class="fas fa-times"></i>
-                        <span>취소됨</span>
-                    </div>
-                </div>
-
-                <div class="order-details">
-                    <h3>주문 내역</h3>
-                    <div class="order-items" id="orderItems">
-                        <!-- 주문 항목들이 여기에 동적으로 추가됩니다 -->
-                    </div>
-                    <div class="order-total">
-                        <span>총 금액:</span>
-                        <span class="total-amount" id="totalAmount"></span>
+                    <div class="status-step" th:classappend="${order.status == 'COMPLETED' ? 'active' : ''}" data-status="completed">
+                        <div class="step-icon">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="step-label">완료</div>
                     </div>
                 </div>
             </div>
-        </main>
-    </div>
+
+            <div class="estimated-time">예상 대기 시간: 15분</div>
+        </div>
+
+        <div class="order-details">
+            <div class="order-item" th:each="item : ${order.orderItems}">
+                <div class="item-info">
+                    <span class="item-name" th:text="${item.menuName}"></span>
+                    <span class="item-quantity" th:text="'× ' + ${item.quantity}"></span>
+                </div>
+                <span class="item-price" th:text="${#numbers.formatInteger(item.price * item.quantity, 0, 'COMMA')} + '원'"></span>
+            </div>
+            
+            <div class="total-amount">
+                <span class="total-label">총 결제금액</span>
+                <span class="total-value" th:text="${#numbers.formatInteger(order.totalAmount, 0, 'COMMA')} + '원'"></span>
+            </div>
+        </div>
+    </main>
 
     <script th:inline="javascript">
-        // Thymeleaf 변수를 JavaScript 변수로 전달
-        const orderId = [[${orderId}]];
-        const restaurantId = [[${restaurantId}]];
-        const tableId = [[${tableId}]];
-    </script>
-    <script type="module">
-        import { OrderService } from '/js/store/order-service.js';
-
-        const orderService = new OrderService();
-        let currentOrder = null;
-
-        // URL에서 주문 ID와 테이블 정보 가져오기
-        const urlParams = new URLSearchParams(window.location.search);
-        const orderId = urlParams.get('orderId');
-        const tableNo = urlParams.get('table');
-        const menuId = urlParams.get('id');
-
-        // 테이블 번호 표시
-        if (tableNo) {
-            document.getElementById('tableNumber').textContent = tableNo;
-        }
-
-        // localStorage 변경 이벤트 리스너
-        window.addEventListener('storage', (e) => {
-            if (e.key === orderService.orderStatusKey || e.key === orderService.ordersKey) {
-                if (currentOrder) {
-                    const updatedStatus = orderService.getOrderStatus(currentOrder.id);
-                    if (updatedStatus && updatedStatus !== currentOrder.status) {
-                        currentOrder.status = updatedStatus;
-                        displayOrderInfo();
-                    }
-                }
-            }
-        });
-
-        // 주문 정보 표시 함수
-        function displayOrderInfo() {
-            if (!currentOrder) return;
-
-            // 주문 번호 표시
-            document.getElementById('orderNumber').textContent = currentOrder.id;
-
-            // 주문 상태에 따른 UI 업데이트
-            updateStatusUI(currentOrder.status);
-
-            // 주문 아이템 표시
-            const orderItemsContainer = document.getElementById('orderItems');
-            orderItemsContainer.innerHTML = '';
-            
-            currentOrder.items.forEach(item => {
-                const itemElement = document.createElement('div');
-                itemElement.className = 'order-item';
-                itemElement.innerHTML = `
-                    <span>${item.name} × ${item.quantity}</span>
-                    <span>${(item.price * item.quantity).toLocaleString()}원</span>
-                `;
-                orderItemsContainer.appendChild(itemElement);
-            });
-
-            // 총 금액 표시
-            document.getElementById('totalAmount').textContent = 
-                currentOrder.totalAmount.toLocaleString();
-        }
-
         // 주문 상태에 따른 UI 업데이트
         function updateStatusUI(status) {
             const steps = document.querySelectorAll('.status-step');
             const progressBar = document.getElementById('progressBar');
             
-            let progress = 0;
             const statusIndex = {
                 'PENDING': 0,
                 'ACCEPTED': 1,
@@ -434,7 +270,7 @@
                 'CANCELLED': 3
             }[status] || 0;
 
-            progress = statusIndex * 25;
+            const progress = (statusIndex / (steps.length - 1)) * 100;
             progressBar.style.width = `${progress}%`;
             
             steps.forEach((step, index) => {
@@ -446,40 +282,10 @@
             });
         }
 
-        // 주문 상태 주기적으로 확인 (백업용)
-        function pollOrderStatus() {
-            setInterval(() => {
-                if (currentOrder) {
-                    const updatedStatus = orderService.getOrderStatus(currentOrder.id);
-                    if (updatedStatus && updatedStatus !== currentOrder.status) {
-                        currentOrder.status = updatedStatus;
-                        displayOrderInfo();
-                    }
-                }
-            }, 5000); // 5초마다 확인
-        }
-
-        // 뒤로가기 버튼 처리 함수
-        window.goToMenu = function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const tableNo = urlParams.get('table');
-            window.location.href = `index.html?table=${tableNo}`;
-        };
-
-        // 페이지 로드 시 초기화
-        document.addEventListener('DOMContentLoaded', () => {
-            if (orderId) {
-                const orders = orderService.getOrders();
-                currentOrder = orders.find(order => order.id === orderId);
-                
-                if (currentOrder) {
-                    displayOrderInfo();
-                    pollOrderStatus(); // 백업용으로 폴링도 유지
-                } else {
-                    alert('주문 정보를 찾을 수 없습니다.');
-                    window.location.href = `order-history.html?table=${tableNo}&id=${menuId}`;
-                }
-            }
+        // 초기 상태 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            const orderStatus = [[${order.status}]];
+            updateStatusUI(orderStatus);
         });
     </script>
     <script th:src="@{/js/order-status.js}"></script>

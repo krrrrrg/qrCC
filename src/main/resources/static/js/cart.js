@@ -179,7 +179,7 @@ async function placeOrder() {
         sessionStorage.removeItem(cartKey);
         
         // 주문 상태 페이지로 리다이렉트
-        window.location.href = `/order-status?restaurantId=${currentRestaurantId}&tableId=${currentTableId}&orderId=${data.orderId}`;
+        window.location.href = `/order-status?restaurantId=${currentRestaurantId}&tableId=${currentTableId}&orderId=${data.id}`;
     } catch (error) {
         console.error('Error:', error);
         alert('주문 처리 중 오류가 발생했습니다.');
