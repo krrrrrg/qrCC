@@ -207,6 +207,15 @@
             padding: 5px;
             margin-left: 10px;
         }
+
+        .order-history-button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: auto;
+        }
     </style>
 </head>
 <body>
@@ -215,6 +224,9 @@
             <i class="fas fa-arrow-left"></i>
         </button>
         <h1 class="title">주문 상태</h1>
+        <button class="order-history-button" th:data-restaurant-id="${restaurantId}" th:data-table-id="${tableId}" onclick="goToOrderHistory(this)">
+            <i class="fas fa-history"></i>
+        </button>
     </header>
 
     <main class="center-container">
@@ -312,6 +324,12 @@
             const restaurantId = element.getAttribute('data-restaurant-id');
             const tableId = element.getAttribute('data-table-id');
             window.location.href = `/menu?restaurantId=${restaurantId}&tableId=${tableId}`;
+        }
+        
+        function goToOrderHistory(element) {
+            const restaurantId = element.getAttribute('data-restaurant-id');
+            const tableId = element.getAttribute('data-table-id');
+            window.location.href = `/order/history?restaurantId=${restaurantId}&tableId=${tableId}`;
         }
     </script>
     <script th:src="@{/js/order-status.js}"></script>

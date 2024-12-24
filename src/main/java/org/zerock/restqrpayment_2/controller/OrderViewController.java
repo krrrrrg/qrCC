@@ -62,17 +62,25 @@ public class OrderViewController {
         }
     }
 
-    @GetMapping("/user/order-history")
+    @GetMapping("/order/history")
     public String orderHistory(
             @RequestParam("restaurantId") Long restaurantId,
             @RequestParam("tableId") Long tableId,
             Model model) {
+        log.info("=== Order History Page Request ===");
+        log.info("Restaurant ID: {}", restaurantId);
+        log.info("Table ID: {}", tableId);
+        
         try {
             List<OrderDTO> orders = orderService.getOrderHistory(restaurantId, tableId);
+            RestaurantDTO restaurant = restaurantService.getRestaurant(restaurantId);
+            
             model.addAttribute("orders", orders);
+            model.addAttribute("restaurant", restaurant);
             model.addAttribute("restaurantId", restaurantId);
             model.addAttribute("tableId", tableId);
-            return "user/order-history";
+            
+            return "/user/order-history";
         } catch (Exception e) {
             log.error("Error getting order history: ", e);
             return "redirect:/error";
